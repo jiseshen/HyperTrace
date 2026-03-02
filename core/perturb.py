@@ -1,10 +1,9 @@
 import json
 from typing import Any, Dict, List
 
-from core.config import TracerContext
+from core.utils import TracerContext
 from core.hypothesis_set import Hypothesis, WorkingBelief
 from data.base import Turn
-
 
 AXIS_PROMPT = """
 You are extracting the explanatory axis along which a hypothesis z explains the user's preferences for each hypothesis.
@@ -96,7 +95,7 @@ K={K}
 
 
 def perturb_hypotheses(conversation_history: List[Turn], similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
-    hypotheses = context.current_belief.get_hypotheses()
+    hypotheses = context.belief.get_hypotheses()
     axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
     axes: List[str] = json.loads(context.model.generate(axes_prompt, cfg=context.generation_config)["output"])
     perturbed_hids, perturbed_weights = [], []
@@ -105,22 +104,23 @@ def perturb_hypotheses(conversation_history: List[Turn], similar_groups: List[Li
         perturbed_hids.extend(new_hids)
         perturbed_weights.extend(new_weights)
         axes.extend(new_axes)
-    context.current_belief = WorkingBelief(ids=perturbed_hids, priors=perturbed_weights, repo=context.hypothesis_set)
+    perturbed_belief = WorkingBelief(ids=perturbed_hids, priors=perturbed_weights, repo=context.hypothesis_set)
+    return perturbed_belief
     
 def perturb_group(group: List[int], axes: List[str], conversation_history: List[Turn], context: TracerContext) -> Dict[str, Any]:
     if len(group) == 1:
-        hyps, weights = context.current_belief[group]
+        hyps, weights = context.belief[group]
         new_axes = []
         return [hyps[0].id], weights.tolist(), new_axes
     prev_turns = conversation_history[-context.tracer_config.max_history_turns:]
     current_turn = conversation_history[-1]
-    hypotheses, weights = context.current_belief[group]
+    hypotheses, weights = context.belief[group]
     total_weight = weights.sum()
     merged_weight = total_weight * (1 - context.tracer_config.perturb_alpha)
     merged_prior = max([context.hypothesis_set.global_prior[h.id] for h in hypotheses])
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     prompt = PERTURB_PROMPT.format(
-        conversation_history="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
+        conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         current_turn=current_turn.format(include_candidates=True, include_choice=True),
         collapsed_cluster="\n\n".join([h.content for h in hypotheses]),
         global_axes_summary=", ".join(axes),

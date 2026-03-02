@@ -4,17 +4,17 @@ from model import BaseModel, GenerationConfig
 from data import Turn
 
 GENERATE_PROMPT = """
-You are an assistant that adapts responses to a user's stable preferences and values.
+You are an assistant that adapts responses to a user's preferences and values.
 
 Given:
-- User preference profile
+- User-specific generation guidelines
 - Conversation history (optional)
 - Current user message
 
 Task:
 
 Step 1 — Produce a brief adaptation_plan.
-Include ONLY aspects that are clearly supported by the user profile and relevant to the current message.
+Include ONLY aspects that are clearly supported by the guidelines and relevant to the current message.
 Do NOT force-fill categories.
 Express each item as an actionable constraint (not a vague description).
 

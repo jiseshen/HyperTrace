@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union, overload
 from collections import OrderedDict
 from dataclasses import dataclass
 import logging
@@ -420,17 +420,28 @@ class WorkingBelief:
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo = repo
     
-    def __getitem__(self, idx: int | Iterable) -> Tuple[Hypothesis | List[Hypothesis], float | np.ndarray]:
+    @overload
+    def __getitem__(self, idx: int) -> Tuple[Hypothesis, float]: ...
+    
+    @overload
+    def __getitem__(self, idx: Union[slice, Sequence[int]]) -> Tuple[List[Hypothesis], np.ndarray]: ...
+    
+    def __getitem__(
+        self,
+        idx: Union[int, slice, Sequence[int]],
+    ) -> Union[Tuple[Hypothesis, float], Tuple[List[Hypothesis], np.ndarray]]:
         if isinstance(idx, int):
             hid = self.ids[idx]
-            hyp = self.repo.hypotheses[hid]
-            weight = self.weights[idx]
-            return hyp, weight
+            return self.repo.hypotheses[hid], float(self.weights[idx])
+        if isinstance(idx, slice):
+            hids = self.ids[idx]
+            weights = self.weights[idx]
         else:
-            hids = [self.ids[i] for i in idx]
-            hyps = [self.repo.hypotheses[hid] for hid in hids]
-            weights = self.weights[list(idx)]
-            return hyps, weights
+            idx_list = list(idx)
+            hids = [self.ids[i] for i in idx_list]
+            weights = self.weights[idx_list]
+        hyps = [self.repo.hypotheses[hid] for hid in hids]
+        return hyps, weights
     
     def get_hypotheses(self) -> List[Hypothesis]:
         return [self.repo.hypotheses[hid] for hid in self.ids]
@@ -443,6 +454,9 @@ class WorkingBelief:
     
     def ess(self) -> float:
         return 1.0 / np.sum(self.weights ** 2)
+    
+    def normalized_entropy(self) -> float:
+        return -np.sum(self.weights * np.log(self.weights + 1e-14)) / np.log(len(self.weights) + 1e-14)
     
     def resample(self) -> List[List[int]]:
         new_ids: np.ndarray = np.random.choice(self.ids, size=len(self.ids), replace=True, p=self.weights)

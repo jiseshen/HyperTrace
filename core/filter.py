@@ -1,7 +1,7 @@
 import json
 from typing import List
 
-from core.config import TracerContext
+from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief, Update, Hypothesis
 from data.base import Turn
 
@@ -83,7 +83,7 @@ Output JSON only:
 def weight_hypothesis(conversation_history: List[Turn], context: TracerContext) -> WorkingBelief:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
-    hypotheses: List[Hypothesis] = context.current_belief.get_hypotheses()
+    hypotheses = context.belief.get_hypotheses()
     
     likelihood_prompts = [
         LIKELIHOOD_PROMPT.format(
@@ -105,5 +105,5 @@ def weight_hypothesis(conversation_history: List[Turn], context: TracerContext) 
             likelihood=likelihood
         )
         updates.append(update)
-    context.current_belief.update(updates=updates)
-    return context.current_belief
+    context.belief.update(updates=updates)
+    return context.belief

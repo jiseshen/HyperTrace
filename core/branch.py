@@ -1,5 +1,5 @@
 from hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief, Update
-from .config import TracerContext
+from .utils import TracerContext
 from data import Turn
 from typing import List, Optional
 import json
@@ -110,7 +110,7 @@ def branch_hypotheses(conversation_history: List[Turn], context: TracerContext) 
     """Propagate hypotheses based on new user message. Skip if no usable evidence, reinitialize if irrelevant, or simply revise."""
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
-    current_hypotheses: List[Hypothesis] = context.hypothesis_set[context.current_belief.ids][0]
+    current_hypotheses = context.belief.get_hypotheses()
     prompts = [
         BRANCHING_PROMPT.format(
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
@@ -133,10 +133,10 @@ def branch_hypotheses(conversation_history: List[Turn], context: TracerContext) 
     if skip > len(outputs) / 2:  # Vote to skip
         return None
     if replace > len(outputs) / 2:  # Vote to reinitialize
-        context.current_belief.consolidate(context.tracer_config.importance, context.tracer_config.alpha)
+        context.belief.consolidate(context.tracer_config.importance, context.tracer_config.consolidate_alpha)
         return initialize_hypothesis(conversation_history, context)
     if replace > 0:
-        context.current_belief.consolidate(context.tracer_config.importance, context.tracer_config.alpha)
+        context.belief.consolidate(context.tracer_config.importance, context.tracer_config.consolidate_alpha)
     updates = []
     revised_ids = []
     new = []

@@ -1,6 +1,6 @@
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
-from .config import TracerContext
+from .utils import TracerContext
 from typing import List, Optional
 import json
 
@@ -86,7 +86,7 @@ def initialize_hypothesis(
     
     prompt = INITIALIZATION_PROMPT.format(
         n_hypotheses=context.tracer_config.n_hypotheses,
-        prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
+        prev_turns="\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
         current_turn=current_turn.format(),
         retrieved_hypotheses="\n".join([h.format() for h in candidate_hypotheses])
     )

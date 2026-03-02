@@ -22,7 +22,7 @@ class Turn:
                 raise ValueError(f"chosen candidate '{self.chosen}' not found in candidates list: {self.candidates}")
     
     def __repr__(self):
-        return f"Turn {self.turn}:\nUser Message:\n {self.user_message[:100]}\n\nCandidates:\n{'\n'.join([c[:100] for c in self.candidates])}\n\nChosen:\n{self.chosen[:100]}"
+        return f"Turn {self.turn}:\nUser Message:\n {self.user_message[:100] + ('...' if len(self.user_message) > 100 else '')}\n\nCandidates:\n{'\n'.join([c[:100] + ('...' if len(c) > 100 else '') for c in self.candidates])}\n\nChosen:\n{self.chosen[:100] + ('...' if len(self.chosen) > 100 else '')}\n"
     
     def format(self, include_candidates: bool = True, include_choice: bool = True) -> str:
         formatted = f"User: {self.user_message}\n"

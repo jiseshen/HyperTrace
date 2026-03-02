@@ -1,4 +1,4 @@
-from .config import TracerConfig, TracerContext
+from .utils import TracerConfig, TracerContext
 from .hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief, RepoConfig
 from data import Conversation, Turn, UserData
 from model import BaseModel, GenerationConfig
