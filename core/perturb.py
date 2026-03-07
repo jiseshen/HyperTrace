@@ -79,8 +79,11 @@ Output JSON only without extra commentary:
 [ConversationHistory]
 {conversation_history}
 
-[CurrentTurn]
-{current_turn}
+[CurrentUserMessage]
+{user_message}
+
+[CandidateResponses]
+{candidates}
 
 [CollapsedCluster]
 {collapsed_cluster}
@@ -94,20 +97,20 @@ K={K}
 """
 
 
-def perturb_hypotheses(conversation_history: List[Turn], similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
+def perturb_hypotheses(conversation_history: List[Turn], candidates: str, similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
     hypotheses = context.belief.get_hypotheses()
     axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
     axes: List[str] = json.loads(context.model.generate(axes_prompt, cfg=context.generation_config)["output"])
     perturbed_hids, perturbed_weights = [], []
     for group in similar_groups:
-        new_hids, new_weights, new_axes = perturb_group(group=group, axes=axes, conversation_history=conversation_history, context=context)
+        new_hids, new_weights, new_axes = perturb_group(group=group, axes=axes, conversation_history=conversation_history, candidates=candidates, context=context)
         perturbed_hids.extend(new_hids)
         perturbed_weights.extend(new_weights)
         axes.extend(new_axes)
     perturbed_belief = WorkingBelief(ids=perturbed_hids, priors=perturbed_weights, repo=context.hypothesis_set)
     return perturbed_belief
     
-def perturb_group(group: List[int], axes: List[str], conversation_history: List[Turn], context: TracerContext) -> Dict[str, Any]:
+def perturb_group(group: List[int], axes: List[str], conversation_history: List[Turn], candidates: str, context: TracerContext) -> Dict[str, Any]:
     if len(group) == 1:
         hyps, weights = context.belief[group]
         new_axes = []
@@ -121,7 +124,8 @@ def perturb_group(group: List[int], axes: List[str], conversation_history: List[
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
-        current_turn=current_turn.format(include_candidates=True, include_choice=True),
+        user_message=current_turn.user_message,
+        candidates=candidates,
         collapsed_cluster="\n\n".join([h.content for h in hypotheses]),
         global_axes_summary=", ".join(axes),
         K=len(group) - 1

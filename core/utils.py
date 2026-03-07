@@ -28,6 +28,9 @@ class TracerContext:
         assert self.current_belief is not None, "Current belief is not initialized"
         return self.current_belief
     
+    def update_belief(self, new_belief: WorkingBelief):
+        self.current_belief = new_belief
+    
     
 def compute_importance(conversation_length: int, entropy: float) -> float:
     g = 1 - np.exp(-conversation_length)

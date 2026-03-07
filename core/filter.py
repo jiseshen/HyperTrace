@@ -72,15 +72,18 @@ Output JSON only:
 [Conversation history]
 {prev_turns}
 
-[Current Interaction]
-{current_turn}
+[Current User Message]
+{user_message}
+
+[Candidate Responses]
+{candidates}
 
 [Hypothesis z]
 {hypothesis}
 """
 
 
-def weight_hypothesis(conversation_history: List[Turn], context: TracerContext) -> WorkingBelief:
+def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext):
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     hypotheses = context.belief.get_hypotheses()
@@ -88,7 +91,8 @@ def weight_hypothesis(conversation_history: List[Turn], context: TracerContext) 
     likelihood_prompts = [
         LIKELIHOOD_PROMPT.format(
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
-            current_turn=current_turn.format(include_candidates=True, include_choice=True),
+            user_message=current_turn.user_message,
+            candidates=candidates,
             hypothesis=h.format()
         ) for h in hypotheses
     ]
@@ -106,4 +110,3 @@ def weight_hypothesis(conversation_history: List[Turn], context: TracerContext) 
         )
         updates.append(update)
     context.belief.update(updates=updates)
-    return context.belief

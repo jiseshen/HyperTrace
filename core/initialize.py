@@ -21,21 +21,10 @@ Internally:
 - Determine which differences likely drove the user's choice.
 - Only rely on differences clearly supported by evidence.
 
-Possible dimensions (not exhaustive):
-- Underlying values
-- Information density
-- Structure
-- Level of abstraction
-- Framing
-- Actionability
-- Tone
-
 Then:
 
-1. Decide whether to initialize a new belief state based on the given interaction.
-   - If the user message contains insufficient information (e.g., simple greetings) or the candidate responses differ primarily in overall quality rather than stylistic or structural dimensions, such that no clear user-specific preference can be inferred, return "action": "skip" and produce no hypotheses.
-2. Identify the category/topic of the current conversation.
-3. Produce exactly {n_hypotheses} stable user preference hypotheses:
+1. Identify the category/topic of the current conversation.
+2. Produce exactly {n_hypotheses} stable user preference hypotheses:
    - Reuse and revise relevant retrieved hypotheses when appropriate.
    - Otherwise generate new hypotheses.
    - Do not speculate beyond available evidence.
@@ -46,7 +35,6 @@ Output Format
 Return a JSON object:
 
 {{
-  "action": "initialize" | "skip",
   "category": "string",
   "hypotheses": [
     {{
@@ -62,13 +50,15 @@ Rules:
 - Output valid JSON only.
 - If the action is initialize, always include all required fields, and produce exactly {n_hypotheses} hypotheses.
 - Ground each hypothesis in explicit evidence from the comparison.
-- If skipping, leave other fields empty or null.
 
 Conversation History:
 {prev_turns}
 
-Current Turn:
-{current_turn}
+Current User Message:
+{user_message}
+
+Candidate Responses:
+{candidates}
 
 Previously Retrieved Hypotheses:
 {retrieved_hypotheses}
@@ -77,8 +67,9 @@ Previously Retrieved Hypotheses:
 
 def initialize_hypothesis(
     conversation_history: List[Turn],
+    candidates: str,
     context: TracerContext
-    ) -> Optional[WorkingBelief]:
+    ):
     """Initialize a working belief with retrieved hypotheses. Return None if skipping this turn."""
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
@@ -87,7 +78,8 @@ def initialize_hypothesis(
     prompt = INITIALIZATION_PROMPT.format(
         n_hypotheses=context.tracer_config.n_hypotheses,
         prev_turns="\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
-        current_turn=current_turn.format(),
+        user_message=current_turn.user_message,
+        candidates=candidates,
         retrieved_hypotheses="\n".join([h.format() for h in candidate_hypotheses])
     )
     
@@ -99,8 +91,6 @@ def initialize_hypothesis(
             output_data = json.loads(initialize_output)
             new_hypotheses: List[Hypothesis] = []
             reused_hypotheses: List[Hypothesis] = []
-            if output_data['action'] == 'skip':
-                return None
             for h in output_data['hypotheses']:
                 if h['action'] == 'reuse':
                     prev_category = context.hypothesis_set[h['id']][0].category
@@ -127,4 +117,4 @@ def initialize_hypothesis(
         hypothesis_ids=all_ids,
         priors=priors
     )
-    return belief
+    context.update_belief(belief)
