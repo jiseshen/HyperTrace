@@ -1,4 +1,4 @@
-from model import BaseModel, GenerationConfig
+from model import BaseLM, GenerationConfig
 from typing import List, Dict
 import json
 
@@ -63,7 +63,7 @@ Now evaluate:
 """
 
 
-def profile_score(model: BaseModel, profile: str, survey: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
+def profile_score(model: BaseLM, profile: str, survey: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
     prompt = COMPARISON_PROMPT.format(profile=profile, survey=survey)
     retries = 0
     while True:

@@ -1,8 +1,9 @@
+from pydantic import BaseModel, create_model, conlist
+
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
 from .utils import TracerContext
-from typing import List, Optional
-import json
+from typing import List, Literal, Optional
 
 
 INITIALIZATION_PROMPT = """
@@ -40,7 +41,7 @@ Return a JSON object:
     {{
       "id": "string (reuse existing ID or 'new-1')",
       "action": "reuse" | "new",
-      "content": "string",
+      "content": "revised or new hypothesis content",
       "evidence": "short justification (optional)"
     }}
   ]
@@ -64,6 +65,10 @@ Previously Retrieved Hypotheses:
 {retrieved_hypotheses}
 """
 
+class HypothesisSchema(BaseModel):
+    id: str
+    action: Literal["reuse", "new"]
+    content: str
 
 def initialize_hypothesis(
     conversation_history: List[Turn],
@@ -83,31 +88,30 @@ def initialize_hypothesis(
         retrieved_hypotheses="\n".join([h.format() for h in candidate_hypotheses])
     )
     
-    retries = 0
-    while True:
-        retries += 1
-        initialize_output = context.model.generate(prompt, cfg=context.generation_config)["output"]
-        try:
-            output_data = json.loads(initialize_output)
-            new_hypotheses: List[Hypothesis] = []
-            reused_hypotheses: List[Hypothesis] = []
-            for h in output_data['hypotheses']:
-                if h['action'] == 'reuse':
-                    prev_category = context.hypothesis_set[h['id']][0].category
-                    if output_data['category'] not in prev_category:
-                        new_category = prev_category + ", " + output_data['category']
-                    else:
-                        new_category = prev_category
-                    reused_hypotheses.append(Hypothesis(id=h['id'], category=new_category, content=h['content']))
-                else:
-                    new_hypotheses.append(Hypothesis(id=h['id'], category=output_data['category'], content=h['content']))
-            if len(new_hypotheses) + len(reused_hypotheses) != context.tracer_config.n_hypotheses:
-                continue
-            break
-        except:
-            if retries >= context.generation_config.max_retries:
-                raise ValueError(f"Failed to parse model output after {retries} attempts: {initialize_output}")
-            
+    InitializeSchema = create_model(
+        "InitializeSchema",
+        category=(str, ...),
+        hypotheses=(conlist(HypothesisSchema, min_length=context.tracer_config.n_hypotheses, max_length=context.tracer_config.n_hypotheses), ...)
+    )
+    
+    try:
+        output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config)["output"]
+    except Exception as e:
+        print(f"Initialization failed with error: {e}")
+        return
+    new_hypotheses: List[Hypothesis] = []
+    reused_hypotheses: List[Hypothesis] = []
+    for h in output['hypotheses']:
+        if h['action'] == 'reuse':
+            prev_category = context.hypothesis_set[h['id']][0].category
+            if output['category'] not in prev_category:
+                new_category = prev_category + ", " + output['category']
+            else:
+                new_category = prev_category
+            reused_hypotheses.append(Hypothesis(id=h['id'], category=new_category, content=h['content']))
+        else:
+            new_hypotheses.append(Hypothesis(id=h['id'], category=output['category'], content=h['content']))
+
     context.hypothesis_set.update_hypotheses(reused_hypotheses)
     new_ids = context.hypothesis_set.add_hypotheses(new_hypotheses)
     reused_ids = [h.id for h in reused_hypotheses]

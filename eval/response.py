@@ -1,6 +1,6 @@
 import json
 from typing import Dict, List
-from model import BaseModel, GenerationConfig
+from model import BaseLM, GenerationConfig
 from data import Turn
 
 GENERATE_PROMPT = """
@@ -112,7 +112,7 @@ Output JSON only:
 """
 
 
-def evaluate_generation(model: BaseModel, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
+def evaluate_generation(model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     current_message = current_turn.user_message

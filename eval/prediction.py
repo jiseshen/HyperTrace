@@ -12,7 +12,7 @@ Output format:
 """
 
 import json
-from model import GenerationConfig, BaseModel
+from model import GenerationConfig, BaseLM
 from data import Turn
 from typing import Dict, List
 import numpy as np
@@ -69,7 +69,7 @@ Current interaction:
 {current_turn}
 """
 
-def predict_choice(model: BaseModel, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
+def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     gt_choice = current_turn.chosen_idx + 1

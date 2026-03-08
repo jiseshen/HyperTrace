@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Union, Dict, Any
 
 
-class BaseModel(ABC):
+class BaseLM(ABC):
     @abstractmethod
     def generate(self, prompt: str, **kwargs) -> Union[str, Dict[str, Any]]:
         ...

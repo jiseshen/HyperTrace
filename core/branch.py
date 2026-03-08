@@ -1,8 +1,8 @@
-from hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief, Update
+from hypothesis_set import WorkingBelief, Update
+from pydantic import BaseModel
 from .utils import TracerContext, compute_importance
 from data import Turn
-from typing import List, Optional
-import json
+from typing import List, Literal, Optional
 from .initialize import initialize_hypothesis
 
 
@@ -59,7 +59,7 @@ Output JSON only:
   "updated_hypothesis": {{
     "category": "string",
     "content": "string"
-  }} | null,
+  }},
   "evidence": "one short justification"
 }}
 
@@ -82,6 +82,14 @@ Current Hypothesis:
 {current_hypothesis}
 """
 
+class UpdatedHypothesisSchema(BaseModel):
+    category: str
+    content: str
+
+class BranchSchema(BaseModel):
+    action: Literal["revise", "replace"]
+    relevance: Literal["direct", "partial", "none"]
+    updated_hypothesis: UpdatedHypothesisSchema
 
 def branch_hypotheses(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Optional[WorkingBelief]:
     """Propagate hypotheses based on new user message. Skip if no usable evidence, reinitialize if irrelevant, or simply revise."""
@@ -96,16 +104,11 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             current_hypothesis=h.format()
         ) for h in current_hypotheses
     ]
-    outputs = [o["output"] for o in context.model.async_generate(prompts, cfg=context.generation_config)]
-    
+    outputs = [o["output"]  if not isinstance(o, Exception) else None for o in context.model.async_generate(prompts, schema=BranchSchema, cfg=context.generation_config)]
     replace, invalid = 0, 0
     for output in outputs:
-        try:
-            output_data = json.loads(output)
-            if output_data['action'] == 'replace':
-                replace += 1
-        except:
-            invalid += 1
+        if output and output['action'] == 'replace':
+            replace += 1
     if replace > len(outputs) / 2:  # Vote to reinitialize
         context.belief.consolidate(compute_importance(len(conversation_history), context.current_belief.normalized_entropy()), context.tracer_config.consolidate_alpha)
         initialize_hypothesis(conversation_history, candidates, context)

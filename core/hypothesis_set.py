@@ -387,8 +387,8 @@ class HypothesisSet:
             group = [hid]
             checked.add(hid)
             has_similar = False
-            for j, other_hid in enumerate(id_list[i+1:]):
-                if other_hid not in checked and sim_matrix[i, i+j+1] > threshold:
+            for j, other_hid in enumerate(id_list[i+1:], i + 1):
+                if other_hid not in checked and sim_matrix[i, j] > threshold:
                     group.append(other_hid)
                     checked.add(other_hid)
                     has_similar = True
@@ -407,7 +407,22 @@ class HypothesisSet:
             prev_prior = self.global_prior.get(hid)
             self.global_prior[hid] = prev_prior * (1 - alpha * importance) + w * alpha * importance
             
-            
+    def top_p_retrieve(self, p: float = 0.8, max_k: int = 10) -> List[Hypothesis]:
+        prior_sum = sum(self.global_prior.values())
+        if prior_sum == 0:
+            return []
+        normalized_priors = {hid: prior / prior_sum for hid, prior in self.global_prior}
+        sorted_hids = sorted(normalized_priors, key=normalized_priors.get, reverse=True)
+        cumulative_prob = 0.0
+        selected_hids = []
+        for hid in sorted_hids[:max_k]:
+            cumulative_prob += normalized_priors[hid]
+            selected_hids.append(hid)
+            if cumulative_prob >= p:
+                break
+        return [self.hypotheses[hid] for hid in selected_hids]
+
+
 class WorkingBelief:
     def __init__(
         self,
@@ -447,8 +462,9 @@ class WorkingBelief:
         return [self.repo.hypotheses[hid] for hid in self.ids]
     
     def update(self, updates: List[Update]):
-        for i, update in enumerate(updates):
-            self.weights[i] *= update.likelihood
+        if all(update.likelihood is not None for update in updates):
+            for i, update in enumerate(updates):
+                self.weights[i] *= update.likelihood
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo.update_hypotheses(updates)
     

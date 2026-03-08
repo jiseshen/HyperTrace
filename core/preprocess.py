@@ -1,7 +1,8 @@
 
 
-from typing import List, Optional
-import json
+from typing import List, Literal, Optional, Union
+from flask import json
+from pydantic import BaseModel, create_model, conlist
 from core.utils import TracerContext
 from data.base import Turn
 
@@ -60,25 +61,34 @@ Rules:
 {candidates}
 """
 
+class CandidateSchema(BaseModel):
+    i: int
+    preview: str
+    
+class SkipSchema(BaseModel):
+    skip: Literal[True]
+
 def preprocess_candidates(conversation_history: List[Turn], context: TracerContext) -> Optional[str]:
     current_turn = conversation_history[-1]
     preprocess_prompt = PREPROCESSING_PROMPT.format(
         user_message=current_turn.user_message,
         candidates="\n".join([f"{i}. {c}" for i, c in enumerate(current_turn.candidates)])
     )
-    retries = 0
-    while retries < context.tracer_config.max_retries:
-        output = context.model.generate(preprocess_prompt, cfg=context.generation_config)["output"]
-        try:
-            data = json.loads(output)
-            if data["skip"]:
-                return None
-            else:
-                previews = [c["preview"] for c in data["candidates"]]
-                return "\n".join(
-                    [f"{i}. {"[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"} Preview: {preview} Content: {candidate[:50]}...{candidate[-50:]}" for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates))]
-                )
-        except:
-            retries += 1
-            if retries >= context.generation_config.max_retries:
-                return None
+    n = len(current_turn.candidates)
+    Schema = Union[create_model(
+        "PreprocessSchema",
+        skip=(Literal[True], ...),
+        candidates=(conlist(CandidateSchema, min_length=0, max_length=0), ...),
+    )]
+    try:
+        output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config)["output"]
+    except Exception as e:
+        print(f"Preprocessing failed with error: {e}")
+        return None
+    if output["skip"]:
+        return None
+    else:
+        previews = [c["preview"] for c in output["candidates"]]
+        return "\n".join(
+            [f"{i}. {"[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"} Preview: {preview} Content: {candidate[:50]}...{candidate[-50:]}" for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates))]
+        )

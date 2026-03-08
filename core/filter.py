@@ -1,6 +1,5 @@
-import json
 from typing import List
-
+from pydantic import BaseModel, Field
 from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief, Update, Hypothesis
 from data.base import Turn
@@ -17,20 +16,8 @@ Interpretation:
 
 Given:
 - Current user message
-- All candidate responses
-- The chosen candidate (a)
+- All candidate responses with the chosen one (a) indicated
 - Hypothesis z (a statement describing a latent user preference/value)
-
-Step 1 — Identify distinguishing signals.
-Briefly identify the key differences among the candidates that could influence user choice:
-- Tone
-- Information density
-- Structure
-- Abstraction level
-- Actionability
-- Framing
-- Uncertainty signaling
-Only mention dimensions that actually differ.
 
 Step 2 — Likelihood reasoning.
 Assuming hypothesis z is true:
@@ -64,9 +51,9 @@ Important:
 
 Output JSON only:
 {{
-  "reason": "2-4 sentences summarizing the key distinguishing dimensions and how z interacts with them.",
+  "reason": "2-4 sentences briefly analyzing how z is related to the choice.",
   "likelihood_bucket": "Very Likely | Likely | Somewhat Likely | Somewhat Unlikely | Unlikely | Very Unlikely",
-  "P_a_given_z": 0.xx
+  "likelihood": 0.xx
 }}
 
 [Conversation history]
@@ -81,6 +68,9 @@ Output JSON only:
 [Hypothesis z]
 {hypothesis}
 """
+
+class FilterSchema(BaseModel):
+    likelihood: float = Field(ge=0.0, le=1.0)
 
 
 def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext):
@@ -97,13 +87,10 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
         ) for h in hypotheses
     ]
     
-    likelihood_outputs = context.model.async_generate(likelihood_prompts, cfg=context.generation_config)
+    likelihood_outputs = [o["output"] if not isinstance(o, Exception) else None for o in context.model.async_generate(likelihood_prompts, schema=FilterSchema, cfg=context.generation_config) ]
     updates = []
     for h, output in zip(hypotheses, likelihood_outputs):
-        try:
-            likelihood = json.loads(output["output"])["P_a_given_z"]
-        except:
-            likelihood = 0.5
+        likelihood = output['likelihood'] if output else 0.5
         update = Update(
             id=h.id,
             likelihood=likelihood

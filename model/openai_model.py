@@ -1,5 +1,7 @@
 from openai import OpenAI, AsyncOpenAI, APIError, RateLimitError
-from .base import BaseModel
+from .base import BaseLM
+from .utils import Parser, ParseError
+from pydantic import BaseModel
 from dataclasses import dataclass, replace
 from typing import Optional, Union, Tuple, List, Dict, Any
 import json
@@ -26,7 +28,7 @@ class GenerationConfig:
     timeout: Optional[float] = None
     
 
-class OpenAIModel(BaseModel):
+class OpenAIModel(BaseLM):
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, model: str = "gpt-4o"):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "empty")
         self.base_url = base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
@@ -62,23 +64,27 @@ class OpenAIModel(BaseModel):
             kwargs["temperature"] = cfg.temperature
         return kwargs
     
-    def generate(self, prompt: str, cfg: Optional[GenerationConfig] = None, **overrides) -> Dict[str, str]:
+    def generate(self, prompt: str, schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, **overrides) -> Dict[str, str]:
         cfg = self._resolve_cfg(cfg, overrides)
         retries = cfg.max_retries
         kwargs = self._build_responses_kwargs(prompt, cfg)
         for attempt in range(retries):
             try:
                 resp = self.client.responses.create(**kwargs)
-            except (APIError, RateLimitError) as err:
-                time.sleep(cfg.retry_delay)
+                output = resp.output_text
+                if schema:
+                    parser = Parser(schema)
+                    output = parser.parse(output)
+            except (APIError, RateLimitError, ParseError):
                 if attempt == retries - 1:
-                    raise err
+                    raise
+                time.sleep(cfg.retry_delay)
                 continue
             if cfg.reasoning_summary:
-                return {"output": resp.output_text, "reasoning": resp.output[0].summary[0].text}
-            return {"output": resp.output_text}
+                return {"output": output, "reasoning": resp.output[0].summary[0].text}
+            return {"output": output}
     
-    async def async_generate(self, prompts: list[str], cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides) -> list[Union[Dict[str, str], Exception]]:
+    async def async_generate(self, prompts: list[str], schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides) -> list[Union[Dict[str, str], Exception]]:
         cfg = self._resolve_cfg(cfg, overrides)
         sem = asyncio.Semaphore(concurrency)
         async def _one(prompt: str) -> Union[Dict[str, str], Exception]:
@@ -88,14 +94,18 @@ class OpenAIModel(BaseModel):
                     try:
                         kwargs = self._build_responses_kwargs(prompt, cfg)
                         resp = await self.async_client.responses.create(**kwargs)
-                    except Exception:
+                        output = resp.output_text
+                        if schema:
+                            parser = Parser(schema)
+                            output = parser.parse(output)
+                    except (APIError, RateLimitError, ParseError):
                         if attempt == retries - 1:
                             raise
                         await asyncio.sleep(cfg.retry_delay)
                         continue
                     if cfg.reasoning_summary:
-                        return {"output": resp.output_text, "reasoning": resp.output[0].summary[0].text}
-                    return {"output": resp.output_text}
+                        return {"output": output, "reasoning": resp.output[0].summary[0].text}
+                    return {"output": output}
         tasks = [_one(p) for p in prompts]
         return await asyncio.gather(*tasks, return_exceptions=return_exceptions)
         

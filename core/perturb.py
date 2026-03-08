@@ -1,6 +1,5 @@
-import json
-from typing import Any, Dict, List
-
+from typing import Any, Dict, List, Optional, Tuple
+from pydantic import BaseModel, create_model, conlist
 from core.utils import TracerContext
 from core.hypothesis_set import Hypothesis, WorkingBelief
 from data.base import Turn
@@ -15,8 +14,8 @@ Task:
 For each hypothesis, identify the key explanatory dimensions, 
 e.g., "The user likely values neutrality and objectivity in geopolitical discussions." explains the interaction through the dimension of "objectiveness".
 
-Output JSON only:
-["dimensions for hypothesis 1", "dimensions for hypothesis 2", ...]
+Output raw text only:
+"dimensions for hypothesis 1", "dimensions for hypothesis 2", ...
 
 Rules:
 - Use brief phrases for each dimension, without extra explanation.
@@ -25,6 +24,8 @@ Rules:
 [Hypotheses]
 {hypotheses}
 """
+
+
 
 PERTURB_PROMPT = """
 You are performing particle rejuvenation in a Sequential Monte Carlo personalization system.
@@ -96,25 +97,28 @@ The current global hypothesis space already includes the following explanation a
 K={K}
 """
 
+class PerturbedHypothesisSchema(BaseModel):
+    content: str
+    novel_axis: str
+
 
 def perturb_hypotheses(conversation_history: List[Turn], candidates: str, similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
     hypotheses = context.belief.get_hypotheses()
     axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
-    axes: List[str] = json.loads(context.model.generate(axes_prompt, cfg=context.generation_config)["output"])
+    axes = context.model.generate(axes_prompt, cfg=context.generation_config)["output"]
     perturbed_hids, perturbed_weights = [], []
     for group in similar_groups:
         new_hids, new_weights, new_axes = perturb_group(group=group, axes=axes, conversation_history=conversation_history, candidates=candidates, context=context)
         perturbed_hids.extend(new_hids)
         perturbed_weights.extend(new_weights)
-        axes.extend(new_axes)
+        axes += f", {new_axes}" if new_axes else ""
     perturbed_belief = WorkingBelief(ids=perturbed_hids, priors=perturbed_weights, repo=context.hypothesis_set)
     return perturbed_belief
     
-def perturb_group(group: List[int], axes: List[str], conversation_history: List[Turn], candidates: str, context: TracerContext) -> Dict[str, Any]:
+def perturb_group(group: List[int], axes: str, conversation_history: List[Turn], candidates: str, context: TracerContext) -> Tuple[List[str], List[float], Optional[str]]:
     if len(group) == 1:
         hyps, weights = context.belief[group]
-        new_axes = []
-        return [hyps[0].id], weights.tolist(), new_axes
+        return [hyps[0].id], weights.tolist(), None
     prev_turns = conversation_history[-context.tracer_config.max_history_turns:]
     current_turn = conversation_history[-1]
     hypotheses, weights = context.belief[group]
@@ -122,28 +126,30 @@ def perturb_group(group: List[int], axes: List[str], conversation_history: List[
     merged_weight = total_weight * (1 - context.tracer_config.perturb_alpha)
     merged_prior = max([context.hypothesis_set.global_prior[h.id] for h in hypotheses])
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
+    K = len(group) - 1
     prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         user_message=current_turn.user_message,
         candidates=candidates,
         collapsed_cluster="\n\n".join([h.content for h in hypotheses]),
         global_axes_summary=", ".join(axes),
-        K=len(group) - 1
+        K=K
     )
-    retries = 0
-    while True:
-        try:
-            output = context.model.generate(prompt, cfg=context.generation_config)["output"]
-            output_data = json.loads(output)
-            current_category = output_data['category']
-            merged_hypothesis = output_data['merged']
-            proposed_hypotheses = output_data['new_hypotheses']
-            new_axes = [ph['novel_axis'] for ph in proposed_hypotheses]
-            break
-        except Exception as e:
-            retries += 1
-            if retries > context.generation_config.max_retries:
-                raise ValueError(f"Failed to perturb hypotheses after {context.generation_config.max_retries} attempts. Error: {e}")
+    PerturbSchema = create_model(
+        "PerturbSchema",
+        category=(str, ...),
+        merged=(str, ...),
+        new_hypotheses=(conlist(PerturbedHypothesisSchema, min_length=K, max_length=K), ...)
+    )
+    try:
+        output = context.model.generate(prompt, schema=PerturbSchema, cfg=context.generation_config)["output"]
+    except Exception as e:
+        print(f"Perturbation failed with error: {e}")
+        return [h.id for h in hypotheses], weights.tolist(), None
+    current_category = output['category']
+    merged_hypothesis = output['merged']
+    proposed_hypotheses = output['new_hypotheses']
+    new_axes = ", ".join(ph['novel_axis'] for ph in proposed_hypotheses)
 
     for h in hypotheses:
         context.hypothesis_set.remove_hypothesis(h.id)
