@@ -11,6 +11,8 @@ from .branch import branch_hypotheses
 from .filter import weight_hypothesis
 from .perturb import perturb_hypotheses
 from .summary import summarize_hypotheses, summarize_profile
+from .consolidate import consolidate_hypotheses
+
 from eval import predict_choice, profile_score, evaluate_generation
 
 
@@ -77,7 +79,7 @@ class PreferenceTracer:
                 else:
                     similar_groups = self.context.belief.get_similarity_groups(threshold=self.tracer_config.similarity_threshold)
                     perturb_hypotheses(conversation_history, candidates, similar_groups, self.context)
-        
+            consolidate_hypotheses(conversation_history, self.context)
         # Evaluate profile alignment    
         profile = summarize_profile(self.context)
         profile_alignment = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.evaluation_config)

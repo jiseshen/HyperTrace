@@ -311,7 +311,13 @@ class HypothesisSet:
         self.hypotheses: Dict[str, Hypothesis] = {}
         self.category_counts: Dict[str, int] = {}
     
-    def __getitem__(self, key: str | List[str]) -> Union[Tuple[Hypothesis, float], Tuple[List[Hypothesis], List[float]]]:
+    @overload
+    def __getitem__(self, idx: str) -> Tuple[Hypothesis, float]: ...
+    
+    @overload
+    def __getitem__(self, idx: List[str]) -> Tuple[List[Hypothesis], List[float]]: ...
+    
+    def __getitem__(self, key: Union[str, List[str]]) -> Union[Tuple[Hypothesis, float], Tuple[List[Hypothesis], List[float]]]:
         if isinstance(key, list):
             return [self.hypotheses[k] for k in key], [self.global_prior[k] for k in key]
         else:
@@ -406,7 +412,18 @@ class HypothesisSet:
         for hid, w in zip(ids, weights):
             prev_prior = self.global_prior.get(hid)
             self.global_prior[hid] = prev_prior * (1 - alpha * importance) + w * alpha * importance
-            
+    
+    def merge_hypotheses(
+        self,
+        ids: List[str],
+        merged_hypothesis: Dict[str, str]
+    ):
+        priors = [self.global_prior[hid] for hid in ids]
+        total_prior = sum(priors)
+        for hid in ids:
+            self.remove_hypothesis(hid)
+        self.add_hypotheses([{"category": merged_hypothesis['category'], "content": merged_hypothesis['content'], "prior": total_prior}])
+    
     def top_p_retrieve(self, p: float = 0.8, max_k: int = 10) -> List[Hypothesis]:
         prior_sum = sum(self.global_prior.values())
         if prior_sum == 0:
