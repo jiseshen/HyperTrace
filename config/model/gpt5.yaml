@@ -1,0 +1,11 @@
+model: "gpt-5-nano"
+max_tokens: 128
+temperature: 0.0
+reasoning_effort: "minimal"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5
+completion_window: "24h"
+poll_interval: 60.0
+timeout: null

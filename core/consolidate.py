@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 import numpy as np
 
@@ -38,10 +38,11 @@ def deduplicate_group(group: List[str], context: TracerContext):
     merged_hypothesis = context.model.generate(merge_prompt, cfg=context.generation_config)["output"]
     context.hypothesis_set.merge_hypotheses(group, {"category": category, "content": merged_hypothesis})
 
-def consolidate_hypotheses(conversation_history: List[Turn], context: TracerContext):
+def consolidate_hypotheses(conversation_history: List[Turn], context: TracerContext) -> Dict[str, Any]:
     importance = compute_importance(len(conversation_history), context.current_belief.normalized_entropy())
     context.belief.consolidate(importance, context.tracer_config.consolidate_alpha)
     similar_groups = context.hypothesis_set.get_similarity_groups(context.tracer_config.similarity_threshold)
     for group in similar_groups:
         if len(group) > 1:
             deduplicate_group(group, context)
+    return {"groups": [group for group in similar_groups if len(group) > 1], "importance": importance}

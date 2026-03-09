@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from pydantic import BaseModel, create_model, conlist
 from core.utils import TracerContext
 from data.base import Turn
@@ -65,7 +65,7 @@ class CandidateSchema(BaseModel):
 class SkipSchema(BaseModel):
     skip: Literal[True]
 
-def preprocess_candidates(conversation_history: List[Turn], context: TracerContext) -> Optional[str]:
+def preprocess_candidates(conversation_history: List[Turn], context: TracerContext) -> Tuple[str, Optional[Dict[str, Any]]]:
     current_turn = conversation_history[-1]
     preprocess_prompt = PREPROCESSING_PROMPT.format(
         user_message=current_turn.user_message,
@@ -75,17 +75,17 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
     Schema = Union[create_model(
         "PreprocessSchema",
         skip=(Literal[True], ...),
-        candidates=(conlist(CandidateSchema, min_length=0, max_length=0), ...),
+        candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...),
     )]
     try:
         output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config)["output"]
     except Exception as e:
         print(f"Preprocessing failed with error: {e}")
-        return None
+        return "", {"success": False, "reason": str(e)}
     if output["skip"]:
-        return None
+        return "", {"success": True, "skip": True, "reason": output["rationale"]}
     else:
         previews = [c["preview"] for c in output["candidates"]]
         return "\n".join(
             [f"{i}. {"[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"} Preview: {preview} Content: {candidate[:50]}...{candidate[-50:]}" for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates))]
-        )
+        ), {"success": True, "skip": False}

@@ -3,7 +3,7 @@ from pydantic import BaseModel, create_model, conlist
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
 from .utils import TracerContext
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 
 INITIALIZATION_PROMPT = """
@@ -74,7 +74,7 @@ def initialize_hypothesis(
     conversation_history: List[Turn],
     candidates: str,
     context: TracerContext
-    ):
+    ) -> Dict[str, Any]:
     """Initialize a working belief with retrieved hypotheses. Return None if skipping this turn."""
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
@@ -98,7 +98,7 @@ def initialize_hypothesis(
         output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config)["output"]
     except Exception as e:
         print(f"Initialization failed with error: {e}")
-        return
+        return {"success": False, "reason": str(e)}
     new_hypotheses: List[Hypothesis] = []
     reused_hypotheses: List[Hypothesis] = []
     for h in output['hypotheses']:
@@ -122,3 +122,4 @@ def initialize_hypothesis(
         priors=priors
     )
     context.update_belief(belief)
+    return {"success": True}

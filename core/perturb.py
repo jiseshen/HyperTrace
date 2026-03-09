@@ -95,18 +95,22 @@ def perturb_hypotheses(conversation_history: List[Turn], candidates: str, simila
     axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
     axes = context.model.generate(axes_prompt, cfg=context.generation_config)["output"]
     perturbed_hids, perturbed_weights = [], []
+    invalid = 0
     for group in similar_groups:
         new_hids, new_weights, new_axes = perturb_group(group=group, axes=axes, conversation_history=conversation_history, candidates=candidates, context=context)
         perturbed_hids.extend(new_hids)
         perturbed_weights.extend(new_weights)
         axes += f", {new_axes}" if new_axes else ""
+        if new_axes is None:
+            invalid += 1
     perturbed_belief = WorkingBelief(ids=perturbed_hids, priors=perturbed_weights, repo=context.hypothesis_set)
-    return perturbed_belief
+    context.update_belief(perturbed_belief)
+    return {"groups": [group for group in similar_groups if len(group) > 1], "invalid": invalid}
     
 def perturb_group(group: List[int], axes: str, conversation_history: List[Turn], candidates: str, context: TracerContext) -> Tuple[List[str], List[float], Optional[str]]:
     if len(group) == 1:
         hyps, weights = context.belief[group]
-        return [hyps[0].id], weights.tolist(), None
+        return [hyps[0].id], weights.tolist(), ""
     prev_turns = conversation_history[-context.tracer_config.max_history_turns:]
     current_turn = conversation_history[-1]
     hypotheses, weights = context.belief[group]

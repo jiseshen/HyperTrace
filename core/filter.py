@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 from pydantic import BaseModel, Field
 from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief, Update, Hypothesis
@@ -73,7 +73,7 @@ class FilterSchema(BaseModel):
     likelihood: float = Field(ge=0.0, le=1.0)
 
 
-def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext):
+def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Dict[str, Any]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     hypotheses = context.belief.get_hypotheses()
@@ -87,13 +87,17 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
         ) for h in hypotheses
     ]
     
-    likelihood_outputs = [o["output"] if not isinstance(o, Exception) else None for o in context.model.async_generate(likelihood_prompts, schema=FilterSchema, cfg=context.generation_config) ]
+    outputs = [o["output"] if not isinstance(o, Exception) else None for o in context.model.async_generate(likelihood_prompts, schema=FilterSchema, cfg=context.generation_config) ]
     updates = []
-    for h, output in zip(hypotheses, likelihood_outputs):
-        likelihood = output['likelihood'] if output else 0.5
+    invalid = 0
+    for h, o in zip(hypotheses, outputs):
+        if o is None:
+            invalid += 1
+        likelihood = o['likelihood'] if o else 0.5
         update = Update(
             id=h.id,
             likelihood=likelihood
         )
         updates.append(update)
     context.belief.update(updates=updates)
+    return {"invalid": invalid}

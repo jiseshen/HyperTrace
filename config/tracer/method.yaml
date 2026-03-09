@@ -1,0 +1,7 @@
+n_hypotheses: 5
+consolidate_alpha: 0.5
+similarity_threshold: 0.8
+perturb_alpha: 0.3
+summary_threshold: 0.1
+max_history_turns: 3
+profile_top_p: 0.8

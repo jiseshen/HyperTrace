@@ -38,24 +38,26 @@ class PreferenceTracer:
             tracer_config=tracer_cfg,
             generation_config=generation_cfg
         )
-        self.results = []
     
     def trace(self, user_data: UserData):
+        records = {"user": user_data.user_id, "turns": []}
         for conversation in user_data.conversations:
-            results = []
             initialized = False
             conversation_history = []
             for turn in conversation.turns:
+                turn_record = {}
                 conversation_history.append(turn)
                 working_profile = summarize_hypotheses(conversation_history, self.context)
+                turn_record["summary"] = working_profile
                 # Online Evaluation
-                choice = predict_choice(
+                turn_record["choice_metrics"] = predict_choice(
                     model=self.evaluation_model, 
                     conversation_history=conversation_history, 
                     profile=working_profile, 
                     generation_cfg=self.evaluation_config
                 )
-                generation = evaluate_generation(
+                
+                turn_record["generation_metrics"] = evaluate_generation(
                     model=self.evaluation_model, 
                     conversation_history=conversation_history, 
                     profile=working_profile,
@@ -63,24 +65,34 @@ class PreferenceTracer:
                 )
 
                 # Online Update
-                candidates = preprocess_candidates(conversation_history, self.context)
-                if candidates is None:
-                    results.append({"turn": turn, "skipped": True})
+                candidates, preprocess_status = preprocess_candidates(conversation_history, self.context)
+                turn_record["preprocess"] = preprocess_status
+                if not preprocess_status["success"] or preprocess_status["skip"]:
+                    records["turns"].append(turn_record)
                     continue
                 if not initialized:
-                    initialize_hypothesis(conversation_history, candidates, self.context)
-                    initialized = True
+                    initialize_record = initialize_hypothesis(conversation_history, candidates, self.context)
+                    turn_record["initialize"] = initialize_record
+                    if not (initialized := initialize_record["success"]):
+                        records["turns"].append(turn_record)
+                        continue
                 else:
-                    branch_hypotheses(conversation_history, candidates, self.context)
-                weight_hypothesis(conversation_history, candidates, self.context)
-                if self.context.belief.ess() < self.tracer_config.n_hypotheses / 2:
+                    branch_status = branch_hypotheses(conversation_history, candidates, self.context)
+                    turn_record["branch"] = branch_status
+                weight_status = weight_hypothesis(conversation_history, candidates, self.context)
+                turn_record["weight"] = weight_status
+                if (ess := self.context.belief.ess()) < self.tracer_config.n_hypotheses / 2:
                     similar_groups = self.context.belief.resample()
-                    perturb_hypotheses(conversation_history, candidates, similar_groups, self.context)
                 else:
                     similar_groups = self.context.belief.get_similarity_groups(threshold=self.tracer_config.similarity_threshold)
-                    perturb_hypotheses(conversation_history, candidates, similar_groups, self.context)
-            consolidate_hypotheses(conversation_history, self.context)
+                turn_record["perturb"] = perturb_hypotheses(conversation_history, candidates, similar_groups, self.context)
+                turn_record["perturb"]["ess"] = ess
+                records["turns"].append(turn_record)
+            records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, self.context)
         # Evaluate profile alignment    
         profile = summarize_profile(self.context)
-        profile_alignment = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.evaluation_config)
+        records["profile_metrics"] = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.evaluation_config)
+        
+        return records
+        
         

@@ -2,7 +2,7 @@ from hypothesis_set import WorkingBelief, Update
 from pydantic import BaseModel
 from .utils import TracerContext, compute_importance
 from data import Turn
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from .initialize import initialize_hypothesis
 
 
@@ -91,7 +91,7 @@ class BranchSchema(BaseModel):
     relevance: Literal["direct", "partial", "none"]
     updated_hypothesis: UpdatedHypothesisSchema
 
-def branch_hypotheses(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Optional[WorkingBelief]:
+def branch_hypotheses(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Optional[Dict[str, Any]]:
     """Propagate hypotheses based on new user message. Skip if no usable evidence, reinitialize if irrelevant, or simply revise."""
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
@@ -109,11 +109,13 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
     for output in outputs:
         if output and output['action'] == 'replace':
             replace += 1
+        if output is None:
+            invalid += 1
     if replace > len(outputs) / 2:  # Vote to reinitialize
         context.belief.consolidate(compute_importance(len(conversation_history), context.current_belief.normalized_entropy()), context.tracer_config.consolidate_alpha)
         conversation_history[:] = conversation_history[-1:]  # Treat as a new conversation
-        initialize_hypothesis(conversation_history, candidates, context)
-        return
+        init_status = initialize_hypothesis(conversation_history, candidates, context)
+        return {"reinit": True, **init_status, "replace": replace, "invalid": invalid}
     updates = []
     revised_ids = []
     revised_weights = []
@@ -121,6 +123,10 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
     replaced_weights = []
     new = []
     for i, (h, o) in enumerate(zip(current_hypotheses, outputs)):
+        if o is None:
+            updates.append(Update(id=h.id, likelihood=0.5))
+            revised_ids.append(h.id)
+            revised_weights.append(current_weights[i])
         if o['action'] == 'revise':
             new_cat = o['updated_hypothesis']['category']
             new_cat = h.category if new_cat in h.category else h.category + ", " + new_cat
@@ -138,4 +144,4 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
     all_ids = revised_ids + new_ids
     all_weights = revised_weights + [0.5 for _ in new_ids]
     context.update_belief(WorkingBelief(ids=all_ids, priors=all_weights, repo=context.hypothesis_set))
-    
+    return {"replace": replace, "invalid": invalid}
