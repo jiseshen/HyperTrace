@@ -1,0 +1,3 @@
+name: "gpt5-nano-main"
+main_model: "<model/gpt5.yaml>"
+eval_model: "<model/gpt5.yaml>"

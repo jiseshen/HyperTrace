@@ -1,9 +1,10 @@
 from hypothesis_set import WorkingBelief, Update
 from pydantic import BaseModel
-from .utils import TracerContext, compute_importance
+from .utils import TracerContext
 from data import Turn
 from typing import Any, Dict, List, Literal, Optional
 from .initialize import initialize_hypothesis
+from .consolidate import compute_importance
 
 
 BRANCHING_PROMPT = """

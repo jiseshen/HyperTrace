@@ -121,7 +121,8 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     K = len(group) - 1
     merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
     merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config)["output"]
-    # TODO: Micro-rejuvenation
+    # TODO: Micro-rejuvenation 
+    # TODO: retrieve stored hypotheses
     perturb_prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         user_message=current_turn.user_message,
@@ -146,14 +147,10 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     for h in hypotheses:
         context.hypothesis_set.remove_hypothesis(h.id)
     new_hids = context.hypothesis_set.add_hypotheses([
-        {"category": category, "content": merged_hypothesis, "prior": merged_prior}
+        {"category": category, "content": merged_hypothesis, "prior": merged_prior},
+        {"category": current_category, "content": ph['content']} for ph in proposed_hypotheses
     ])
     new_weights = [merged_weight]
-    proposed_ids = context.hypothesis_set.add_hypotheses([
-        {"category": current_category, "content": ph['content']}
-        for ph in proposed_hypotheses
-    ])
-    new_hids.extend(proposed_ids)
-    new_weights.extend([(total_weight - merged_weight) / len(proposed_ids)] * len(proposed_ids))
+    new_weights.extend([(total_weight - merged_weight) / len(proposed_hypotheses)] * len(proposed_hypotheses))
     return new_hids, new_weights, new_axes
     

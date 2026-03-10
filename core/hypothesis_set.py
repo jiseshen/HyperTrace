@@ -1,9 +1,10 @@
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union, overload
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, overload
 from collections import OrderedDict
 from dataclasses import dataclass
 import logging
 import faiss
 import numpy as np
+from .utils import embed
 
 logger = logging.getLogger(__name__)
 
@@ -23,70 +24,6 @@ class Update:
     content: Optional[str] = None
     likelihood: float = None
     
-@dataclass
-class RepoConfig:
-    backend: str = "openai"
-    model: str = "text-embedding-3-small"
-    dim: int = 1536
-    metric: str = "ip"
-    capacity: int = 1000
-
-def embed(
-    text: str,
-    *,
-    backend: str = "openai",
-    model: str = "text-embedding-3-small",
-) -> np.ndarray:
-    """
-    Embed an experience into a vector.
-
-    Args:
-        experience: Experience dict or string to embed.
-        backend: "openai" or "transformer".
-        model: Embedding model name.
-
-    Returns:
-        1D numpy float32 vector.
-    """
-    if backend == "openai":
-        from openai import OpenAI
-        client = OpenAI()
-        response = client.embeddings.create(
-            model=model,
-            input=text,
-            encoding_format="float",
-        )
-        vec = np.array(response.data[0].embedding, dtype=np.float32)
-        vec = vec / (np.linalg.norm(vec) + 1e-12)
-        return vec.reshape(1, -1)
-
-    elif "transformer" in backend:
-        import torch
-        from transformers import AutoTokenizer, AutoModel
-        tokenizer = AutoTokenizer.from_pretrained(model)
-        encoder = AutoModel.from_pretrained(model)
-
-        inputs = tokenizer(
-            text,
-            return_tensors="pt",
-            truncation=True,
-            max_length=512,
-        )
-
-        with torch.inference_mode():
-            outputs = encoder(**inputs)
-
-        hidden = outputs.last_hidden_state
-        mask = inputs["attention_mask"].unsqueeze(-1)
-        pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
-
-        vec = pooled[0].cpu().numpy().astype(np.float32)
-        vec = vec / (np.linalg.norm(vec) + 1e-12)
-        return vec.reshape(1, -1)
-
-    else:
-        raise ValueError(f"Unknown embedding backend: {backend}")
-
 
 class VectorStore:
     """
@@ -125,7 +62,7 @@ class VectorStore:
 
         self.index = faiss.IndexIDMap2(base)
 
-        self.contents: Dict[int, Dict[str, Any]] | Dict[int, str] = {}
+        self.contents: Dict[int, str] = {}
         if self.use_keys:
             self.key2id: Dict[str, int] = {}
             self.id2key: Dict[int, str] = {}
@@ -135,40 +72,43 @@ class VectorStore:
 
     def store(
         self,
-        content: str,
-        key: Optional[str] = None,
+        contents: List[str],
+        keys: Optional[List[str]] = None,
     ) -> None:
         """
-        Store a new hypothesis.
+        Store a list of new hypotheses.
 
         Args:
             hypothesis: Hypothesis dict.
         """
-        idx = self.next_id
         if self.use_keys:
-            if key is None:
-                raise ValueError("Key must be provided when use_keys is True.")
-            if key in self.key2id:
-                logger.warning(f"Key {key} already exists. Updating existing entry.")
-                self.update(key, content)
-                return
-            self.key2id[key] = idx
-            self.id2key[idx] = key
-        self.next_id += 1
-        
-        if len(self.contents) >= self.max_memories:
+            if keys is None:
+                raise ValueError("Keys must be provided when use_keys is True.")
+            for k in keys:
+                if k in self.key2id:
+                    raise ValueError(f"Key {k} already exists in vector store.")
+        while len(self.contents) + len(contents) >= self.max_memories:
             self.delete(self.lru_order.popitem(last=False)[0])
         
         vec = embed(
-            content,
+            contents,
             backend=self.backend,
             model=self.model,
         )
-
-        self.index.add_with_ids(vec, np.asarray([idx], dtype=np.int64))
-        self.contents[idx] = content
-        self.lru_order[idx] = None
-        self.lru_order.move_to_end(idx)
+        indices = []
+        for i, content in enumerate(contents):
+            idx = self.next_id
+            self.next_id += 1
+            indices.append(idx)
+            if self.use_keys:
+                key = keys[i]
+                self.key2id[key] = idx
+                self.id2key[idx] = key
+            self.contents[idx] = content
+            self.lru_order[idx] = None
+            self.lru_order.move_to_end(idx)
+        self.index.add_with_ids(vec, np.asarray(indices, dtype=np.int64))
+            
 
     def retrieve(
         self,
@@ -195,7 +135,7 @@ class VectorStore:
         )
         k = min(top_k, len(self.contents))
         scores, indices = self.index.search(vec, k)
-        retrieved_hypotheses: List[str] = []
+        retrieved_hypotheses: List[str | int] = []
         retrieval_scores: List[float] = []
         for idx, score in zip(indices[0], scores[0]):
             if idx < 0:
@@ -211,7 +151,9 @@ class VectorStore:
                 retrieval_scores.append(float(score))
         return retrieved_hypotheses, retrieval_scores
 
-    def get_index(self, id: int | str) -> int:
+    def get_index(self, id: int | str | List[int] | List[str]) -> int | List[int]:
+        if isinstance(id, list):
+            return [self.get_index(i) for i in id]
         if self.use_keys and isinstance(id, str):
             if id in self.key2id:
                 return self.key2id[id]
@@ -235,19 +177,20 @@ class VectorStore:
                 self.key2id.pop(key)
         self.lru_order.pop(idx, None)
 
-    def update(self, id: int | str, content: str) -> None:
-        idx = self.get_index(id)
-        if idx not in self.contents:
-            raise ValueError(f"ID {id} not found in vector store.")
+    def update(self, ids: List[int] | List[str], contents: List[str]) -> None:
+        idx = self.get_index(ids)
+        for i, content in zip(idx, contents):
+            if i not in self.contents:
+                raise ValueError(f"ID {id} not found in vector store.")
+            self.contents[i] = content
+            self.lru_order.move_to_end(i)
+        self.index.remove_ids(np.asarray(idx, dtype=np.int64))
         vec = embed(
-            content,
+            contents,
             backend=self.backend,
             model=self.model,
         )
-        self.index.remove_ids(np.asarray([idx], dtype=np.int64))
-        self.index.add_with_ids(vec, np.asarray([idx], dtype=np.int64))
-        self.contents[idx] = content
-        self.lru_order.move_to_end(idx)
+        self.index.add_with_ids(vec, np.asarray(idx, dtype=np.int64))
 
     def similarity(self, id1: int | str, id2: int | str) -> float:
         idx1 = self.get_index(id1)
@@ -257,11 +200,11 @@ class VectorStore:
         self.index.reconstruct(idx1, vec1[0])
         self.index.reconstruct(idx2, vec2[0])
         if self.metric == "ip":
-            return float(np.dot(vec1, vec2.T))
+            return float((vec1 @ vec2.T).item())
         elif self.metric == "l2":
             diff = vec1 - vec2
-            return float(np.exp(-np.dot(diff, diff)))
-        
+            return float(np.exp(-diff @ diff.T).item())
+
     def similarity_all(self) -> Tuple[np.ndarray, Optional[List[str]]]:
         n = len(self.contents)
         X = np.zeros((n, self.dim), dtype=np.float32)
@@ -296,15 +239,18 @@ class HypothesisSet:
     def __init__(
         self,
         *,
-        cfg: Optional[RepoConfig] = None
+        backend: str = "openai",
+        model: str = "text-embedding-3-small",
+        dim: int = 1536,
+        metric: str = "ip",
+        capacity: int = 1000,
     ) -> None:
-        cfg = cfg or RepoConfig()
         self.vector_store = VectorStore(
-            backend=cfg.backend,
-            model=cfg.model,
-            dim=cfg.dim,
-            metric=cfg.metric,
-            capacity=cfg.capacity,
+            backend=backend,
+            model=model,
+            dim=dim,
+            metric=metric,
+            capacity=capacity,
             use_keys=True,
         )
         self.global_prior: Dict[str, float] = {}
@@ -328,6 +274,7 @@ class HypothesisSet:
         hypotheses: List[Dict]
     ):
         hids = []
+        contents = []
         for hyp in hypotheses:
             cat = hyp['category']
             self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
@@ -342,15 +289,16 @@ class HypothesisSet:
                 self.global_prior[hid] = hyp['prior']
             else:
                 self.global_prior[hid] = 1.0
-            self.vector_store.store(h.content, key=hid)
+            contents.append(h.content)
             hids.append(hid)
+        self.vector_store.store(contents, keys=hids)
         return hids
             
     def retrieve_hypotheses(
         self,
         query: str,
         top_k: int = 5,
-    ) -> List[Hypothesis]:
+    ) -> Tuple[List[str], List[float]]:
         retrieved, _ = self.vector_store.retrieve(query, top_k=top_k, return_keys=True)
         priors = [self.global_prior.get(hid) for hid in retrieved]
         return retrieved, priors
@@ -359,15 +307,25 @@ class HypothesisSet:
         self,
         updates: List[Union[Update, Hypothesis]]
     ):
+        contents = []
+        hids = []
+        changed_ids = []
+        changed_contents = []
         for update in updates:
             hid = update.id
+            hids.append(hid)
             hyp = self.hypotheses[hid]
+            
             if update.category is not None:
                 hyp.category = update.category
             if update.content is not None:
+                if hyp.content != update.content:
+                    changed_ids.append(hid)
+                    changed_contents.append(update.content)
                 hyp.content = update.content
-                self.vector_store.update(hid, hyp.content)
-            
+            contents.append(hyp.content)
+        self.vector_store.update(changed_ids, changed_contents)
+        
     def get_similarity(
         self,
         key1: str,
@@ -382,6 +340,7 @@ class HypothesisSet:
         if key in self.hypotheses:
             del self.hypotheses[key]
             self.vector_store.delete(key)
+            del self.global_prior[key]
             
     def get_similarity_groups(self, threshold: float = 0.8) -> List[List[str]]:
         sim_matrix, id_list = self.vector_store.similarity_all()
@@ -428,7 +387,7 @@ class HypothesisSet:
         prior_sum = sum(self.global_prior.values())
         if prior_sum == 0:
             return []
-        normalized_priors = {hid: prior / prior_sum for hid, prior in self.global_prior}
+        normalized_priors = {hid: prior / prior_sum for hid, prior in self.global_prior.items()}
         sorted_hids = sorted(normalized_priors, key=normalized_priors.get, reverse=True)
         cumulative_prob = 0.0
         selected_hids = []
@@ -448,6 +407,7 @@ class WorkingBelief:
         repo: HypothesisSet
     ):
         self.ids = ids
+        self.hid2id = {hid: i for i, hid in enumerate(ids)}
         self.weights = np.array(priors, dtype=np.float32)
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo = repo
@@ -479,9 +439,10 @@ class WorkingBelief:
         return [self.repo.hypotheses[hid] for hid in self.ids]
     
     def update(self, updates: List[Update]):
-        if all(update.likelihood is not None for update in updates):
-            for i, update in enumerate(updates):
-                self.weights[i] *= update.likelihood
+        for update in updates:
+            if update.likelihood is not None:
+                i = self.hid2id[update.id]
+                self.weights[i] = update.likelihood
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo.update_hypotheses(updates)
     

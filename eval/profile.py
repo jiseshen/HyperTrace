@@ -1,6 +1,7 @@
 from model import BaseLM, GenerationConfig
-from typing import List, Dict
-import json
+from typing import Dict
+from pydantic import BaseModel, Field
+from .utils import text_similarity
 
 
 COMPARISON_PROMPT = """
@@ -27,7 +28,7 @@ Key principles:
 
 Evaluate four aspects (each 1 to 10):
 A) Survey Consistency
-- Agreement with explicit survey facts:
+- Agreement with explicit survey facts: user's stated values and expectations.
 - Penalize direct conflicts.
 
 B) Key Aspect Match (prioritized aspects)
@@ -45,13 +46,13 @@ Scoring rubric:
 The score ranges from 1 (poor) to 10 (excellent) for each aspect.
 
 Output ONLY the final JSON:
-{
+{{
   "reason": "A brief explanation of scoring, citing concrete matches/mismatches and analyzing internal plausibility.",
   "aspects_covered": ["aspect1", "aspect2", ...],
   "survey_consistency": 1-10,
   "key_aspect_match": 1-10,
   "internal_plausibility": 1-10,
-}
+}}
 
 Now evaluate:
 
@@ -62,20 +63,26 @@ Now evaluate:
 {profile}
 """
 
+class ProfileEvalSchema(BaseModel):
+    survey_consistency: float = Field(ge=1.0, le=10.0)
+    key_aspect_match: float = Field(ge=1.0, le=10.0)
+    internal_plausibility: float = Field(ge=1.0, le=10.0)
 
-def profile_score(model: BaseLM, profile: str, survey: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
+
+def profile_score(eval_model: BaseLM, profile: str, survey: str, evaluation_cfg: GenerationConfig = None) -> Dict[str, float]:
+    similarity = text_similarity(profile, survey)
     prompt = COMPARISON_PROMPT.format(profile=profile, survey=survey)
-    retries = 0
-    while True:
-        response = model.generate(prompt, generation_cfg=generation_cfg)["output"]
-        try:
-            evaluation = json.loads(response)
-            return {
-                "survey_consistency": evaluation["survey_consistency"],
-                "key_aspect_match": evaluation["key_aspect_match"],
-                "internal_plausibility": evaluation["internal_plausibility"]
-            }
-        except Exception as e:
-            retries += 1
-            if retries > generation_cfg.max_retries:
-                raise ValueError(f"Failed to parse evaluation response after {generation_cfg.max_retries} attempts. Last response: {response} Error: {e}.")
+
+    try:
+        response = eval_model.generate(prompt, schema=ProfileEvalSchema, generation_cfg=evaluation_cfg)["output"]
+    except Exception as e:
+        return {"survey_consistency": None, "key_aspect_match": None, "internal_plausibility": None, "overall": None, "similarity": similarity, "error": str(e)}
+    overall_score = 0.4 * response["survey_consistency"] + 0.4 * response["key_aspect_match"] + 0.2 * response["internal_plausibility"]
+    return {
+        "survey_consistency": response["survey_consistency"],
+        "key_aspect_match": response["key_aspect_match"],
+        "internal_plausibility": response["internal_plausibility"],
+        "overall": overall_score,
+        "similarity": similarity
+    }
+    

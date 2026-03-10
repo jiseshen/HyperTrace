@@ -1,7 +1,8 @@
-import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 from model import BaseLM, GenerationConfig
+from pydantic import BaseModel, Field
 from data import Turn
+from .utils import text_similarity, relative_similarity_score
 
 GENERATE_PROMPT = """
 You are an assistant that adapts responses to a user's preferences and values.
@@ -111,34 +112,47 @@ Output JSON only:
 {adapted}
 """
 
+class GenSchema(BaseModel):
+    response: str
 
-def evaluate_generation(model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
+class EvalSchema(BaseModel):
+    score: int = Field(ge=1, le=10)
+
+
+def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: Optional[GenerationConfig] = None, eval_model: Optional[BaseLM] = None, evaluation_cfg: Optional[GenerationConfig] = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     current_message = current_turn.user_message
     generate_prompt = GENERATE_PROMPT.format(profile=profile, prev_turns=prev_turns, current_message=current_message)
-    
-    retries = 0
-    while True:
-        try:
-            generate_output = model.generate(
-                prompt=generate_prompt,
-                generation_config=generation_cfg
-            )["output"]
-            adapted_response = json.loads(generate_output)["response"]
-            evaluate_prompt = EVALUATE_PROMPT.format(
-                current_turn=current_turn.format(include_candidates=True, include_choice=True),
-                adapted=adapted_response
-            )
-            evaluate_output = model.generate(             
-                prompt=evaluate_prompt,
-                generation_config=generation_cfg
-            )["output"]
-            evaluation = json.loads(evaluate_output)
-            return {
-                "generation_score": evaluation["score"],
-            }
-        except Exception as e:
-            retries += 1
-            if retries > generation_cfg.max_retries:
-                raise ValueError(f"Failed to evaluate generation after {generation_cfg.max_retries} attempts. Error: {e}")
+    if eval_model is None:
+        eval_model = gen_model
+    if evaluation_cfg is None:
+        evaluation_cfg = generation_cfg
+    try:
+        generate_output = gen_model.generate(
+            prompt=generate_prompt,
+            schema=GenSchema,
+            generation_config=generation_cfg,
+        )["output"]
+    except Exception as e:
+        return {"gpt_score": 1.0, "similarity_score": 0.0, "relative_score": 0.0, "error": "Generation: " + str(e)}
+    adapted_response = generate_output["response"]
+    relative_score = relative_similarity_score(adapted_response, current_turn.candidates, current_turn.chosen_idx)
+    similarity_score = text_similarity(adapted_response, current_turn.chosen)
+    evaluate_prompt = EVALUATE_PROMPT.format(
+        current_turn=current_turn.format(include_candidates=True, include_choice=True),
+        adapted=adapted_response
+    )
+    try:
+        evaluate_output = eval_model.generate(             
+            prompt=evaluate_prompt,
+            schema=EvalSchema,
+            generation_config=evaluation_cfg
+        )["output"]
+    except Exception as e:
+        return {"gpt_score": 5.0, "similarity_score": similarity_score, "relative_score": relative_score, "error": "Evaluation: " + str(e)}
+    return {
+        "gpt_score": evaluate_output["score"], 
+        "similarity_score": similarity_score,
+        "relative_score": relative_score,
+    }

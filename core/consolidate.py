@@ -3,8 +3,7 @@ from typing import Any, Dict, List
 import numpy as np
 
 from data.base import Turn
-from .utils import TracerContext, compute_importance
-from .hypothesis_set import Hypothesis, WorkingBelief
+from .utils import TracerContext
 
 
 CONSOLIDATE_PROMPT = """

@@ -1,6 +1,6 @@
 from typing import Optional
 from .utils import TracerConfig, TracerContext
-from .hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief, RepoConfig
+from .hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief, EmbedConfig
 from data import Conversation, Turn, UserData
 from model import BaseLM, GenerationConfig
 
@@ -22,7 +22,7 @@ class PreferenceTracer:
         model: BaseLM,
         generation_cfg: GenerationConfig, 
         tracer_cfg: TracerConfig, 
-        repo_cfg: RepoConfig,
+        repo_cfg: EmbedConfig,
         evaluation_model: Optional[BaseLM] = None,
         evaluation_cfg: Optional[GenerationConfig] = None
     ):
@@ -51,10 +51,10 @@ class PreferenceTracer:
                 turn_record["summary"] = working_profile
                 # Online Evaluation
                 turn_record["choice_metrics"] = predict_choice(
-                    model=self.evaluation_model, 
+                    model=self.model, 
                     conversation_history=conversation_history, 
                     profile=working_profile, 
-                    generation_cfg=self.evaluation_config
+                    generation_cfg=self.base_generation_config
                 )
                 
                 turn_record["generation_metrics"] = evaluate_generation(

@@ -1,3 +1,4 @@
+backend: "openai"
 model: "gpt-5-nano"
 max_tokens: 128
 temperature: 0.0
