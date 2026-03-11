@@ -89,11 +89,14 @@ class PerturbedHypothesisSchema(BaseModel):
     content: str
     novel_axis: str
 
+AXIS_BUDGET = 64
+UNIT_PERTURB_BUDGET = 128
+
 
 def perturb_hypotheses(conversation_history: List[Turn], candidates: str, similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
     hypotheses = context.belief.get_hypotheses()
     axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
-    axes = context.model.generate(axes_prompt, cfg=context.generation_config)["output"]
+    axes = context.model.generate(axes_prompt, cfg=context.generation_config, max_tokens=AXIS_BUDGET)["output"]
     perturbed_hids, perturbed_weights = [], []
     invalid = 0
     for group in similar_groups:
@@ -119,8 +122,9 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     merged_prior = max([context.hypothesis_set.global_prior[h.id] for h in hypotheses])
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     K = len(group) - 1
+    budget = UNIT_PERTURB_BUDGET * K
     merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
-    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config)["output"]
+    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=budget)["output"]
     # TODO: Micro-rejuvenation 
     # TODO: retrieve stored hypotheses
     perturb_prompt = PERTURB_PROMPT.format(

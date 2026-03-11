@@ -18,18 +18,19 @@ Given:
 - Previously retrieved hypotheses (may be empty)
 
 Internally:
-- Identify concrete differences between chosen and rejected responses.
-- Determine which differences likely drove the user's choice.
-- Only rely on differences clearly supported by evidence.
+- Analyze primarily the differences among the candidate responses.
+- For hypotheses, focus on conversational style and underlying value preferences rather than specific topics.
+- Use the user message only as auxiliary evidence, when it clearly provides explicit feedback to previous interaction or preference signals.
 
 Then:
 
 1. Identify the category/topic of the current conversation.
-2. Produce exactly {n_hypotheses} stable user preference hypotheses:
+   This category is used only for organizing and retrieving hypotheses in the library.
+
+2. Propose exactly {n_hypotheses} stable user preference hypotheses:
+   - Each hypothesis should focus on a different aspect of preference or value that could explain the user's choice.
    - Reuse and revise relevant retrieved hypotheses when appropriate.
    - Otherwise generate new hypotheses.
-   - Do not speculate beyond available evidence.
-   - Do not force-fit dimensions.
 
 Output Format
 
@@ -42,14 +43,14 @@ Return a JSON object:
       "id": "string (reuse existing ID or 'new-1')",
       "action": "reuse" | "new",
       "content": "revised or new hypothesis content",
-      "evidence": "short justification (optional)"
+      "evidence": "short justification (1-2 sentences) citing specific candidate differences or user message cues that support this hypothesis"
     }}
   ]
 }}
 
 Rules:
 - Output valid JSON only.
-- If the action is initialize, always include all required fields, and produce exactly {n_hypotheses} hypotheses.
+- Always include all required fields, and produce exactly {n_hypotheses} hypotheses.
 - Ground each hypothesis in explicit evidence from the comparison.
 
 Conversation History:
@@ -64,6 +65,8 @@ Candidate Responses:
 Previously Retrieved Hypotheses:
 {retrieved_hypotheses}
 """
+
+UNIT_INITIALIZE_BUDGET = 128
 
 class HypothesisSchema(BaseModel):
     id: str
@@ -93,9 +96,9 @@ def initialize_hypothesis(
         category=(str, ...),
         hypotheses=(conlist(HypothesisSchema, min_length=context.tracer_config.n_hypotheses, max_length=context.tracer_config.n_hypotheses), ...)
     )
-    
+    budget = UNIT_INITIALIZE_BUDGET * context.tracer_config.n_hypotheses
     try:
-        output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config)["output"]
+        output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
         print(f"Initialization failed with error: {e}")
         return {"success": False, "reason": str(e)}

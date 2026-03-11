@@ -1,9 +1,9 @@
 from openai import OpenAI, AsyncOpenAI, APIError, RateLimitError
-from .base import BaseLM
+from .base import BaseLM, GenerationConfig, GenerationOverrides
 from .utils import Parser, ParseError
 from pydantic import BaseModel
 from dataclasses import dataclass, replace
-from typing import Optional, Union, Tuple, List, Dict, Any
+from typing import Optional, Union, Tuple, List, Dict, Any, Unpack, Unpack
 import json
 import time
 import os
@@ -13,23 +13,8 @@ REASONING_PREFIXES = ("gpt-5", "o")
 REASONING_BUDGETS = {"none": 0, "minimal": 32, "low": 128, "medium": 256, "high": 1024}
 
 
-@dataclass(frozen=True)
-class GenerationConfig:
-    model: str = "gpt-5-nano"
-    max_tokens: int = 128
-    temperature: float = 0.0
-    reasoning_effort: str = "minimal"
-    reasoning_summary: Optional[str] = None
-    verbosity: str = "low"
-    max_retries: int = 3
-    retry_delay: float = 0.5
-    completion_window: str = "24h"
-    poll_interval: float = 60.0
-    timeout: Optional[float] = None
-    
-
 class OpenAIModel(BaseLM):
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, model: str = "gpt-4o"):
+    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, model: str = "gpt-5-nano"):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "empty")
         self.base_url = base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         self.default_cfg = GenerationConfig(model=model)
@@ -64,7 +49,7 @@ class OpenAIModel(BaseLM):
             kwargs["temperature"] = cfg.temperature
         return kwargs
     
-    def generate(self, prompt: str, schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, **overrides) -> Dict[str, str]:
+    def generate(self, prompt: str, schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, **overrides: Unpack[GenerationOverrides]) -> Dict[str, str]:
         cfg = self._resolve_cfg(cfg, overrides)
         retries = cfg.max_retries
         kwargs = self._build_responses_kwargs(prompt, cfg)
@@ -84,7 +69,7 @@ class OpenAIModel(BaseLM):
                 return {"output": output, "reasoning": resp.output[0].summary[0].text}
             return {"output": output}
     
-    async def async_generate(self, prompts: list[str], schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides) -> list[Union[Dict[str, str], Exception]]:
+    async def async_generate(self, prompts: list[str], schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides: Unpack[GenerationOverrides]) -> list[Union[Dict[str, str], Exception]]:
         cfg = self._resolve_cfg(cfg, overrides)
         sem = asyncio.Semaphore(concurrency)
         async def _one(prompt: str) -> Union[Dict[str, str], Exception]:
@@ -124,7 +109,7 @@ class OpenAIModel(BaseLM):
         cfg: Optional[GenerationConfig] = None,
         custom_ids: Optional[List[str]] = None,
         metadata: Optional[Dict[str, str]] = None,
-        **overrides
+        **overrides: Unpack[GenerationOverrides]
     ) -> str:
         """
         Submit a batch job for /v1/responses.

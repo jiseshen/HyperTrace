@@ -72,6 +72,8 @@ Output JSON only:
 class FilterSchema(BaseModel):
     likelihood: float = Field(ge=0.0, le=1.0)
 
+FILTER_BUDGET = 64
+
 
 def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Dict[str, Any]:
     prev_turns = conversation_history[:-1]
@@ -87,7 +89,7 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
         ) for h in hypotheses
     ]
     
-    outputs = [o["output"] if not isinstance(o, Exception) else None for o in context.model.async_generate(likelihood_prompts, schema=FilterSchema, cfg=context.generation_config) ]
+    outputs = [o["output"] if not isinstance(o, Exception) else None for o in context.model.async_generate(likelihood_prompts, schema=FilterSchema, cfg=context.generation_config, max_tokens=FILTER_BUDGET)]
     updates = []
     invalid = 0
     for h, o in zip(hypotheses, outputs):

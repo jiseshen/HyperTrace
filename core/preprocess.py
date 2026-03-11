@@ -58,6 +58,8 @@ Rules:
 {candidates}
 """
 
+UNIT_PREPROCESS_BUDGET = 64
+
 class CandidateSchema(BaseModel):
     i: int
     preview: str
@@ -77,8 +79,9 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
         skip=(Literal[True], ...),
         candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...),
     )]
+    budget = UNIT_PREPROCESS_BUDGET * n
     try:
-        output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config)["output"]
+        output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
         print(f"Preprocessing failed with error: {e}")
         return "", {"success": False, "reason": str(e)}

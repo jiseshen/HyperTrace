@@ -83,6 +83,8 @@ Current Hypothesis:
 {current_hypothesis}
 """
 
+BRANCH_BUDGET = 128
+
 class UpdatedHypothesisSchema(BaseModel):
     category: str
     content: str
@@ -105,7 +107,7 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             current_hypothesis=h.format()
         ) for h in current_hypotheses
     ]
-    outputs = [o["output"]  if not isinstance(o, Exception) else None for o in context.model.async_generate(prompts, schema=BranchSchema, cfg=context.generation_config)]
+    outputs = [o["output"]  if not isinstance(o, Exception) else None for o in context.model.async_generate(prompts, schema=BranchSchema, cfg=context.generation_config, max_tokens=BRANCH_BUDGET)]
     replace, invalid = 0, 0
     for output in outputs:
         if output and output['action'] == 'replace':

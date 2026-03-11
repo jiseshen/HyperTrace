@@ -17,12 +17,15 @@ Merge the cluster into ONE generalized hypothesis.
 - Preserve stable components strongly supported by the cluster.
 - Remove stylistic rephrasing and redundant details.
 - Keep it specific and evidence-grounded; do not invent new preferences.
+- Keep the length similar to the original hypotheses.
 
 Output ONLY the raw text of merged hypothesis without any explanation.
 
 [Cluster]
 {collapsed_cluster}
 """
+
+CONSOLIDATE_BUDGET = 128
 
 
 def compute_importance(conversation_length: int, entropy: float) -> float:
@@ -34,7 +37,7 @@ def deduplicate_group(group: List[str], context: TracerContext):
     hyps, _ = context.hypothesis_set[group]
     category = ", ".join(set(c for h in hyps for c in h.category.split(", ")))
     merge_prompt = CONSOLIDATE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hyps]))
-    merged_hypothesis = context.model.generate(merge_prompt, cfg=context.generation_config)["output"]
+    merged_hypothesis = context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=CONSOLIDATE_BUDGET)["output"]
     context.hypothesis_set.merge_hypotheses(group, {"category": category, "content": merged_hypothesis})
 
 def consolidate_hypotheses(conversation_history: List[Turn], context: TracerContext) -> Dict[str, Any]:

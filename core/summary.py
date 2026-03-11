@@ -56,6 +56,7 @@ Guidelines:
 {hypotheses}
 """
 
+SUMMARY_BUDGET = 256
 
 def summarize_hypotheses(conversation_history: List[Turn], context: TracerContext) -> str:
     prev_turns = conversation_history[:-1]
@@ -66,7 +67,7 @@ def summarize_hypotheses(conversation_history: List[Turn], context: TracerContex
         prev_turns="\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
         user_message=current_turn.user_message
     )
-    output = context.model.generate(prompt, cfg=context.generation_config)["output"]
+    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET)["output"]
     return output
 
 
@@ -75,5 +76,5 @@ def summarize_profile(context: TracerContext) -> str:
     prompt = PROFILE_PROMPT.format(
         hypotheses="\n".join([h.format() for h in top_hypotheses])
     )
-    output = context.model.generate(prompt, cfg=context.generation_config)["output"]
+    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=PROFILE_BUDGET)["output"]
     return output
