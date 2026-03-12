@@ -54,6 +54,7 @@ class PreferenceTracer:
                 else:
                     working_profile = ""
                 turn_record["summary"] = working_profile
+                
                 # Online Evaluation
                 turn_record["choice_metrics"] = predict_choice(
                     model=self.model, 
@@ -99,9 +100,12 @@ class PreferenceTracer:
                 records["turns"].append(turn_record)
             if conversation_history and initialized and context.current_belief is not None:
                 records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, context)
-        # Evaluate profile alignment    
-        profile = summarize_profile(context) if context.current_belief is not None else ""
-        records["profile_metrics"] = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.embed_config, self.evaluation_config)
+        # Evaluate profile alignment
+        if context.current_belief is not None:
+            profile = summarize_profile(context)
+            records["profile_metrics"] = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.embed_config, self.evaluation_config)
+        else:
+            records["profile_metrics"] = {"success": False, "reason": "Belief not initialized"}
         return records
         
         

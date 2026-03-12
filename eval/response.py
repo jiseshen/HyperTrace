@@ -100,10 +100,10 @@ Scoring rubric (1-10):
 1-2: Adapted strongly resembles Rejected.
 
 Output JSON only:
-{
+{{
   "reason": "2-3 sentences describing the key distinguishing signals and how Adapted compares.",
   "score": 1-10
-}
+}}
 
 [Interaction]
 {current_turn}
@@ -118,6 +118,8 @@ class GenSchema(BaseModel):
 class EvalSchema(BaseModel):
     score: int = Field(ge=1, le=10)
 
+GEN_BUDGET = 1024
+EVAL_BUDGET = 128
 
 def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], profile: str, embed_cfg: EmbedConfig, generation_cfg: Optional[GenerationConfig] = None, eval_model: Optional[BaseLM] = None, evaluation_cfg: Optional[GenerationConfig] = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
@@ -137,6 +139,7 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
             prompt=generate_prompt,
             schema=GenSchema,
             cfg=generation_cfg,
+            max_tokens=GEN_BUDGET
         )["output"]
     except Exception as e:
         return {"gpt_score": 1.0, "similarity_score": 0.0, "relative_score": 0.0, "error": "Generation: " + str(e)}
@@ -151,7 +154,8 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         evaluate_output = eval_model.generate(             
             prompt=evaluate_prompt,
             schema=EvalSchema,
-            cfg=evaluation_cfg
+            cfg=evaluation_cfg,
+            max_tokens=EVAL_BUDGET
         )["output"]
     except Exception as e:
         return {"gpt_score": 5.0, "similarity_score": similarity_score, "relative_score": relative_score, "error": "Evaluation: " + str(e)}

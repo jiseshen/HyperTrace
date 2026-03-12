@@ -68,11 +68,12 @@ Current interaction:
 {current_turn}
 """
 
+PREDICT_BUDGET = 128
+
 def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     gt_choice = current_turn.chosen_idx + 1
-    
     prompt = PREDICT_PROMPT.format(
         profile=profile,
         prev_turns='\n\n'.join([turn.format(include_candidates=False) for turn in prev_turns]),
@@ -84,7 +85,7 @@ def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str
     prediction = None
     while True:
         try:
-            prediction = model.generate(prompt, cfg=cfg)["output"]
+            prediction = model.generate(prompt, cfg=cfg, max_tokens=PREDICT_BUDGET)["output"]
             prediction_data = prediction if isinstance(prediction, dict) else json.loads(prediction)
             ranking = prediction_data.get('ranking')
             ranking = [int(r) for r in ranking]

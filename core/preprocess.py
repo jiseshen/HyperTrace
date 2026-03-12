@@ -1,56 +1,27 @@
-from typing import Any, Dict, List, Literal, Optional, Tuple
-from pydantic import BaseModel, create_model, conlist
+import asyncio
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union, Annotated
+from pydantic import BaseModel, create_model, conlist, TypeAdapter
 import logging
 from .utils import TracerContext
 from data.base import Turn
 
+SKIP_PROMPT = """
+You are a gating engine for an LLM personalization system.
+Your task is to determine whether the current user interaction contains preference-relevant signals worth extracting later.
 
-PREPROCESSING_PROMPT = """
-You are a preprocessing engine for an LLM personalization system.
-Convert raw candidate responses into a stable, compact representation that highlights preference-relevant differences.
+Important:
+- If the current user message is merely a greeting, acknowledgment, filler, or other phatic/social utterance with no substantive preference, value, stance, boundary, or constraint signal, then return skip=true, even if the candidate responses differ stylistically.
+- Do NOT skip merely because the content is sensitive, offensive, taboo, controversial, or politically charged. Such interactions may still contain important signals about values, stance, tone tolerance, safety boundaries, or preferred response framing.
 
-Inputs:
-- user_message
-- candidates (list of responses)
-
-Step 1 — Gate (skip decision)
-Return skip=true if BOTH hold:
-(A) The user message contains no actionable preference signal (e.g., greeting/ack only, or no constraints/refinements), AND
-(B) Candidate differences are NOT preference-relevant, meaning they are mainly correctness/completeness with no clear stylistic/structural/value contrast.
-
-If skip=true:
-- rationale: one short sentence
-- dimensions: []
-- candidates: []
-
-Step 2 — Dimensions (if not skipped)
-Identify 1-4 key dimensions that clearly differ across candidates.
-Use short canonical labels (e.g., "values", "information_density", "structure", "actionability", "tone", "framing", "abstraction") (Not exhaustive and do not force-fit).
-Only include dimensions with obvious contrast.
-
-Step 3 — Candidate previews (if not skipped)
-For each candidate, output a compact preview (<50 words) aligned to the contrasting dimensions.
-- The preview should focus on the most salient differences.
-- For each dimension listed in "dimensions", the preview must address how this candidate differs on that dimension.
-- You may add at most ONE extra detail not covered by the dimensions.
-You may cite representative parts of the candidate to highlight the differences, but do NOT restate the whole candidate.
+Return skip=true if EITHER holds:
+(A) The current user message is only a greeting / acknowledgment / filler and does not provide a meaningful preference, value, stance, boundary, or constraint signal.
+(B) Although the message is substantive, the differences among candidates are not meaningfully preference-relevant, and are mainly about correctness, completeness, or minor wording differences rather than tone, framing, values, structure, boundaries, or response strategy.
 
 Output JSON only:
 {{
-  "rationale": "a short justification about the skip decision and dimension identification",
-  "skip": boolean,
-  "dimensions": ["dimension 1", ...],
-  "candidates": [
-    {{"i": 0, "preview": "a brief preview for candidate 0"}},
-    {{"i": 1, "preview": "a brief preview for candidate 1"}},
-    ...
-  ]
+  "reason": "a short justification about why to skip or not",
+  "skip": boolean
 }}
-
-Rules:
-- Valid JSON only.
-- If skip=true, candidates must be [] and dimensions must be [].
-- You must keep the order of candidates as given.
 
 [user_message]
 {user_message}
@@ -59,7 +30,53 @@ Rules:
 {candidates}
 """
 
-UNIT_PREPROCESS_BUDGET = 64
+PREPROCESSING_PROMPT = """
+You are a preprocessing engine for an LLM personalization system.
+Convert raw candidate responses into a stable, compact representation that highlights preference-relevant differences.
+
+Inputs:
+- Current user message
+- A list of candidate responses
+
+Step 1 — Dimensions
+Identify 1-4 key dimensions that clearly differ across candidates.
+Use short canonical labels (e.g., "values", "information_density", "structure", "actionability", "tone", "framing", "abstraction") (Not exhaustive and do not force-fit).
+Only include dimensions with obvious contrast.
+
+Step 2 — Candidate previews
+For each candidate, output a compact preview (<50 words) aligned to the contrasting dimensions.
+- The preview should focus on the most salient differences.
+- For each dimension listed in "dimensions", the preview must address how this candidate differs on that dimension.
+- You may add at most ONE extra detail not covered by the dimensions.
+You may cite representative parts of the candidate to highlight the differences, but do NOT restate the whole candidate.
+
+Output JSON only:
+{{
+  "reason": "a short justification about the dimension identification",
+  "dimensions": ["dimension 1", ...],
+  "processed_candidates": [
+    {{"i": 0, "preview": "a brief preview for candidate 0"}},
+    {{"i": 1, "preview": "a brief preview for candidate 1"}}
+  ]
+}}
+
+Rules:
+- Return valid, parsable JSON only. Do not include any commentary, markdown, or comments.
+- Use only the candidates explicitly provided in the input.
+- Preserve the original candidate order and indices exactly as given.
+- Return exactly one processed candidate item for each input candidate, and do not add, remove, or invent candidates.
+
+[user_message]
+{user_message}
+
+[candidates]
+{candidates}
+
+Generate exactly {n} items in processed_candidates.
+"""
+
+SKIP_BUDGET = 128
+UNIT_PREPROCESS_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class CandidateSchema(BaseModel):
@@ -67,40 +84,56 @@ class CandidateSchema(BaseModel):
     preview: str
     
 class SkipSchema(BaseModel):
-    skip: Literal[True]
-
-class PreprocessSchema(BaseModel):
-    rationale: str
     skip: bool
-    dimensions: List[str]
-    candidates: List[CandidateSchema]
+
+def compact_text(s: str, head: int = 100, tail: int = 100) -> str:
+    if len(s) <= head + tail + 3:
+        return s
+    return f"{s[:head]}...{s[-tail:]}"
 
 def preprocess_candidates(conversation_history: List[Turn], context: TracerContext) -> Tuple[str, Optional[Dict[str, Any]]]:
     current_turn = conversation_history[-1]
+    skip_prompt = SKIP_PROMPT.format(
+        user_message=current_turn.user_message,
+        candidates="\n".join([f"[{i}] {c}" for i, c in enumerate(current_turn.candidates)])
+    )
+    try:
+        async_output = asyncio.run(
+            context.model.async_generate([skip_prompt for _ in range(context.tracer_config.n_hypotheses)], schema=SkipSchema, cfg=context.generation_config, max_tokens=SKIP_BUDGET)
+        )
+    except Exception as e:
+        logger.exception("Skip generation failed")
+        return "", {"success": False, "skip": True, "reason": str(e), "invalid": context.tracer_config.n_hypotheses}
+    skip_outputs = [o["output"] if not isinstance(o, Exception) else None for o in async_output]
+    skip = 0
+    invalid = 0
+    for o in skip_outputs:
+        if o is None:
+            invalid += 1
+        elif o['skip']:
+            skip += 1
+    if skip > len(skip_outputs) / 2:  # Majority vote to skip
+        return "", {"success": True, "skip": True, "invalid": invalid}
+    n = len(current_turn.candidates)
     preprocess_prompt = PREPROCESSING_PROMPT.format(
         user_message=current_turn.user_message,
-        candidates="\n".join([f"{i}. {c}" for i, c in enumerate(current_turn.candidates)])
-    )
-    n = len(current_turn.candidates)
-    Schema = create_model(
-        "PreprocessSchemaStrict",
-        __base__=PreprocessSchema,
-        candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...),
+        candidates="\n".join([f"[{i}] {c}" for i, c in enumerate(current_turn.candidates)]),
+        n=n
     )
     budget = UNIT_PREPROCESS_BUDGET * n
+    Schema = create_model(
+        "PreprocessSchema",
+        processed_candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...)
+    )
     try:
         output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
         logger.exception("Preprocessing failed")
-        return "", {"success": False, "skip": False, "reason": str(e), "invalid": 1}
-    if output["skip"]:
-        return "", {"success": True, "skip": True, "reason": output["rationale"], "invalid": 0}
+        return "", {"success": False, "skip": False, "reason": str(e), "invalid": invalid}
     else:
-        previews = [c["preview"] for c in output["candidates"]]
+        previews = [c["preview"] for c in output["processed_candidates"]]
         lines = []
         for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates)):
             marker = "[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"
-            lines.append(f"{i}. {marker} Preview: {preview} Content: {candidate[:50]}...{candidate[-50:]}")
-        return "\n".join(
-            lines
-        ), {"success": True, "skip": False, "reason": output["rationale"], "invalid": 0}
+            lines.append(f"{i}. {marker} Preview: {preview} Content: {compact_text(candidate)}")
+        return "\n".join(lines), {"success": True, "skip": False, "invalid": invalid}

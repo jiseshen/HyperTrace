@@ -4,8 +4,8 @@ from argparse import ArgumentParser
 from omegaconf import OmegaConf
 from pathlib import Path
 from tqdm import tqdm
-from core.utils import TracerConfig, EmbedConfig
-from model import load_model, GenerationConfig
+from core.utils import TracerConfig
+from model import load_model, GenerationConfig, EmbedConfig
 import json
 from typing import Any
 
@@ -14,7 +14,7 @@ def main():
     parser = ArgumentParser(description="Run preference tracing on a configured dataset")
     parser.add_argument("--config", type=str, default="run/main.yaml", help="Path to the main config file")
     parser.add_argument("--config-root", type=str, default="config", help="Root directory for config files, used for resolving relative paths in the main config")
-    parser.add_argument("--result", type=str | None, default=None, help="Path to save the results, if not provided use run name with seed")
+    parser.add_argument("--result", type=str, default=None, help="Path to save the results, if not provided use run name with seed")
     parser.add_argument("--result-root", type=str, default="result", help="Root directory for results")
     args = parser.parse_args()
     
@@ -54,7 +54,9 @@ def main():
     if finished_ids:
         print(f"Skipping {len(finished_ids)} finished users")
     print(f"Running preference tracing for {len(target_users)} users")
-    for user in tqdm(target_users, desc="Tracing preferences", unit="user"):
+    pbar = tqdm(target_users, desc="Tracing preferences", unit="user")
+    for user in pbar:
+        pbar.set_postfix(user=user.user_id)
         records = preference_tracer.trace(user)
         with open(result_path / f"{user.user_id}.json", "w") as f:
             json.dump(records, f, indent=4)

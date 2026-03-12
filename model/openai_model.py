@@ -10,14 +10,14 @@ import os
 import asyncio
 
 REASONING_PREFIXES = ("gpt-5", "o")
-REASONING_BUDGETS = {"none": 0, "minimal": 32, "low": 128, "medium": 256, "high": 1024}
+REASONING_BUDGETS = {"none": 0, "minimal": 64, "low": 128, "medium": 256, "high": 1024}
 
 
 class OpenAIModel(BaseLM):
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, default_cfg: Optional[GenerationConfig] = None):
+    def __init__(self, api_key: Optional[str] = None, default_cfg: Optional[GenerationConfig] = None):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "empty")
-        self.base_url = base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         self.default_cfg = default_cfg or GenerationConfig()
+        self.base_url = self.default_cfg.base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         self.async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
     
@@ -50,6 +50,7 @@ class OpenAIModel(BaseLM):
         return kwargs
     
     def generate(self, prompt: str, schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, **overrides: Unpack[GenerationOverrides]) -> Dict[str, str]:
+        # TODO: Use parse if schema
         cfg = self._resolve_cfg(cfg, overrides)
         retries = cfg.max_retries
         kwargs = self._build_responses_kwargs(prompt, cfg)

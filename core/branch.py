@@ -85,7 +85,7 @@ Current Hypothesis:
 {current_hypothesis}
 """
 
-BRANCH_BUDGET = 128
+BRANCH_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class UpdatedHypothesisSchema(BaseModel):

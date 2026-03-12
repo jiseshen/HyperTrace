@@ -91,7 +91,7 @@ class PerturbedHypothesisSchema(BaseModel):
     novel_axis: str
 
 AXIS_BUDGET = 64
-UNIT_PERTURB_BUDGET = 128
+UNIT_PERTURB_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 
@@ -124,9 +124,8 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     merged_prior = max([context.hypothesis_set.global_prior[h.id] for h in hypotheses])
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     K = len(group) - 1
-    budget = UNIT_PERTURB_BUDGET * K
     merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
-    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=budget)["output"]
+    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=UNIT_PERTURB_BUDGET)["output"]
     # TODO: Micro-rejuvenation with retrieval from the global hypothesis store.
     perturb_prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
@@ -140,8 +139,9 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
         category=(str, ...),
         new_hypotheses=(conlist(PerturbedHypothesisSchema, min_length=K, max_length=K), ...)
     )
+    budget = UNIT_PERTURB_BUDGET * K
     try:
-        output = context.model.generate(perturb_prompt, schema=PerturbSchema, cfg=context.generation_config)["output"]
+        output = context.model.generate(perturb_prompt, schema=PerturbSchema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
         logger.exception("Perturbation failed")
         return [h.id for h in hypotheses], weights.tolist(), None

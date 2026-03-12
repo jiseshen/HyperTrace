@@ -235,6 +235,14 @@ class HypothesisSet:
         self.global_prior: Dict[str, float] = {}
         self.hypotheses: Dict[str, Hypothesis] = {}
         self.category_counts: Dict[str, int] = {}
+        self.next_hypothesis_id: int = 1
+
+    def _allocate_hid(self) -> str:
+        while True:
+            hid = f"h{self.next_hypothesis_id}"
+            self.next_hypothesis_id += 1
+            if hid not in self.hypotheses:
+                return hid
     
     @overload
     def __getitem__(self, idx: str) -> Tuple[Hypothesis, float]: ...
@@ -257,7 +265,7 @@ class HypothesisSet:
             prior = None if isinstance(hyp, Hypothesis) else hyp.get("prior")
             cat = category
             self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
-            hid = cat[:3] + str(self.category_counts[cat])
+            hid = self._allocate_hid()
             h = Hypothesis(
                 id=hid,
                 category=cat,
@@ -435,10 +443,10 @@ class WorkingBelief:
         self.repo.update_hypotheses(updates)
     
     def ess(self) -> float:
-        return 1.0 / np.sum(self.weights ** 2)
+        return float(1.0 / np.sum(self.weights ** 2))
     
     def normalized_entropy(self) -> float:
-        return -np.sum(self.weights * np.log(self.weights + 1e-14)) / np.log(len(self.weights) + 1e-14)
+        return float(-np.sum(self.weights * np.log(self.weights + 1e-14)) / np.log(len(self.weights) + 1e-14))
     
     def resample(self) -> List[List[int]]:
         new_ids: np.ndarray = np.random.choice(self.ids, size=len(self.ids), replace=True, p=self.weights)

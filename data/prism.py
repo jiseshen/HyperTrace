@@ -6,17 +6,30 @@ import random
 def group_by_turns(conversation_history: List[Dict]) -> List[Turn]:
     turns = {}
     for msg in conversation_history:
-        turn = msg.get('turn', 0)
+        turn = msg.get("turn", 0)
         if turn not in turns:
-            turns[turn] = Turn()
-        role = msg.get('role')
-        if role == 'user':
-            turns[turn].user_message = msg.get('content')
+            turns[turn] = {
+                "user_message": "",
+                "candidates": [],
+                "chosen": "",
+            }
+        role = msg.get("role")
+        if role == "user":
+            turns[turn]["user_message"] = msg.get("content")
         else:
-            turns[turn].candidates.append(msg.get('content'))
-            if msg.get('if_chosen', False):
-                turns[turn].chosen = msg.get('content')
-    return [turns[i] for i in sorted(turns.keys())]
+            content = msg.get("content")
+            turns[turn]["candidates"].append(content)
+            if msg.get("if_chosen", False):
+                turns[turn]["chosen"] = content
+    return [
+        Turn(
+            turn=t,
+            user_message=data["user_message"],
+            candidates=data["candidates"],
+            chosen=data["chosen"],
+        )
+        for t, data in sorted(turns.items()) if data["user_message"] != "EMPTY STRING"  # Filter out turns with PRISM empty placeholder (2 in total)
+    ]
 
 def extract_profile(survey: dict) -> str:
     key_fields = [

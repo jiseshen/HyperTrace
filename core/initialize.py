@@ -50,7 +50,7 @@ Return a JSON object:
 }}
 
 Rules:
-- Output valid JSON only.
+- Output valid, parsable JSON only.
 - Always include all required fields, and produce exactly {n_hypotheses} hypotheses.
 - Ground each hypothesis in explicit evidence from the comparison.
 
@@ -67,7 +67,7 @@ Previously Retrieved Hypotheses:
 {retrieved_hypotheses}
 """
 
-UNIT_INITIALIZE_BUDGET = 128
+UNIT_INITIALIZE_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class HypothesisSchema(BaseModel):

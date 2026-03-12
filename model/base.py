@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from typing import List, Union, Dict, Any, Optional, TypedDict, Unpack
 
 
 @dataclass(frozen=True)
 class GenerationConfig:
+    backend: str = "openai"
+    base_url: Optional[str] = None
     model: str = "gpt-5-nano"
     max_tokens: int = 128
     temperature: float = 0.0

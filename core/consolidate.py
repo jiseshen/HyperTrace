@@ -25,13 +25,13 @@ Output ONLY the raw text of merged hypothesis without any explanation.
 {collapsed_cluster}
 """
 
-CONSOLIDATE_BUDGET = 128
+CONSOLIDATE_BUDGET = 256
 
 
 def compute_importance(conversation_length: int, entropy: float) -> float:
     g = 1 - np.exp(-conversation_length)
-    h = 1 - entropy
-    return g * h
+    h = np.sqrt(max(1 - entropy, 0))
+    return float(g * h)
 
 def deduplicate_group(group: List[str], context: TracerContext):
     hyps, _ = context.hypothesis_set[group]

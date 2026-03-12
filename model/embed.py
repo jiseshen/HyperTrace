@@ -57,7 +57,7 @@ def embed(
             input=text
         )
         vec = np.array([d.embedding for d in sorted(response.data, key=lambda x: x.index)], dtype=np.float32)
-        vec = vec / (np.linalg.norm(vec, axis=1, keepdims=True) + 1e-12)
+        vec = vec / (np.linalg.norm(vec, axis=1, keepdims=True) + 1e-14)
         return vec
 
     elif "transformer" in embed_cfg.backend:
@@ -74,7 +74,7 @@ def embed(
             contents=text
         )
         vec = np.stack([np.array(item.values, dtype=np.float32) for item in resp.embeddings])
-        vec = vec / (np.linalg.norm(vec, axis=1, keepdims=True) + 1e-12)
+        vec = vec / (np.linalg.norm(vec, axis=1, keepdims=True) + 1e-14)
         return vec
         
     else:
