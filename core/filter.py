@@ -1,4 +1,6 @@
 from typing import Any, Dict, List
+import asyncio
+import logging
 from pydantic import BaseModel, Field
 from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief, Update, Hypothesis
@@ -73,6 +75,7 @@ class FilterSchema(BaseModel):
     likelihood: float = Field(ge=0.0, le=1.0)
 
 FILTER_BUDGET = 64
+logger = logging.getLogger(__name__)
 
 
 def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Dict[str, Any]:
@@ -89,7 +92,16 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
         ) for h in hypotheses
     ]
     
-    outputs = [o["output"] if not isinstance(o, Exception) else None for o in context.model.async_generate(likelihood_prompts, schema=FilterSchema, cfg=context.generation_config, max_tokens=FILTER_BUDGET)]
+    try:
+        async_outputs = asyncio.run(
+            context.model.async_generate(
+                likelihood_prompts, schema=FilterSchema, cfg=context.generation_config, max_tokens=FILTER_BUDGET
+            )
+        )
+    except Exception:
+        logger.exception("Likelihood weighting generation failed")
+        async_outputs = [None for _ in likelihood_prompts]
+    outputs = [o["output"] if not isinstance(o, Exception) else None for o in async_outputs]
     updates = []
     invalid = 0
     for h, o in zip(hypotheses, outputs):

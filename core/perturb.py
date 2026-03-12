@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
+import logging
 from pydantic import BaseModel, create_model, conlist
 from core.utils import TracerContext
 from core.hypothesis_set import Hypothesis, WorkingBelief
@@ -91,6 +92,7 @@ class PerturbedHypothesisSchema(BaseModel):
 
 AXIS_BUDGET = 64
 UNIT_PERTURB_BUDGET = 128
+logger = logging.getLogger(__name__)
 
 
 def perturb_hypotheses(conversation_history: List[Turn], candidates: str, similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
@@ -125,13 +127,12 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     budget = UNIT_PERTURB_BUDGET * K
     merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
     merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=budget)["output"]
-    # TODO: Micro-rejuvenation 
-    # TODO: retrieve stored hypotheses
+    # TODO: Micro-rejuvenation with retrieval from the global hypothesis store.
     perturb_prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         user_message=current_turn.user_message,
         candidates=candidates,
-        global_axes_summary=", ".join(axes),
+        global_axes_summary=axes,
         K=K
     )
     PerturbSchema = create_model(
@@ -142,7 +143,7 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     try:
         output = context.model.generate(perturb_prompt, schema=PerturbSchema, cfg=context.generation_config)["output"]
     except Exception as e:
-        print(f"Perturbation failed with error: {e}")
+        logger.exception("Perturbation failed")
         return [h.id for h in hypotheses], weights.tolist(), None
     current_category = output['category']
     proposed_hypotheses = output['new_hypotheses']
@@ -150,10 +151,9 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
 
     for h in hypotheses:
         context.hypothesis_set.remove_hypothesis(h.id)
-    new_hids = context.hypothesis_set.add_hypotheses([
-        {"category": category, "content": merged_hypothesis, "prior": merged_prior},
-        {"category": current_category, "content": ph['content']} for ph in proposed_hypotheses
-    ])
+    new_items = [{"category": category, "content": merged_hypothesis, "prior": merged_prior}]
+    new_items.extend([{"category": current_category, "content": ph["content"]} for ph in proposed_hypotheses])
+    new_hids = context.hypothesis_set.add_hypotheses(new_items)
     new_weights = [merged_weight]
     new_weights.extend([(total_weight - merged_weight) / len(proposed_hypotheses)] * len(proposed_hypotheses))
     return new_hids, new_weights, new_axes

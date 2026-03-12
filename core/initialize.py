@@ -1,4 +1,5 @@
 from pydantic import BaseModel, create_model, conlist
+import logging
 
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
@@ -67,6 +68,7 @@ Previously Retrieved Hypotheses:
 """
 
 UNIT_INITIALIZE_BUDGET = 128
+logger = logging.getLogger(__name__)
 
 class HypothesisSchema(BaseModel):
     id: str
@@ -81,7 +83,9 @@ def initialize_hypothesis(
     """Initialize a working belief with retrieved hypotheses. Return None if skipping this turn."""
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
-    candidate_hypotheses = context.hypothesis_set.retrieve_hypotheses(current_turn.user_message, top_k=context.tracer_config.n_hypotheses)
+    candidate_hypotheses, _ = context.hypothesis_set.retrieve_hypotheses(
+        current_turn.user_message, top_k=context.tracer_config.n_hypotheses
+    )
     
     prompt = INITIALIZATION_PROMPT.format(
         n_hypotheses=context.tracer_config.n_hypotheses,
@@ -100,12 +104,12 @@ def initialize_hypothesis(
     try:
         output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
-        print(f"Initialization failed with error: {e}")
+        logger.exception("Initialization failed")
         return {"success": False, "reason": str(e)}
     new_hypotheses: List[Hypothesis] = []
     reused_hypotheses: List[Hypothesis] = []
     for h in output['hypotheses']:
-        if h['action'] == 'reuse':
+        if h['action'] == 'reuse' and h["id"] in context.hypothesis_set.hypotheses:
             prev_category = context.hypothesis_set[h['id']][0].category
             if output['category'] not in prev_category:
                 new_category = prev_category + ", " + output['category']
@@ -115,14 +119,16 @@ def initialize_hypothesis(
         else:
             new_hypotheses.append(Hypothesis(id=h['id'], category=output['category'], content=h['content']))
 
-    context.hypothesis_set.update_hypotheses(reused_hypotheses)
+    if reused_hypotheses:
+        context.hypothesis_set.update_hypotheses(reused_hypotheses)
     new_ids = context.hypothesis_set.add_hypotheses(new_hypotheses)
     reused_ids = [h.id for h in reused_hypotheses]
     all_ids = new_ids + reused_ids
     _, priors = context.hypothesis_set.retrieve_hypotheses(all_ids)
     belief = WorkingBelief(
-        hypothesis_ids=all_ids,
-        priors=priors
+        ids=all_ids,
+        priors=priors,
+        repo=context.hypothesis_set,
     )
     context.update_belief(belief)
     return {"success": True}

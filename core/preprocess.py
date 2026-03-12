@@ -1,6 +1,7 @@
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple
 from pydantic import BaseModel, create_model, conlist
-from core.utils import TracerContext
+import logging
+from .utils import TracerContext
 from data.base import Turn
 
 
@@ -59,6 +60,7 @@ Rules:
 """
 
 UNIT_PREPROCESS_BUDGET = 64
+logger = logging.getLogger(__name__)
 
 class CandidateSchema(BaseModel):
     i: int
@@ -67,6 +69,12 @@ class CandidateSchema(BaseModel):
 class SkipSchema(BaseModel):
     skip: Literal[True]
 
+class PreprocessSchema(BaseModel):
+    rationale: str
+    skip: bool
+    dimensions: List[str]
+    candidates: List[CandidateSchema]
+
 def preprocess_candidates(conversation_history: List[Turn], context: TracerContext) -> Tuple[str, Optional[Dict[str, Any]]]:
     current_turn = conversation_history[-1]
     preprocess_prompt = PREPROCESSING_PROMPT.format(
@@ -74,21 +82,25 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
         candidates="\n".join([f"{i}. {c}" for i, c in enumerate(current_turn.candidates)])
     )
     n = len(current_turn.candidates)
-    Schema = Union[create_model(
-        "PreprocessSchema",
-        skip=(Literal[True], ...),
+    Schema = create_model(
+        "PreprocessSchemaStrict",
+        __base__=PreprocessSchema,
         candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...),
-    )]
+    )
     budget = UNIT_PREPROCESS_BUDGET * n
     try:
         output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
-        print(f"Preprocessing failed with error: {e}")
-        return "", {"success": False, "reason": str(e)}
+        logger.exception("Preprocessing failed")
+        return "", {"success": False, "skip": False, "reason": str(e), "invalid": 1}
     if output["skip"]:
-        return "", {"success": True, "skip": True, "reason": output["rationale"]}
+        return "", {"success": True, "skip": True, "reason": output["rationale"], "invalid": 0}
     else:
         previews = [c["preview"] for c in output["candidates"]]
+        lines = []
+        for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates)):
+            marker = "[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"
+            lines.append(f"{i}. {marker} Preview: {preview} Content: {candidate[:50]}...{candidate[-50:]}")
         return "\n".join(
-            [f"{i}. {"[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"} Preview: {preview} Content: {candidate[:50]}...{candidate[-50:]}" for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates))]
-        ), {"success": True, "skip": False}
+            lines
+        ), {"success": True, "skip": False, "reason": output["rationale"], "invalid": 0}

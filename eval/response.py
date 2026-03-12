@@ -123,7 +123,11 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     current_message = current_turn.user_message
-    generate_prompt = GENERATE_PROMPT.format(profile=profile, prev_turns=prev_turns, current_message=current_message)
+    generate_prompt = GENERATE_PROMPT.format(
+        profile=profile,
+        prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
+        current_message=current_message,
+    )
     if eval_model is None:
         eval_model = gen_model
     if evaluation_cfg is None:
@@ -132,7 +136,7 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         generate_output = gen_model.generate(
             prompt=generate_prompt,
             schema=GenSchema,
-            generation_config=generation_cfg,
+            cfg=generation_cfg,
         )["output"]
     except Exception as e:
         return {"gpt_score": 1.0, "similarity_score": 0.0, "relative_score": 0.0, "error": "Generation: " + str(e)}
@@ -147,7 +151,7 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         evaluate_output = eval_model.generate(             
             prompt=evaluate_prompt,
             schema=EvalSchema,
-            generation_config=evaluation_cfg
+            cfg=evaluation_cfg
         )["output"]
     except Exception as e:
         return {"gpt_score": 5.0, "similarity_score": similarity_score, "relative_score": relative_score, "error": "Evaluation: " + str(e)}

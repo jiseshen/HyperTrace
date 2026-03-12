@@ -2,8 +2,8 @@ from openai import OpenAI, AsyncOpenAI, APIError, RateLimitError
 from .base import BaseLM, GenerationConfig, GenerationOverrides
 from .utils import Parser, ParseError
 from pydantic import BaseModel
-from dataclasses import dataclass, replace
-from typing import Optional, Union, Tuple, List, Dict, Any, Unpack, Unpack
+from dataclasses import replace
+from typing import Optional, Union, Tuple, List, Dict, Any, Unpack
 import json
 import time
 import os
@@ -28,7 +28,7 @@ class OpenAIModel(BaseLM):
         return cfg
     
     def _build_responses_kwargs(self, prompt: str, cfg: GenerationConfig):
-        model = cfg.model or self.model
+        model = cfg.model
         reasoning = model.startswith(REASONING_PREFIXES)
         kwargs = {
             "model": model,
@@ -205,6 +205,7 @@ class OpenAIModel(BaseLM):
         metadata: Optional[Dict[str, str]] = None,
         **overrides
     ):
+        cfg = self._resolve_cfg(cfg, overrides)
         batch_id = self.submit_responses_batch(
             prompts,
             cfg=cfg,

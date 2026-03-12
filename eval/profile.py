@@ -74,7 +74,7 @@ def profile_score(eval_model: BaseLM, profile: str, survey: str, embed_cfg: Embe
     prompt = COMPARISON_PROMPT.format(profile=profile, survey=survey)
 
     try:
-        response = eval_model.generate(prompt, schema=ProfileEvalSchema, generation_cfg=evaluation_cfg)["output"]
+        response = eval_model.generate(prompt, schema=ProfileEvalSchema, cfg=evaluation_cfg)["output"]
     except Exception as e:
         return {"survey_consistency": None, "key_aspect_match": None, "internal_plausibility": None, "overall": None, "similarity": similarity, "error": str(e)}
     overall_score = 0.4 * response["survey_consistency"] + 0.4 * response["key_aspect_match"] + 0.2 * response["internal_plausibility"]

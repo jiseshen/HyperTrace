@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 import logging
 import faiss
 import numpy as np
-from .utils import embed, EmbedConfig
+from model import embed, EmbedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ class VectorStore:
         """
         self.backend = embed_cfg.backend
         self.model = embed_cfg.model
+        self.embed_cfg = embed_cfg
         self.dim = embed_cfg.dim
         self.metric = metric
         self.max_memories = capacity
@@ -88,11 +89,7 @@ class VectorStore:
         while len(self.contents) + len(contents) >= self.max_memories:
             self.delete(self.lru_order.popitem(last=False)[0])
         
-        vec = embed(
-            contents,
-            backend=self.backend,
-            model=self.model,
-        )
+        vec = embed(contents, embed_cfg=self.embed_cfg)
         indices = []
         for i, content in enumerate(contents):
             idx = self.next_id
@@ -126,11 +123,7 @@ class VectorStore:
         """
         if len(self.contents) == 0:
             return [], []
-        vec = embed(
-            content,
-            backend=self.backend,
-            model=self.model
-        )
+        vec = embed(content, embed_cfg=self.embed_cfg)
         k = min(top_k, len(self.contents))
         scores, indices = self.index.search(vec, k)
         retrieved_hypotheses: List[str | int] = []
@@ -179,15 +172,11 @@ class VectorStore:
         idx = self.get_index(ids)
         for i, content in zip(idx, contents):
             if i not in self.contents:
-                raise ValueError(f"ID {id} not found in vector store.")
+                raise ValueError(f"ID {i} not found in vector store.")
             self.contents[i] = content
             self.lru_order.move_to_end(i)
         self.index.remove_ids(np.asarray(idx, dtype=np.int64))
-        vec = embed(
-            contents,
-            backend=self.backend,
-            model=self.model,
-        )
+        vec = embed(contents, embed_cfg=self.embed_cfg)
         self.index.add_with_ids(vec, np.asarray(idx, dtype=np.int64))
 
     def similarity(self, id1: int | str, id2: int | str) -> float:
@@ -240,7 +229,7 @@ class HypothesisSet:
         embed_config: EmbedConfig
     ) -> None:
         self.vector_store = VectorStore(
-            embed_config,
+            embed_cfg=embed_config,
             use_keys=True,
         )
         self.global_prior: Dict[str, float] = {}
@@ -259,51 +248,54 @@ class HypothesisSet:
         else:
             return self.hypotheses[key], self.global_prior[key]
     
-    def add_hypotheses(
-        self,
-        hypotheses: List[Dict]
-    ):
+    def add_hypotheses(self, hypotheses: List[Union[Dict, Hypothesis]]) -> List[str]:
         hids = []
         contents = []
         for hyp in hypotheses:
-            cat = hyp['category']
+            category = hyp.category if isinstance(hyp, Hypothesis) else hyp["category"]
+            content = hyp.content if isinstance(hyp, Hypothesis) else hyp["content"]
+            prior = None if isinstance(hyp, Hypothesis) else hyp.get("prior")
+            cat = category
             self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
             hid = cat[:3] + str(self.category_counts[cat])
             h = Hypothesis(
                 id=hid,
                 category=cat,
-                content=hyp['content']
+                content=content
             )
             self.hypotheses[hid] = h
-            if 'prior' in hyp:
-                self.global_prior[hid] = hyp['prior']
+            if prior is not None:
+                self.global_prior[hid] = prior
             else:
                 self.global_prior[hid] = 1.0
             contents.append(h.content)
             hids.append(hid)
-        self.vector_store.store(contents, keys=hids)
+        if contents:
+            self.vector_store.store(contents, keys=hids)
         return hids
             
     def retrieve_hypotheses(
         self,
-        query: str,
+        query: Union[str, List[str]],
         top_k: int = 5,
-    ) -> Tuple[List[str], List[float]]:
-        retrieved, _ = self.vector_store.retrieve(query, top_k=top_k, return_keys=True)
-        priors = [self.global_prior.get(hid) for hid in retrieved]
-        return retrieved, priors
+    ) -> Tuple[List[Hypothesis], List[float]]:
+        if isinstance(query, list):
+            hypotheses = [self.hypotheses[hid] for hid in query]
+            priors = [self.global_prior.get(hid, 1.0) for hid in query]
+            return hypotheses, priors
+        retrieved_ids, _ = self.vector_store.retrieve(query, top_k=top_k, return_keys=True)
+        hypotheses = [self.hypotheses[hid] for hid in retrieved_ids]
+        priors = [self.global_prior.get(hid, 1.0) for hid in retrieved_ids]
+        return hypotheses, priors
     
     def update_hypotheses(
         self,
         updates: List[Union[Update, Hypothesis]]
-    ):
-        contents = []
-        hids = []
+    ) -> None:
         changed_ids = []
         changed_contents = []
         for update in updates:
             hid = update.id
-            hids.append(hid)
             hyp = self.hypotheses[hid]
             
             if update.category is not None:
@@ -313,8 +305,8 @@ class HypothesisSet:
                     changed_ids.append(hid)
                     changed_contents.append(update.content)
                 hyp.content = update.content
-            contents.append(hyp.content)
-        self.vector_store.update(changed_ids, changed_contents)
+        if changed_ids:
+            self.vector_store.update(changed_ids, changed_contents)
         
     def get_similarity(
         self,
@@ -397,10 +389,15 @@ class WorkingBelief:
         repo: HypothesisSet
     ):
         self.ids = ids
-        self.hid2id = {hid: i for i, hid in enumerate(ids)}
+        self._refresh_indices()
         self.weights = np.array(priors, dtype=np.float32)
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo = repo
+
+    def _refresh_indices(self) -> None:
+        self.hid2indices: Dict[str, List[int]] = {}
+        for i, hid in enumerate(self.ids):
+            self.hid2indices.setdefault(hid, []).append(i)
     
     @overload
     def __getitem__(self, idx: int) -> Tuple[Hypothesis, float]: ...
@@ -429,9 +426,10 @@ class WorkingBelief:
         return [self.repo.hypotheses[hid] for hid in self.ids]
     
     def update(self, updates: List[Update]):
+        local_positions = {hid: list(indices) for hid, indices in self.hid2indices.items()}
         for update in updates:
             if update.likelihood is not None:
-                i = self.hid2id[update.id]
+                i = local_positions[update.id].pop(0)
                 self.weights[i] = update.likelihood
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo.update_hypotheses(updates)
@@ -445,6 +443,7 @@ class WorkingBelief:
     def resample(self) -> List[List[int]]:
         new_ids: np.ndarray = np.random.choice(self.ids, size=len(self.ids), replace=True, p=self.weights)
         self.ids = new_ids.tolist()
+        self._refresh_indices()
         self.weights = np.ones_like(self.weights) / len(self.ids)
         
         pos = {}

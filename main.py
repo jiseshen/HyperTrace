@@ -1,13 +1,14 @@
-from core import PreferenceTracer
+from core.preference_tracer import PreferenceTracer
 from data import load_data
 from argparse import ArgumentParser
 from omegaconf import OmegaConf
 from pathlib import Path
-from glob import glob
 from tqdm import tqdm
-from core import TracerConfig, EmbedConfig
+from core.utils import TracerConfig, EmbedConfig
 from model import load_model, GenerationConfig
 import json
+from typing import Any
+
 
 def main():
     parser = ArgumentParser(description="Run preference tracing on a configured dataset")
@@ -21,6 +22,7 @@ def main():
     OmegaConf.register_new_resolver("include", lambda path: OmegaConf.load(config_root / path))
     config = OmegaConf.load(config_root / args.config)
     OmegaConf.resolve(config)
+    config = OmegaConf.to_container(config, resolve=True)
     print(f"Loaded config: {config}")
     
     result_root = Path(args.result_root)
@@ -32,11 +34,11 @@ def main():
     print(f"Loaded {len(user_data)} users from dataset {config['dataset']}")
 
     tracer_cfg = TracerConfig(**config["tracer"])
-    gen_cfg = GenerationConfig(**config["gen_model"])
+    gen_cfg = GenerationConfig(**config["main_model"])
     eval_cfg = GenerationConfig(**config["eval_model"])
     embed_cfg = EmbedConfig(**config["embed"])
     
-    gen_model = load_model(backend=config["gen_model"]["backend"], default_cfg=gen_cfg)
+    gen_model = load_model(backend=config["main_model"]["backend"], default_cfg=gen_cfg)
     eval_model = load_model(backend=config["eval_model"]["backend"], default_cfg=eval_cfg)
     preference_tracer = PreferenceTracer(
         model=gen_model,
@@ -47,12 +49,16 @@ def main():
         evaluation_cfg=eval_cfg
     )
 
-    finished_ids = set(Path(f).stem for f in glob(result_path / "*.json"))
+    finished_ids = {p.stem for p in result_path.glob("*.json")}
+    target_users = [ud for ud in user_data if ud.user_id not in finished_ids][:config['users_per_run']]
     if finished_ids:
-        target_users = [ud for ud in user_data if ud.user_id not in finished_ids][:config['users_per_run']]
         print(f"Skipping {len(finished_ids)} finished users")
     print(f"Running preference tracing for {len(target_users)} users")
     for user in tqdm(target_users, desc="Tracing preferences", unit="user"):
         records = preference_tracer.trace(user)
         with open(result_path / f"{user.user_id}.json", "w") as f:
             json.dump(records, f, indent=4)
+
+
+if __name__ == "__main__":
+    main()

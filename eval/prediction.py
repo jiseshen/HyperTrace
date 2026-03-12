@@ -15,7 +15,6 @@ import json
 from model import GenerationConfig, BaseLM
 from data import Turn
 from typing import Dict, List
-import numpy as np
 
 PREDICT_PROMPT = """
 You are ranking candidate responses for a user based on a given user preference profile.
@@ -80,14 +79,17 @@ def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str
         current_turn=current_turn.format(include_candidates=True, include_choice=False)  # ids are (idx + 1)
     )
     
+    cfg = generation_cfg or GenerationConfig()
     retries = 0
+    prediction = None
     while True:
         try:
-            prediction = model.generate(prompt, generation_config=generation_cfg)["output"]
-            prediction_data = json.loads(prediction)
+            prediction = model.generate(prompt, cfg=cfg)["output"]
+            prediction_data = prediction if isinstance(prediction, dict) else json.loads(prediction)
             ranking = prediction_data.get('ranking')
+            ranking = [int(r) for r in ranking]
             rank = ranking.index(gt_choice) + 1
-            ranking_score = (len(ranking) - rank) / (len(ranking) - 1)
+            ranking_score = 1.0 if len(ranking) == 1 else (len(ranking) - rank) / (len(ranking) - 1)
             accuracy = 1.0 if rank == 1 else 0.0
             return {
                 "accuracy": accuracy,
@@ -95,5 +97,5 @@ def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str
             }
         except Exception as e:
             retries += 1
-            if retries > generation_cfg.max_retries:
-                raise ValueError(f"Failed to parse model output after {generation_cfg.max_retries} attempts. Prompt: {prompt}. Last output: {prediction} Error: {e}.")
+            if retries > cfg.max_retries:
+                raise ValueError(f"Failed to parse model output after {cfg.max_retries} attempts. Prompt: {prompt}. Last output: {prediction} Error: {e}.")

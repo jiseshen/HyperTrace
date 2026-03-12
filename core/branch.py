@@ -1,4 +1,6 @@
-from hypothesis_set import WorkingBelief, Update
+import asyncio
+import logging
+from .hypothesis_set import WorkingBelief, Update
 from pydantic import BaseModel
 from .utils import TracerContext
 from data import Turn
@@ -84,6 +86,7 @@ Current Hypothesis:
 """
 
 BRANCH_BUDGET = 128
+logger = logging.getLogger(__name__)
 
 class UpdatedHypothesisSchema(BaseModel):
     category: str
@@ -107,7 +110,16 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             current_hypothesis=h.format()
         ) for h in current_hypotheses
     ]
-    outputs = [o["output"]  if not isinstance(o, Exception) else None for o in context.model.async_generate(prompts, schema=BranchSchema, cfg=context.generation_config, max_tokens=BRANCH_BUDGET)]
+    try:
+        async_outputs = asyncio.run(
+            context.model.async_generate(
+                prompts, schema=BranchSchema, cfg=context.generation_config, max_tokens=BRANCH_BUDGET
+            )
+        )
+    except Exception:
+        logger.exception("Branching generation failed")
+        async_outputs = [None for _ in prompts]
+    outputs = [o["output"] if not isinstance(o, Exception) else None for o in async_outputs]
     replace, invalid = 0, 0
     for output in outputs:
         if output and output['action'] == 'replace':
@@ -130,6 +142,7 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             updates.append(Update(id=h.id, likelihood=0.5))
             revised_ids.append(h.id)
             revised_weights.append(current_weights[i])
+            continue
         if o['action'] == 'revise':
             new_cat = o['updated_hypothesis']['category']
             new_cat = h.category if new_cat in h.category else h.category + ", " + new_cat
@@ -142,7 +155,8 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             replaced_weights.append(current_weights[i])
     if replace > 0:
         context.hypothesis_set.consolidate_belief(replaced_ids, replaced_weights, compute_importance(len(conversation_history), context.current_belief.normalized_entropy()), context.tracer_config.consolidate_alpha)
-    context.hypothesis_set.update_hypotheses(updates)
+    if updates:
+        context.hypothesis_set.update_hypotheses(updates)
     new_ids = context.hypothesis_set.add_hypotheses(new)
     all_ids = revised_ids + new_ids
     all_weights = revised_weights + [0.5 for _ in new_ids]
