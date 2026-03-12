@@ -1,7 +1,7 @@
 from model import BaseLM, GenerationConfig
 from typing import Dict
 from pydantic import BaseModel, Field
-from .utils import text_similarity
+from .utils import text_similarity, EmbedConfig
 
 
 COMPARISON_PROMPT = """
@@ -69,8 +69,8 @@ class ProfileEvalSchema(BaseModel):
     internal_plausibility: float = Field(ge=1.0, le=10.0)
 
 
-def profile_score(eval_model: BaseLM, profile: str, survey: str, evaluation_cfg: GenerationConfig = None) -> Dict[str, float]:
-    similarity = text_similarity(profile, survey)
+def profile_score(eval_model: BaseLM, profile: str, survey: str, embed_cfg: EmbedConfig, evaluation_cfg: GenerationConfig = None) -> Dict[str, float]:
+    similarity = text_similarity(profile, survey, embed_cfg)
     prompt = COMPARISON_PROMPT.format(profile=profile, survey=survey)
 
     try:

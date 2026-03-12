@@ -1,0 +1,3 @@
+backend: "transformer"
+model: "Qwen/Qwen3-Embedding-4B"
+dim: 2560

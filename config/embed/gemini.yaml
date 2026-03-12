@@ -1,0 +1,3 @@
+backend: "gemini"
+model: "gemini-embedding-2-preview"
+dim: 3072

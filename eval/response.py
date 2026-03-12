@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 from model import BaseLM, GenerationConfig
 from pydantic import BaseModel, Field
 from data import Turn
-from .utils import text_similarity, relative_similarity_score
+from .utils import text_similarity, relative_similarity_score, EmbedConfig
 
 GENERATE_PROMPT = """
 You are an assistant that adapts responses to a user's preferences and values.
@@ -119,7 +119,7 @@ class EvalSchema(BaseModel):
     score: int = Field(ge=1, le=10)
 
 
-def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: Optional[GenerationConfig] = None, eval_model: Optional[BaseLM] = None, evaluation_cfg: Optional[GenerationConfig] = None) -> Dict[str, float]:
+def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], profile: str, embed_cfg: EmbedConfig, generation_cfg: Optional[GenerationConfig] = None, eval_model: Optional[BaseLM] = None, evaluation_cfg: Optional[GenerationConfig] = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     current_message = current_turn.user_message
@@ -137,8 +137,8 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
     except Exception as e:
         return {"gpt_score": 1.0, "similarity_score": 0.0, "relative_score": 0.0, "error": "Generation: " + str(e)}
     adapted_response = generate_output["response"]
-    relative_score = relative_similarity_score(adapted_response, current_turn.candidates, current_turn.chosen_idx)
-    similarity_score = text_similarity(adapted_response, current_turn.chosen)
+    relative_score = relative_similarity_score(adapted_response, current_turn.candidates, current_turn.chosen_idx, embed_cfg)
+    similarity_score = text_similarity(adapted_response, current_turn.chosen, embed_cfg)
     evaluate_prompt = EVALUATE_PROMPT.format(
         current_turn=current_turn.format(include_candidates=True, include_choice=True),
         adapted=adapted_response

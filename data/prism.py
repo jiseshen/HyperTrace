@@ -38,7 +38,7 @@ def extract_profile(survey: dict) -> str:
     profile += "\nComparatively less prioritzed aspects: " + ", ".join(low_prefs)
     return profile
 
-def load_prism(n_users: int = None) -> List[UserData]:
+def load_prism(n_users: int = None, seed: int = 42) -> List[UserData]:
     """
     Load PRISM conversations and return per-user bundles with normalized conversations and turns.
     If n_users is provided, limit to the first n unique users (by dataset order).
@@ -63,6 +63,7 @@ def load_prism(n_users: int = None) -> List[UserData]:
     survey_rec = {rec['user_id']: rec for rec in survey_data}
     
     if n_users is not None:
+        random.seed(seed)
         user_order = random.sample(user_order, n_users)
 
     users: List[UserData] = []

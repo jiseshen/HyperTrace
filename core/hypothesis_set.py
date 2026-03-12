@@ -1,10 +1,10 @@
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, overload
+from typing import Dict, List, Optional, Sequence, Tuple, Union, overload
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import logging
 import faiss
 import numpy as np
-from .utils import embed
+from .utils import embed, EmbedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +34,7 @@ class VectorStore:
     def __init__(
         self,
         *,
-        backend: str = "openai",
-        model: str = "text-embedding-3-small",
-        dim: int = 1536,
+        embed_cfg: EmbedConfig,
         metric: str = "ip",
         capacity: int = 1000,
         use_keys: bool = False,
@@ -46,19 +44,19 @@ class VectorStore:
             dim: Embedding dimension.
             metric: "ip" or "l2".
         """
-        self.backend = backend
-        self.model = model
-        self.dim = dim
+        self.backend = embed_cfg.backend
+        self.model = embed_cfg.model
+        self.dim = embed_cfg.dim
         self.metric = metric
         self.max_memories = capacity
         self.use_keys = use_keys
 
         if metric == "ip":
-            base = faiss.IndexFlatIP(dim)
+            base = faiss.IndexFlatIP(self.dim)
         elif metric == "l2":
-            base = faiss.IndexFlatL2(dim)
+            base = faiss.IndexFlatL2(self.dim)
         else:
-            raise ValueError("metric must be 'ip' or 'l2'.")
+            raise ValueError("Vector store metric must be 'ip' or 'l2'.")
 
         self.index = faiss.IndexIDMap2(base)
 
@@ -239,18 +237,10 @@ class HypothesisSet:
     def __init__(
         self,
         *,
-        backend: str = "openai",
-        model: str = "text-embedding-3-small",
-        dim: int = 1536,
-        metric: str = "ip",
-        capacity: int = 1000,
+        embed_config: EmbedConfig
     ) -> None:
         self.vector_store = VectorStore(
-            backend=backend,
-            model=model,
-            dim=dim,
-            metric=metric,
-            capacity=capacity,
+            embed_config,
             use_keys=True,
         )
         self.global_prior: Dict[str, float] = {}
@@ -479,3 +469,6 @@ class WorkingBelief:
     
     def consolidate(self, importance: float = 0.5, alpha: float = 0.5):
         self.repo.consolidate_belief(self.ids, self.weights, importance=importance, alpha=alpha)
+        
+    def log_dict(self) -> List[Dict[str, Union[str, float]]]:
+        return [asdict(self.repo.hypotheses[hid]) | {"weight": float(weight)} for hid, weight in zip(self.ids, self.weights)]

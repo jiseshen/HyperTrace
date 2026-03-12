@@ -1,4 +1,9 @@
-name: "gpt5-nano-main"
-main_model: "<model/gpt5.yaml>"
-eval_model: "<model/gpt5.yaml>"
-tracer: "<tracer/base.yaml>"
+name: "gpt5-nano-prism"
+dataset: "prism"
+seed: 42
+n_users: 1000
+users_per_run: 100
+embed: "${include:embed/openai.yaml}"
+main_model: "${include:model/gpt5.yaml}"
+eval_model: "${include:model/gpt5.yaml}"
+tracer: "${include:tracer/base.yaml}"

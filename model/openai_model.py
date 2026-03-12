@@ -14,10 +14,10 @@ REASONING_BUDGETS = {"none": 0, "minimal": 32, "low": 128, "medium": 256, "high"
 
 
 class OpenAIModel(BaseLM):
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, model: str = "gpt-5-nano"):
+    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, default_cfg: Optional[GenerationConfig] = None):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "empty")
         self.base_url = base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
-        self.default_cfg = GenerationConfig(model=model)
+        self.default_cfg = default_cfg or GenerationConfig()
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         self.async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
     

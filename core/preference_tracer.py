@@ -1,9 +1,8 @@
 from typing import Optional
-from .utils import TracerConfig, TracerContext
-from .hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief, EmbedConfig
+from .utils import TracerConfig, TracerContext, EmbedConfig
+from .hypothesis_set import Hypothesis, HypothesisSet, WorkingBelief
 from data import Conversation, Turn, UserData
 from model import BaseLM, GenerationConfig
-
 
 from .preprocess import preprocess_candidates
 from .initialize import initialize_hypothesis
@@ -18,28 +17,29 @@ from eval import predict_choice, profile_score, evaluate_generation
 
 class PreferenceTracer:
     def __init__(
-        self, 
-        model: BaseLM,
-        generation_cfg: GenerationConfig, 
+        self,
         tracer_cfg: TracerConfig, 
-        repo_cfg: EmbedConfig,
+        model: BaseLM,
+        generation_cfg: GenerationConfig,
+        embed_cfg: EmbedConfig,
         evaluation_model: Optional[BaseLM] = None,
         evaluation_cfg: Optional[GenerationConfig] = None
     ):
         self.model = model
         self.evaluation_model = evaluation_model or model
         self.base_generation_config = generation_cfg
+        self.embed_config = embed_cfg
         self.evaluation_config = evaluation_cfg or generation_cfg
         self.tracer_config = tracer_cfg
-        self.hypothesis_set = HypothesisSet(repo_config=repo_cfg)
-        self.context = TracerContext(
-            model=model,
-            hypothesis_set=self.hypothesis_set,
-            tracer_config=tracer_cfg,
-            generation_config=generation_cfg
-        )
     
     def trace(self, user_data: UserData):
+        hypothesis_set = HypothesisSet(self.embed_config)
+        context = TracerContext(
+            model=self.model,
+            hypothesis_set=hypothesis_set,
+            tracer_config=self.tracer_config,
+            generation_config=self.base_generation_config
+        )
         records = {"user": user_data.user_id, "turns": []}
         for conversation in user_data.conversations:
             initialized = False
@@ -47,7 +47,7 @@ class PreferenceTracer:
             for turn in conversation.turns:
                 turn_record = {}
                 conversation_history.append(turn)
-                working_profile = summarize_hypotheses(conversation_history, self.context)
+                working_profile = summarize_hypotheses(conversation_history, context)
                 turn_record["summary"] = working_profile
                 # Online Evaluation
                 turn_record["choice_metrics"] = predict_choice(
@@ -61,38 +61,41 @@ class PreferenceTracer:
                     model=self.evaluation_model, 
                     conversation_history=conversation_history, 
                     profile=working_profile,
-                    context=self.context
+                    embed_cfg=self.embed_config,
+                    generation_cfg=self.base_generation_config,
+                    eval_model=self.evaluation_model,
+                    evaluation_cfg=self.evaluation_config
                 )
 
                 # Online Update
-                candidates, preprocess_status = preprocess_candidates(conversation_history, self.context)
+                candidates, preprocess_status = preprocess_candidates(conversation_history, context)
                 turn_record["preprocess"] = preprocess_status
                 if not preprocess_status["success"] or preprocess_status["skip"]:
                     records["turns"].append(turn_record)
                     continue
                 if not initialized:
-                    initialize_record = initialize_hypothesis(conversation_history, candidates, self.context)
+                    initialize_record = initialize_hypothesis(conversation_history, candidates, context)
                     turn_record["initialize"] = initialize_record
                     if not (initialized := initialize_record["success"]):
                         records["turns"].append(turn_record)
                         continue
                 else:
-                    branch_status = branch_hypotheses(conversation_history, candidates, self.context)
+                    branch_status = branch_hypotheses(conversation_history, candidates, context)
                     turn_record["branch"] = branch_status
-                weight_status = weight_hypothesis(conversation_history, candidates, self.context)
+                weight_status = weight_hypothesis(conversation_history, candidates, context)
                 turn_record["weight"] = weight_status
-                if (ess := self.context.belief.ess()) < self.tracer_config.n_hypotheses / 2:
-                    similar_groups = self.context.belief.resample()
+                if (ess := context.belief.ess()) < self.tracer_config.n_hypotheses / 2:
+                    similar_groups = context.belief.resample()
                 else:
-                    similar_groups = self.context.belief.get_similarity_groups(threshold=self.tracer_config.similarity_threshold)
-                turn_record["perturb"] = perturb_hypotheses(conversation_history, candidates, similar_groups, self.context)
+                    similar_groups = context.belief.get_similarity_groups(threshold=self.tracer_config.similarity_threshold)
+                turn_record["perturb"] = perturb_hypotheses(conversation_history, candidates, similar_groups, context)
                 turn_record["perturb"]["ess"] = ess
+                turn_record["hypotheses"] = context.belief.log_dict()
                 records["turns"].append(turn_record)
-            records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, self.context)
+            records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, context)
         # Evaluate profile alignment    
-        profile = summarize_profile(self.context)
-        records["profile_metrics"] = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.evaluation_config)
-        
+        profile = summarize_profile(context)
+        records["profile_metrics"] = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.embed_config, self.evaluation_config)
         return records
         
         

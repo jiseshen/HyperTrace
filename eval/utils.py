@@ -1,14 +1,14 @@
-from core import embed
+from core import embed, EmbedConfig
 import numpy as np
 from typing import List
 
-
-def text_similarity(text1: str, text2: str) -> float:
-    vec = embed([text1, text2])
+# TODO: Optional Embedding Prompts
+def text_similarity(text1: str, text2: str, embed_cfg: EmbedConfig) -> float:
+    vec = embed([text1, text2], embed_cfg=embed_cfg)
     return np.dot(vec[0], vec[1])
 
-def relative_similarity_score(adapted: str, candidates: List[str], chosen_idx: int) -> float:
-    vec = embed([adapted] + candidates)
+def relative_similarity_score(adapted: str, candidates: List[str], chosen_idx: int, embed_cfg: EmbedConfig) -> float:
+    vec = embed([adapted] + candidates, embed_cfg=embed_cfg)
     adapted_vec = vec[0]
     candidate_vecs = vec[1:]
     similarities = np.dot(candidate_vecs, adapted_vec)

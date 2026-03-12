@@ -76,5 +76,5 @@ def summarize_profile(context: TracerContext) -> str:
     prompt = PROFILE_PROMPT.format(
         hypotheses="\n".join([h.format() for h in top_hypotheses])
     )
-    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=PROFILE_BUDGET)["output"]
+    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET)["output"]
     return output

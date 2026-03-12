@@ -38,7 +38,9 @@ env/
 
 # Results and outputs
 preference_results/
+result/
 results/
+output/
 outputs/
 *.jsonl
 *.json
