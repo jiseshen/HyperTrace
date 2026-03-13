@@ -144,7 +144,7 @@ def perturb_group(group: List[int], conversation_history: List[Turn], candidates
     prev_turns = conversation_history[-context.tracer_config.max_history_turns:]
     current_turn = conversation_history[-1]
     hypotheses, weights = context.belief[group]
-    exclude_ids = [h.id for h in hypotheses]
+    exclude_ids = context.belief.ids
     total_weight = weights.sum()
     merged_weight = total_weight * (1 - context.tracer_config.perturb_alpha)
     merged_prior = max([context.hypothesis_set.global_prior[h.id] for h in hypotheses])
