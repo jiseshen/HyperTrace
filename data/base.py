@@ -27,10 +27,10 @@ class Turn:
     def format(self, include_candidates: bool = True, include_choice: bool = True) -> str:
         formatted = f"User: {self.user_message}\n"
         if include_candidates:
-            formatted += "Candidates:\n"
+            formatted += "Candidates:\n\n"
             for idx, cand in enumerate(self.candidates):
                 marker = "[CHOSEN]" if idx == self.chosen_idx else "[REJECTED]"
-                formatted += f"{marker} {idx+1}. {cand}\n" if include_choice else f"{idx+1}. {cand}\n"
+                formatted += f"{marker} [{idx+1}] {cand}\n" if include_choice else f"[C{idx+1}]\n{cand}\n\n"
         else:
             formatted += f"Model: {self.chosen}\n"
         return formatted

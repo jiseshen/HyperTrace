@@ -91,6 +91,7 @@ class PerturbedHypothesisSchema(BaseModel):
     novel_axis: str
 
 AXIS_BUDGET = 64
+MERGE_BUDGET = 256
 UNIT_PERTURB_BUDGET = 256
 logger = logging.getLogger(__name__)
 
@@ -125,8 +126,9 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     K = len(group) - 1
     merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
-    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=UNIT_PERTURB_BUDGET)["output"]
+    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=MERGE_BUDGET)["output"]
     # TODO: Micro-rejuvenation with retrieval from the global hypothesis store.
+    
     perturb_prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         user_message=current_turn.user_message,

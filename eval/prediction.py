@@ -10,11 +10,12 @@ Output format:
     "ranking_score": the linear ranking score of the prediction
 }
 """
-
-import json
+import logging
+import re
 from model import GenerationConfig, BaseLM
 from data import Turn
 from typing import Dict, List
+from pydantic import create_model, conlist
 
 PREDICT_PROMPT = """
 You are ranking candidate responses for a user based on a given user preference profile.
@@ -23,7 +24,7 @@ Given:
 - User preference profile: a concise summary of the user's stable preferences, values, and communication style
 - Conversation history (optional)
 - Current user message
-- Candidate responses with ids
+- Candidate responses. Each candidate has a unique ID in square brackets, such as [C1], [C2].
 
 Internally:
 - Compare each candidate response.
@@ -49,13 +50,13 @@ Output Format:
 Return a JSON object:
 {{
   "reason": "Brief explanation (2-3 sentences). Mention only concrete observable differences.",
-  "ranking": ["id1", "id2", ...]
+  "ranking": ["id1", "id2"]
 }}
 
 Rules:
-- Output valid JSON only.
-- Use the provided candidate ids.
-- Do not include extra commentary.
+- Output valid, parsable JSON only, without any extra commentary.
+- When referring to candidates in your output, use only their IDs (e.g., C1, C2).
+- Keep the number in the ranking exactly the same as the number of given candidates.
 - Do not invent preference signals not present in the profile.
 
 User preference profile:
@@ -66,37 +67,48 @@ Conversation history:
 
 Current interaction:
 {current_turn}
+
+Number of candidates: {c}
 """
 
 PREDICT_BUDGET = 128
+logger = logging.getLogger(__name__)
 
 def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     gt_choice = current_turn.chosen_idx + 1
+    
+    c = len(current_turn.candidates)
     prompt = PREDICT_PROMPT.format(
         profile=profile,
         prev_turns='\n\n'.join([turn.format(include_candidates=False) for turn in prev_turns]),
-        current_turn=current_turn.format(include_candidates=True, include_choice=False)  # ids are (idx + 1)
+        current_turn=current_turn.format(include_candidates=True, include_choice=False),  # ids are (idx + 1)
+        c=c
     )
-    
+
+    Schema = create_model("PredictSchema", ranking=(conlist(str, min_length=c, max_length=c), ...))
     cfg = generation_cfg or GenerationConfig()
-    retries = 0
     prediction = None
-    while True:
+    try:
+        prediction = model.generate(prompt, schema=Schema, cfg=cfg, max_tokens=PREDICT_BUDGET)["output"]
+    except Exception as e:
+        logger.exception("Prediction generation failed.")
+        return {"success": False, "accuracy": 0.0, "ranking_score": 0.5, "reason": str(e)}
+    ranking = []
+    for r in prediction["ranking"]:
+        m = re.search(r"C(\d+)", r)
         try:
-            prediction = model.generate(prompt, cfg=cfg, max_tokens=PREDICT_BUDGET)["output"]
-            prediction_data = prediction if isinstance(prediction, dict) else json.loads(prediction)
-            ranking = prediction_data.get('ranking')
-            ranking = [int(r) for r in ranking]
-            rank = ranking.index(gt_choice) + 1
-            ranking_score = 1.0 if len(ranking) == 1 else (len(ranking) - rank) / (len(ranking) - 1)
-            accuracy = 1.0 if rank == 1 else 0.0
-            return {
-                "accuracy": accuracy,
-                "ranking_score": ranking_score,
-            }
+            ranking.append(int(m.group(1)))
         except Exception as e:
-            retries += 1
-            if retries > cfg.max_retries:
-                raise ValueError(f"Failed to parse model output after {cfg.max_retries} attempts. Prompt: {prompt}. Last output: {prediction} Error: {e}.")
+            logger.exception("ID unmatched: " + r)
+    if gt_choice in ranking:
+        rank = ranking.index(gt_choice) + 1
+        ranking_score = 1.0 if len(ranking) == 1 else (len(ranking) - rank) / (len(ranking) - 1)
+        accuracy = 1.0 if rank == 1 else 0.0
+        return {
+            "success": True,
+            "accuracy": accuracy,
+            "ranking_score": ranking_score,
+        }
+    return {"success": False, "accuracy": 0.0, "ranking_score": 0.5, "reason": "Ground truth choice ID not found in the predicted ranking."}
