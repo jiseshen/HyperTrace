@@ -100,7 +100,7 @@ def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str
         m = re.search(r"C(\d+)", r)
         try:
             ranking.append(int(m.group(1)))
-        except Exception as e:
+        except Exception:
             logger.exception("ID unmatched: " + r)
     if gt_choice in ranking:
         rank = ranking.index(gt_choice) + 1

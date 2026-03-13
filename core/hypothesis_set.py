@@ -110,7 +110,8 @@ class VectorStore:
         content: str,
         top_k: int = 5,
         return_keys: bool = False,
-    ) -> Tuple[List[str | int], List[float]]:
+        exclude_ids: Optional[List[str]] = None
+    ) -> Tuple[List[Union[str, int]], List[float]]:
         """
         Retrieve top-k most similar hypotheses.
 
@@ -125,8 +126,13 @@ class VectorStore:
             return [], []
         vec = embed(content, embed_cfg=self.embed_cfg)
         k = min(top_k, len(self.contents))
-        scores, indices = self.index.search(vec, k)
-        retrieved_hypotheses: List[str | int] = []
+        if exclude_ids:
+            exclude_indices = set(self.get_index(exclude_ids))
+            sel = faiss.IDSelectorNot(faiss.IDSelectorBatch(list(exclude_indices)))
+            scores, indices = self.index.search(vec, k, params=faiss.SearchParameters(sel=sel))
+        else:    
+            scores, indices = self.index.search(vec, k)
+        retrieved_hypotheses: List[Union[str, int]] = []
         retrieval_scores: List[float] = []
         for idx, score in zip(indices[0], scores[0]):
             if idx < 0:
@@ -226,6 +232,7 @@ class HypothesisSet:
     def __init__(
         self,
         *,
+        n_hypotheses: int,
         embed_config: EmbedConfig
     ) -> None:
         self.vector_store = VectorStore(
@@ -233,6 +240,7 @@ class HypothesisSet:
             use_keys=True,
         )
         self.global_prior: Dict[str, float] = {}
+        self.base_prior: float = 1.0 / n_hypotheses
         self.hypotheses: Dict[str, Hypothesis] = {}
         self.category_counts: Dict[str, int] = {}
         self.next_hypothesis_id: int = 1
@@ -275,7 +283,7 @@ class HypothesisSet:
             if prior is not None:
                 self.global_prior[hid] = prior
             else:
-                self.global_prior[hid] = 1.0
+                self.global_prior[hid] = self.base_prior
             contents.append(h.content)
             hids.append(hid)
         if contents:
@@ -286,14 +294,15 @@ class HypothesisSet:
         self,
         query: Union[str, List[str]],
         top_k: int = 5,
+        exclude_ids: Optional[List[str]] = None
     ) -> Tuple[List[Hypothesis], List[float]]:
         if isinstance(query, list):
             hypotheses = [self.hypotheses[hid] for hid in query]
-            priors = [self.global_prior.get(hid, 1.0) for hid in query]
+            priors = [self.global_prior.get(hid, self.base_prior) for hid in query]
             return hypotheses, priors
-        retrieved_ids, _ = self.vector_store.retrieve(query, top_k=top_k, return_keys=True)
+        retrieved_ids, _ = self.vector_store.retrieve(query, top_k=top_k, return_keys=True, exclude_ids=exclude_ids)
         hypotheses = [self.hypotheses[hid] for hid in retrieved_ids]
-        priors = [self.global_prior.get(hid, 1.0) for hid in retrieved_ids]
+        priors = [self.global_prior.get(hid, self.base_prior) for hid in retrieved_ids]
         return hypotheses, priors
     
     def update_hypotheses(

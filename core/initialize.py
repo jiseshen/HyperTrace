@@ -4,7 +4,7 @@ import logging
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
 from .utils import TracerContext
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal
 
 
 INITIALIZATION_PROMPT = """

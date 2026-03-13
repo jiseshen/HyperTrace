@@ -30,7 +30,7 @@ CONSOLIDATE_BUDGET = 256
 
 def compute_importance(conversation_length: int, entropy: float) -> float:
     g = 1 - np.exp(-conversation_length)
-    h = np.sqrt(max(1 - entropy, 0))
+    h = np.sqrt(max(1 - entropy, 0.5))
     return float(g * h)
 
 def deduplicate_group(group: List[str], context: TracerContext):

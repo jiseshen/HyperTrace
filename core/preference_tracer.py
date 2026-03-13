@@ -35,24 +35,23 @@ class PreferenceTracer:
         self.tracer_config = tracer_cfg
     
     def trace(self, user_data: UserData):
-        hypothesis_set = HypothesisSet(embed_config=self.embed_config)
+        hypothesis_set = HypothesisSet(n_hypotheses=self.tracer_config.n_hypotheses, embed_config=self.embed_config)
         context = TracerContext(
             model=self.model,
             hypothesis_set=hypothesis_set,
             tracer_config=self.tracer_config,
             generation_config=self.base_generation_config
         )
+        working_profile = ""
         records = {"user": user_data.user_id, "turns": []}
         for conversation in user_data.conversations:
             initialized = False
             conversation_history = []
-            for turn in conversation.turns:
+            for i, turn in enumerate(conversation.turns):
                 turn_record = {}
                 conversation_history.append(turn)
-                if initialized and context.current_belief is not None:
+                if initialized:
                     working_profile = summarize_hypotheses(conversation_history, context)
-                else:
-                    working_profile = ""
                 turn_record["summary"] = working_profile
                 
                 # Online Evaluation
@@ -98,7 +97,7 @@ class PreferenceTracer:
                 turn_record["perturb"]["ess"] = ess
                 turn_record["hypotheses"] = context.belief.log_dict()
                 records["turns"].append(turn_record)
-            if conversation_history and initialized and context.current_belief is not None:
+            if conversation_history and initialized:
                 records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, context)
         # Evaluate profile alignment
         if context.current_belief is not None:
