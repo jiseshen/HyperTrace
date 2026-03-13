@@ -50,9 +50,6 @@ class PreferenceTracer:
             for i, turn in enumerate(conversation.turns):
                 turn_record = {}
                 conversation_history.append(turn)
-                if initialized:
-                    working_profile = summarize_hypotheses(conversation_history, context)
-                turn_record["summary"] = working_profile
                 
                 # Online Evaluation
                 turn_record["choice_metrics"] = predict_choice(
@@ -89,6 +86,7 @@ class PreferenceTracer:
                     turn_record["branch"] = branch_status
                 weight_status = weight_hypothesis(conversation_history, candidates, context)
                 turn_record["weight"] = weight_status
+                working_profile = summarize_hypotheses(context)
                 if (ess := context.belief.ess()) < self.tracer_config.n_hypotheses / 2:
                     similar_groups = context.belief.resample()
                 else:
@@ -96,6 +94,7 @@ class PreferenceTracer:
                 turn_record["perturb"] = perturb_hypotheses(conversation_history, candidates, similar_groups, context)
                 turn_record["perturb"]["ess"] = ess
                 turn_record["hypotheses"] = context.belief.log_dict()
+                turn_record["summary"] = working_profile
                 records["turns"].append(turn_record)
             if conversation_history and initialized:
                 records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, context)

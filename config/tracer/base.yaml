@@ -2,7 +2,7 @@ hierarchical: true
 allow_expand: false
 allow_skip: true
 n_hypotheses: 5
-consolidate_alpha: 0.5
+consolidate_alpha: 1
 similarity_threshold: 0.8
 perturb_alpha: 0.3
 summary_threshold: 0.1

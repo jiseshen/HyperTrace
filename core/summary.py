@@ -1,39 +1,28 @@
-from typing import List
-
 from .utils import TracerContext
-from data.base import Turn
 
 
 SUMMARY_PROMPT = """
-You are compiling weighted hypotheses about the user's preferences into a short generation guidance for the NEXT assistant response.
+You are summarizing the current belief about a user's preferences.
 
 Goal:
-Produce a stable, actionable instruction that reflects relevant hypotheses and helps generate the next reply.
+Produce a concise and faithful report describing the user's likely preferences
+based on the weighted hypotheses.
 
 Guidelines:
-- If two kept hypotheses conflict, emphasize the higher-likelihood one.
-- Ignore any hypothesis that is not relevant to the current turn.
-- Cold-start: If the hypothesis list is empty, produce a general instruction that would be helpful to guide the response to the current user message.
+- Reflect the relative likelihood of hypotheses in how much space you allocate.
+- Higher-likelihood hypotheses should be described more prominently.
+- If hypotheses conflict, mention the dominant explanation first.
 
-Weight-to-emphasis mapping (must follow):
-- Highest likelihood: express as MUST / ALWAYS / STRICTLY.
-- Medium likelihood: express as SHOULD / GENERALLY / PREFER.
-- Lower but kept: express as MAY / SLIGHTLY / IF POSSIBLE.
-- Reflect weights in *space*: allocate more words to higher-likelihood hypotheses (roughly proportional), but keep total output short.
+Content requirements:
+- Summarize the user's likely preferences, values, style, and expectations.
+- Preserve the meaning of hypotheses; do NOT invent new preferences.
 
-Output requirements:
-- Output 3-7 bullet rules total, no other text.
-- Bullets must be actionable constraints on how to respond (value, format, structure, density, rigor, tone), not abstract personality labels.
-- Do NOT mention likelihood numbers.
+Output format:
+- A short structured summary (4-8 bullet points).
+- Each bullet should describe one aspect of the user's preference or tendency.
 
 [Hypotheses]
 {hypotheses}
-
-[Conversation history]
-{prev_turns}
-
-[Current user message]
-{user_message}
 """
 
 
@@ -58,14 +47,10 @@ Guidelines:
 
 SUMMARY_BUDGET = 256
 
-def summarize_hypotheses(conversation_history: List[Turn], context: TracerContext) -> str:
-    prev_turns = conversation_history[:-1]
-    current_turn = conversation_history[-1]
+def summarize_hypotheses(context: TracerContext) -> str:
     hypotheses, weights = context.belief[:]
     prompt = SUMMARY_PROMPT.format(
         hypotheses="\n".join([f"{h.content} (weight: {w:.2f})" for h, w in zip(hypotheses, weights)]),
-        prev_turns="\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
-        user_message=current_turn.user_message
     )
     output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET)["output"]
     return output
