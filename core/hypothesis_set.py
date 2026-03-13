@@ -128,6 +128,7 @@ class VectorStore:
         k = min(top_k, len(self.contents))
         if exclude_ids:
             exclude_indices = set(self.get_index(exclude_ids))
+            exclude_indices.discard(None)
             sel = faiss.IDSelectorNot(faiss.IDSelectorBatch(list(exclude_indices)))
             scores, indices = self.index.search(vec, k, params=faiss.SearchParameters(sel=sel))
         else:    
@@ -155,14 +156,15 @@ class VectorStore:
             if id in self.key2id:
                 return self.key2id[id]
             else:
-                raise ValueError(f"Key {id} not found in vector store.")
+                return None
         else:
             return int(id)
 
     def delete(self, id: int | str) -> None:
         idx = self.get_index(id)
-        if idx not in self.contents:
-            raise ValueError(f"ID {id} not found in vector store.")
+        if idx is None or idx not in self.contents:
+            print(f"ID {id} not found in vector store. Continue...")
+            return
         self.index.remove_ids(np.asarray([idx], dtype=np.int64))
         self.contents.pop(idx)
         if self.use_keys:
@@ -177,17 +179,21 @@ class VectorStore:
     def update(self, ids: List[int] | List[str], contents: List[str]) -> None:
         idx = self.get_index(ids)
         for i, content in zip(idx, contents):
-            if i not in self.contents:
-                raise ValueError(f"ID {i} not found in vector store.")
+            if i is None or i not in self.contents:
+                print(f"ID {i} not found in vector store.")
+                continue
             self.contents[i] = content
             self.lru_order.move_to_end(i)
         self.index.remove_ids(np.asarray(idx, dtype=np.int64))
         vec = embed(contents, embed_cfg=self.embed_cfg)
         self.index.add_with_ids(vec, np.asarray(idx, dtype=np.int64))
 
-    def similarity(self, id1: int | str, id2: int | str) -> float:
+    def similarity(self, id1: int | str, id2: int | str) -> Optional[float]:
         idx1 = self.get_index(id1)
         idx2 = self.get_index(id2)
+        if any(i is None or i not in self.contents for i in [idx1, idx2]):
+            print(f"One of the IDs {id1}, {id2} not found in vector store.")
+            return None
         vec1 = np.zeros((1, self.dim), dtype=np.float32)
         vec2 = np.zeros((1, self.dim), dtype=np.float32)
         self.index.reconstruct(idx1, vec1[0])
