@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Annotated
 import logging
-from pydantic import BaseModel, create_model, conlist
+from pydantic import BaseModel, create_model, conlist, StringConstraints
 from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief
 from data.base import Turn
@@ -88,7 +88,7 @@ K={K}
 """
 
 class PerturbedHypothesisSchema(BaseModel):
-    content: str
+    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
     novel_axis: str
 
 AXIS_BUDGET = 64

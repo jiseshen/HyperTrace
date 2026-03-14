@@ -103,10 +103,12 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Quick test for PRISM adapter output")
-    parser.add_argument("--n-users", type=int, default=2, help="Number of users to load for preview")
-    parser.add_argument("--preview", action="store_true", help="Print a short preview of the first user's first conversation")
-    parser.add_argument("--dump-json", action="store_true", help="Dump the first user's bundle as JSON (truncated)")
+    parser.add_argument("--user_id", type=str, default=None, help="User ID to load for preview")
     args = parser.parse_args()
 
-    users = load_prism(n_users=args.n_users)
-    print(users)
+    if args.user_id is not None:
+        users = load_prism()
+        user = [user for user in users if user.user_id == args.user_id]
+    else:
+        user = load_prism(n_users=1)
+    print(user)

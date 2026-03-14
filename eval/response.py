@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 from model import BaseLM, GenerationConfig
-from pydantic import BaseModel, create_model, confloat, conlist
+from pydantic import BaseModel, create_model, confloat, conlist, constr
 from data import Turn
 from .utils import text_similarity, relative_similarity_score, EmbedConfig
 import numpy as np
@@ -14,43 +14,28 @@ Given:
 - Current user message
 
 Task:
-
-Step 1 — Produce a brief adaptation_plan.
-Include ONLY aspects that are clearly supported by the user profile and relevant to the current message.
-Do NOT force-fill categories.
-Express each item as an actionable constraint (not a vague description).
-
-Possible aspects (not exhaustive, include only if applicable):
-- Values constraints
-- Information density
-- Structure
-- Level of abstraction
-- Framing
-- Actionability
-- Tone
+Step 1 — Produce an adaptation_plan (a list of actionable constraints).
+- Include ONLY constraints clearly supported by the user profile AND directly relevant to the current message.
+- Each item must be a specific, actionable instruction (e.g., "Use bullet points", "Avoid jargon").
+- If the profile is empty or irrelevant to the current message, return an empty list.
 
 Step 2 — Generate the final response.
-The response must:
-- Follow the adaptation_plan and align with the user profile
-- Directly address the current user message
-- Be helpful and relevant
-- NOT mention the profile or adaptation process directly
+- Apply every constraint in the adaptation_plan.
+- Directly address the current user message.
+- Do NOT mention the profile, adaptation plan, or personalization process.
 
-Conflict resolution rule:
-If the current user message explicitly requests something that conflicts with the profile,
-follow the explicit request in the current message.
+Conflict resolution:
+- If the current message explicitly requests something that conflicts with the profile, follow the current message.
+- If the conflict is partial (e.g., profile says "be concise" but user asks for a detailed breakdown),
+  honor the explicit request but apply non-conflicting constraints from the plan.
 
-If the user profile is empty or clearly irrelevant:
-- Return an empty adaptation_plan
-- Provide a helpful and relevant response
-
-Output JSON only:
+Output valid JSON only. No preamble, no markdown fences.
 {{
-  "adaptation_plan": {{
-      "...": "...",
-      "...": "..."
-  }},
-  "response": "..."
+  "adaptation_plan": [
+    "<actionable constraint 1>",
+    "<actionable constraint 2>"
+  ],
+  "response": "<your response to the current message>"
 }}
 
 [User preference profile]
@@ -101,9 +86,6 @@ Rules:
 {adapted}
 """
 
-class GenSchema(BaseModel):
-    response: str
-
 GEN_BUDGET = 1024
 EVAL_BUDGET = 128
 
@@ -120,6 +102,10 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         eval_model = gen_model
     if evaluation_cfg is None:
         evaluation_cfg = generation_cfg
+    GenSchema = create_model(
+        "GenSchema",
+        response=(constr(strip_whitespace=True, min_length=1), ...)
+    )
     try:
         generate_output = gen_model.generate(
             prompt=generate_prompt,
@@ -150,8 +136,9 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         )["output"]
     except Exception as e:
         return {"gpt_score": 2.5, "relative_gpt_score": 0, "similarity_score": similarity_score, "relative_score": relative_score, "error": "Evaluation: " + str(e)}
-    gpt_score = evaluate_output["scores"][current_turn.chosen_idx]
-    relative_gpt_score = gpt_score - np.mean(evaluate_output["scores"][i] for i in range(c) if i != current_turn.chosen_idx)
+    scores = evaluate_output["scores"]
+    gpt_score = scores[current_turn.chosen_idx]
+    relative_gpt_score = gpt_score - np.mean([scores[i] for i in range(c) if i != current_turn.chosen_idx])
     return {
         "gpt_score": gpt_score,
         "relative_gpt_score": float(relative_gpt_score),

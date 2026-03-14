@@ -1,10 +1,9 @@
-from pydantic import BaseModel, create_model, conlist
+from pydantic import BaseModel, create_model, conlist, StringConstraints
 import logging
-
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
 from .utils import TracerContext
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Annotated
 
 
 INITIALIZATION_PROMPT = """
@@ -78,7 +77,7 @@ logger = logging.getLogger(__name__)
 class HypothesisSchema(BaseModel):
     id: str
     action: Literal["reuse", "new"]
-    content: str
+    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 def initialize_hypothesis(
     conversation_history: List[Turn],

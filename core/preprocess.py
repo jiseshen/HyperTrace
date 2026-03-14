@@ -1,6 +1,6 @@
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
-from pydantic import BaseModel, create_model, conlist
+from typing import Any, Dict, List, Optional, Tuple, Annotated
+from pydantic import BaseModel, conlist, create_model, StringConstraints
 import logging
 from .utils import TracerContext
 from data.base import Turn
@@ -80,9 +80,8 @@ UNIT_PREPROCESS_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class CandidateSchema(BaseModel):
-    i: int
-    preview: str
-    
+    preview: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+
 class SkipSchema(BaseModel):
     skip: bool
 
@@ -121,12 +120,13 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
         n=n
     )
     budget = UNIT_PREPROCESS_BUDGET * n
-    Schema = create_model(
+
+    PreprocessSchema = create_model(
         "PreprocessSchema",
         processed_candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...)
     )
     try:
-        output = context.model.generate(preprocess_prompt, schema=Schema, cfg=context.generation_config, max_tokens=budget)["output"]
+        output = context.model.generate(preprocess_prompt, schema=PreprocessSchema, cfg=context.generation_config, max_tokens=budget)["output"]
     except Exception as e:
         logger.exception("Preprocessing failed")
         return "", {"success": False, "skip": False, "reason": str(e), "invalid": invalid}

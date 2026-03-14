@@ -64,13 +64,13 @@ Constraints for C:
 - If demographics are missing/withheld, score C mainly by internal coherence and default toward 3 unless clearly problematic.
 
 Output ONLY the final JSON:
-{
+{{
   "reason": "2-4 sentences citing the most important core-signal matches/mismatches and any compatibility concerns.",
   "aspects_covered": ["aspect1", "aspect2", ...],
   "survey_consistency": 0-5,
   "key_aspect_match": 0-5,
   "internal_plausibility": 0-5
-}
+}}
 
 Now evaluate:
 
