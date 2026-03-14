@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 ROOT = Path("result/gpt5-nano-prism_42")
 MIN_USERS_PER_TURN = 10
-SAVE_DIR = Path("result") / "gpt5-nano-prism-plots" / "v2"
+SAVE_DIR = Path("result") / "gpt5-nano-prism-plots" / "v3"
 
 
 def load_json(path: Path) -> Dict[str, Any]:

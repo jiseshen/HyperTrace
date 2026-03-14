@@ -1,8 +1,9 @@
 from typing import Dict, List, Optional
 from model import BaseLM, GenerationConfig
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, create_model, confloat, conlist
 from data import Turn
 from .utils import text_similarity, relative_similarity_score, EmbedConfig
+import numpy as np
 
 GENERATE_PROMPT = """
 You are an assistant that adapts responses to a user's preferences and values.
@@ -63,60 +64,45 @@ Output JSON only:
 """
 
 EVALUATE_PROMPT = """
-You are evaluating whether an Adapted response aligns more closely with the user's chosen response.
+You are evaluating the similarity between an Adapted response and a set of candidate responses in the context of the user preferences.
 
-Given:
-- Current user message
-- Candidate responses (with chosen or rejected specified)
-- Adapted response (to evaluate)
-
-Goal:
-Determine whether the Adapted response is more similar to the Chosen candidate than to the Rejected candidate.
+Inputs:
+- Current turn with candidates (chosen_index indicated)
+- Adapted response
 
 Step 1:
-Identify key preference-relevant differences between Chosen and Rejected.
-Focus on (not exhaustive, and only include if relevant):
-- Underlying value
-- Tone
-- Structure
-- Information density
-- Level of abstraction
-- Actionability
-- Framing
+Identify 2-4 preference-relevant dimensions that distinguish the candidates from at least one alternative.
+Use short canonical labels (e.g., "values", "information_density", "structure", "actionability", "tone", "framing", "abstraction") (Not exhaustive and do not force-fit).
 
 Step 2:
-Compare the Adapted response to both candidates along those dimensions.
+Using ONLY those dimensions, score how similar the Adapted response is to EACH candidate.
+Scores are 0-5:
+5 = Near-identical on the key dimensions; Adapted matches candidate's stance/style/structure with no meaningful drift.
+4 = Strong match on most key dimensions; minor drift on at most one dimension.
+3 = Partial match; aligns on some key dimensions but differs on others OR ambiguity prevents a clear judgment.
+2 = Weak match; differs on one or more key dimensions in a way that matters.
+1 = Very weak match; mostly reflects the opposite of the candidate on key dimensions.
+0 = Opposes/contradicts the candidate on the key dimensions (clear mismatch).
 
-Evaluation principles:
-- Only consider dimensions that distinguish Chosen from Rejected.
-- Do not assume hidden user traits.
-
-Scoring rubric (1-10):
-
-9-10: Adapted clearly reflects the distinguishing qualities of the Chosen candidate.
-7-8: Adapted mostly reflects Chosen, with minor resemblance to Rejected.
-5-6: Mixed; partially resembles both.
-3-4: Adapted resembles Rejected more on key distinguishing aspects.
-1-2: Adapted strongly resembles Rejected.
-
-Output JSON only:
+Output valid, parsable JSON only:
 {{
-  "reason": "2-3 sentences describing the key distinguishing signals and how Adapted compares.",
-  "score": 1-10
+  "dimensions": ["...", "..."],
+  "scores": [s0, s1, ...]
 }}
 
-[Interaction]
+Rules:
+- scores length MUST equal number of candidates; scores[i] corresponds to candidate i. Do NOT change the candidate order.
+- Use the same dimensions for scoring all candidates.
+
+[Current turn]
 {current_turn}
 
-[Adapted response]
+[Adapted]
 {adapted}
 """
 
 class GenSchema(BaseModel):
     response: str
-
-class EvalSchema(BaseModel):
-    score: int = Field(ge=1, le=10)
 
 GEN_BUDGET = 1024
 EVAL_BUDGET = 128
@@ -142,13 +128,18 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
             max_tokens=GEN_BUDGET
         )["output"]
     except Exception as e:
-        return {"gpt_score": 1.0, "similarity_score": 0.0, "relative_score": 0.0, "error": "Generation: " + str(e)}
+        return {"gpt_score": 0.0, "similarity_score": 0.0, "relative_score": 0.0, "error": "Generation: " + str(e)}
     adapted_response = generate_output["response"]
     relative_score = relative_similarity_score(adapted_response, current_turn.candidates, current_turn.chosen_idx, embed_cfg)
     similarity_score = text_similarity(adapted_response, current_turn.chosen, embed_cfg)
     evaluate_prompt = EVALUATE_PROMPT.format(
         current_turn=current_turn.format(include_candidates=True, include_choice=True),
         adapted=adapted_response
+    )
+    c = len(current_turn.candidates)
+    EvalSchema = create_model(
+        "EvalSchema", 
+        scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), ...)
     )
     try:
         evaluate_output = eval_model.generate(             
@@ -158,9 +149,12 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
             max_tokens=EVAL_BUDGET
         )["output"]
     except Exception as e:
-        return {"gpt_score": 5.0, "similarity_score": similarity_score, "relative_score": relative_score, "error": "Evaluation: " + str(e)}
+        return {"gpt_score": 2.5, "relative_gpt_score": 0, "similarity_score": similarity_score, "relative_score": relative_score, "error": "Evaluation: " + str(e)}
+    gpt_score = evaluate_output["scores"][current_turn.chosen_idx]
+    relative_gpt_score = gpt_score - np.mean(evaluate_output["scores"][i] for i in range(c) if i != current_turn.chosen_idx)
     return {
-        "gpt_score": evaluate_output["score"], 
+        "gpt_score": gpt_score,
+        "relative_gpt_score": float(relative_gpt_score),
         "similarity_score": similarity_score,
         "relative_score": relative_score,
     }

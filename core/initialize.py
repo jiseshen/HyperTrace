@@ -26,25 +26,30 @@ Internally:
 Then:
 
 1. Identify the category/topic of the current conversation.
-   This category is used only for organizing and retrieving hypotheses in the library.
+   This category is used only for organizing and retrieving hypotheses in the library. When making hypotheses, focus more on conversational style and value.
 
 2. Propose exactly {n_hypotheses} stable user preference hypotheses:
-   - Each hypothesis should focus on a different aspect of preference or value that could explain the user's choice.
-   - Reuse and revise relevant retrieved hypotheses when appropriate.
-   - Otherwise generate new hypotheses.
+- Each hypothesis should focus on a different aspect of preference or value that could explain the user's choice.
+- Reuse and revise relevant retrieved hypotheses when appropriate.
+- Otherwise generate new hypotheses.
+- For each hypothesis, provide:
+  * "id": either the reused hypothesis ID or create a new unique ID (e.g., "new-1")
+  * "action": "reuse" if reusing a retrieved hypothesis, or "new" if creating a new one
+  * "content": a clear hypothesis describing a latent user preference.
+  * "justification": why it explains the chosen response
 
 Output Format
 
 Return a JSON object:
 
 {{
-  "category": "string",
+  "category": "...",
   "hypotheses": [
     {{
-      "id": "string (reuse existing ID or 'new-1')",
+      "id": "...",
       "action": "reuse" | "new",
-      "content": "revised or new hypothesis content",
-      "evidence": "short justification (1-2 sentences) citing specific candidate differences or user message cues that support this hypothesis"
+      "content": "...",
+      "justification": "..."
     }}
   ]
 }}

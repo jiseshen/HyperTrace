@@ -86,7 +86,7 @@ class CandidateSchema(BaseModel):
 class SkipSchema(BaseModel):
     skip: bool
 
-def compact_text(s: str, head: int = 100, tail: int = 100) -> str:
+def compact_text(s: str, head: int = 200, tail: int = 100) -> str:
     if len(s) <= head + tail + 3:
         return s
     return f"{s[:head]}...{s[-tail:]}"
@@ -135,5 +135,5 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
         lines = []
         for i, (preview, candidate) in enumerate(zip(previews, current_turn.candidates)):
             marker = "[CHOSEN]" if i == current_turn.chosen_idx else "[REJECTED]"
-            lines.append(f"{i}. {marker} Preview: {preview} Content: {compact_text(candidate)}")
+            lines.append(f"[{i}] {marker} Preview: {preview} Content: {compact_text(candidate)}")
         return "\n".join(lines), {"success": True, "skip": False, "invalid": invalid}

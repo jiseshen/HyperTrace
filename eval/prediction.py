@@ -29,8 +29,7 @@ Given:
 Internally:
 - Compare each candidate response.
 - Consider observable differences only.
-- If the user profile is non-empty, evaluate alignment strictly based on explicit signals in the profile.
-- Do NOT speculate about hidden motivations.
+- If the user profile is non-empty, evaluate alignment based on explicit signals in the profile.
 - If the profile is empty or clearly irrelevant to this turn, rank candidates based on overall quality, clarity, and usefulness.
 
 Possible dimensions (do not force-fit):
@@ -49,7 +48,7 @@ Output Format:
 
 Return a JSON object:
 {{
-  "reason": "Brief explanation (2-3 sentences). Mention only concrete observable differences.",
+  "reason": "Brief explanation (2-3 sentences).",
   "ranking": ["id1", "id2"]
 }}
 

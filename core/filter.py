@@ -1,61 +1,43 @@
 from typing import Any, Dict, List
 import asyncio
 import logging
-from pydantic import BaseModel, Field
+import numpy as np
+from pydantic import create_model, conlist, confloat
 from core.utils import TracerContext
 from core.hypothesis_set import Update
 from data.base import Turn
 
 
 LIKELIHOOD_PROMPT = """
-You are estimating the behavioral likelihood P(a | z).
+You are scoring alignment between candidate responses and a hypothesis z in order to estimate choice likelihood.
 
-Interpretation:
-- a = the candidate the user actually chose.
-- z = a single hypothesis about the user's latent preference/value.
-- You must assume z is TRUE for the purpose of this evaluation.
-- Your task is to estimate how likely a rational user with preference z would choose the selected candidate a over the alternatives.
+Definitions:
+- z: a single hypothesis about the user's latent preference/value. Assume z is TRUE.
+- candidates: multiple responses to the same user message.
 
-Given:
-- Current user message
-- All candidate responses with the chosen one (a) indicated
-- Hypothesis z (a statement describing a latent user preference/value)
+Goal:
+For each candidate i, assign an ALIGNMENT SCORE s_i in 0-5 indicating how well the candidate matches z,
+based on preference-relevant differences (values/style/structure/constraints implied by z), NOT general quality.
 
-Step 2 — Likelihood reasoning.
-Assuming hypothesis z is true:
-- Does z strongly favor the chosen candidate?
-- Does z weakly favor it?
-- Is z irrelevant to the distinguishing dimensions?
-- Does z favor a different candidate instead?
+Scoring anchors (use these strictly):
+5 = Best match to z; clearly satisfies z better than others (large margin)
+4 = Strong match; among the top or tied-top under z
+3 = Moderate match; plausible under z but not top
+2 = Weak match; conflicts with z in at least one important way
+1 = Poor match; largely mismatched to z
+0 = Opposes z or ignores it entirely
 
-Think in terms of comparative preference, not absolute quality.
+Rules:
+- Compare candidates RELATIVELY under z. Do not score absolute correctness unless z explicitly cares about it.
+- If z is irrelevant to differences among candidates, give near-equal scores (e.g., all 3, or 3/3/2 with tiny variance).
+- Use the full range when justified; avoid defaulting to 3 unless genuinely ambiguous.
+- Do NOT invent preferences not stated in z or the user message.
+- The output list must have exactly the same length as the number of candidates.
+- scores[i] MUST correspond to candidate i in the given order. Do NOT reorder candidates.
 
-Step 3 — Assign a probability P(a | z).
-
-Use the following calibrated anchors:
-
-Very Likely       ≈ 0.90
-Likely            ≈ 0.70
-Somewhat Likely   ≈ 0.50
-Somewhat Unlikely ≈ 0.30
-Unlikely          ≈ 0.10
-Very Unlikely     ≈ 0.05
-
-You may choose intermediate numeric values (e.g., 0.65, 0.82) if justified,
-but stay within [0.05, 0.95] unless the case is extremely clear.
-
-Important:
-- This is NOT judging whether z is correct.
-- This is NOT judging which candidate is objectively best.
-- Only estimate: if z were true, how likely would a be chosen?
-- Do not assume additional hidden preferences.
-- Base your judgment only on observable differences.
-
-Output JSON only:
+Output valid, parsable JSON only:
 {{
-  "reason": "2-4 sentences briefly analyzing how z is related to the choice.",
-  "likelihood_bucket": "Very Likely | Likely | Somewhat Likely | Somewhat Unlikely | Unlikely | Very Unlikely",
-  "likelihood": 0.xx
+  "scores": [s0, s1, ...]
 }}
 
 [Conversation history]
@@ -71,12 +53,13 @@ Output JSON only:
 {hypothesis}
 """
 
-class FilterSchema(BaseModel):
-    likelihood: float = Field(ge=0.0, le=1.0)
-
 FILTER_BUDGET = 64
 logger = logging.getLogger(__name__)
 
+def softmax(logits: List[float], t: float = 1) -> np.ndarray:
+    scaled_logits = np.array(logits) / t
+    exp_logits = np.exp(scaled_logits - np.max(scaled_logits))  # for numerical stability
+    return exp_logits / np.sum(exp_logits)
 
 def weight_hypothesis(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Dict[str, Any]:
     prev_turns = conversation_history[:-1]
@@ -91,6 +74,11 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
             hypothesis=h.format()
         ) for h in hypotheses
     ]
+    c = len(current_turn.candidates)
+    FilterSchema = create_model(
+        "FilterSchema",
+        scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), ...)
+    )
     
     try:
         async_outputs = asyncio.run(
@@ -107,10 +95,10 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
     for h, o in zip(hypotheses, outputs):
         if o is None:
             invalid += 1
-        likelihood = o['likelihood'] if o else 0.5
+        likelihood = softmax(o['scores'], t=0.5)[current_turn.chosen_idx] if o else softmax([3] * len(current_turn.candidates))[current_turn.chosen_idx]
         update = Update(
             id=h.id,
-            likelihood=likelihood
+            likelihood=float(likelihood)
         )
         updates.append(update)
     context.belief.update(updates=updates)

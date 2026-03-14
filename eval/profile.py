@@ -11,48 +11,66 @@ Inputs:
 - Survey records (ground truth, possibly partial):
   - Basic demographics (age, gender; religion/ethnicity may be "prefer not to say")
   - Self descriptions (values/explicit preferences)
-  - System string (expectations for AI interaction, direct signal of preferences)
-  - Prioritized aspects and less-prioritized aspects
+  - System string (expectations for AI interaction)
+  - Prioritized aspects and less-prioritized aspects (if provided)
 - Inferred profile: a user preference profile inferred from conversation history.
 
 Key principles:
-1) Partial GT: Do NOT treat missing survey fields as negatives. Additional details in the inferred profile are NOT wrong
-   by default; they may be true but unobserved in the survey.
-2) Hard contradictions: Penalize when the inferred profile clearly contradicts explicit survey information.
-3) Demographic priors (soft inference):
-   - You MAY use demographics (age, gender, and religion ONLY if explicitly provided) as statistical priors to judge
-    plausibility of preferences/values when survey is silent.
-   - Demographics are a WEAK signal: they should not override explicit survey statements.
-   - If religion/ethnicity is "prefer not to say", do NOT infer religion-based values.
-4) Topic-agnostic: Ignore topic-specific interests unless they clearly encode stable preference signals (e.g., "prefers unbiased macro analysis").
+1) Partial GT: Do NOT treat missing survey fields as negatives. Extra details in the inferred profile are NOT wrong by default.
+2) Core-signal focus: Many surveys are sparse. Scoring should emphasize whether the inferred profile captures the CLEAR, CENTRAL traits that are explicitly present, even if there are only 1–2 such traits.
+3) Hard contradictions: Penalize only when the inferred profile clearly contradicts explicit survey information.
+4) Demographics as compatibility check (very weak):
+   - Demographics are NOT used to "infer" preferences.
+   - Use them only to detect obvious incompatibilities or surprising assumptions when survey is silent.
+   - If religion is not provided or is "prefer not to say", do NOT use religion-based reasoning at all.
+5) Topic-agnostic: Ignore topic-specific interests unless they encode stable preference signals.
 
-Evaluate four aspects (each 1 to 10):
-A) Survey Consistency
-- Agreement with explicit survey facts: user's stated values and expectations.
-- Penalize direct conflicts.
+Evaluate three aspects (each 0-5):
 
-B) Key Aspect Match (prioritized aspects)
-- List the aspects covered in the inferred profile in "aspects covered".
-- Score reflects how well the inferred profile captures user's prioritized aspects.
-- Penalize overemphasis on non-prioritized aspects.
+A) Survey Consistency (explicit signal capture + non-contradiction)
+Rubric:
+5 = Captures the survey's clearest core preference(s)/expectation(s) and shows no contradictions (even if survey is brief).
+4 = Mostly captures the core signal; minor omissions or slight ambiguity; no hard conflicts.
+3 = Partial capture: gets some signal right but misses/blur a key core point OR contains an ambiguous tension.
+2 = Weak alignment: misses the core survey signal OR includes one clear contradiction to an explicit survey statement.
+1 = Very weak: multiple clear contradictions or systematically mischaracterizes the core signal.
+0 = Opposite: directly contradicts the main explicit survey preference(s).
 
-C) Internal Plausibility
-- Using age, gender and religion, judge whether the inferred preferences are broadly plausible in a statistical sense.
-- e.g. a teen is more likely to prioritize creativity; a religious person may align with certain values.
-- This is NOT a correctness check; it is a plausibility check. Just ask: "Given the demographics, how plausible are these preferences"
-- Do NOT use religion-based inference if religion is not provided or is "prefer not to say".
+B) Key Aspect Match (prioritized aspects, if provided)
+Rubric:
+5 = Covers most prioritized aspects with correct emphasis; avoids overemphasizing less-prioritized aspects.
+4 = Covers several prioritized aspects; emphasis mostly right with small drift.
+3 = Covers some prioritized aspects but misses key ones or spreads emphasis too broadly.
+2 = Mentions few prioritized aspects; noticeably focuses on less-prioritized aspects.
+1 = Barely covers prioritized aspects; emphasis largely misaligned.
+0 = Fails to reflect prioritized aspects at all.
+If the survey does NOT provide prioritized aspects, set key_aspect_match=3 by default unless there is strong evidence to go higher/lower.
 
-Scoring rubric:
-The score ranges from 1 (poor) to 10 (excellent) for each aspect.
+C) Internal Plausibility (demographic compatibility check)
+Interpretation:
+- This is NOT stereotype-based profiling and NOT used to infer preferences.
+- It is only a sanity check for obvious incompatibilities with provided demographics.
+
+Rubric:
+5 = No demographic incompatibilities; profile makes compatible claims.
+4 = Generally compatible; a small stretch but not clearly incompatible.
+3 = Neutral/unknown: demographics provide little usable constraint OR the profile stays generic/compatible.
+2 = Some questionable assumptions given demographics (unnecessary leaps), but not outright incompatible.
+1 = Clearly incompatible assumptions with provided demographics.
+0 = Multiple strong incompatibilities.
+
+Constraints for C:
+- Use religion-based compatibility checks ONLY if religion is explicitly provided and not "prefer not to say".
+- If demographics are missing/withheld, score C mainly by internal coherence and default toward 3 unless clearly problematic.
 
 Output ONLY the final JSON:
-{{
-  "reason": "A brief explanation of scoring, citing concrete matches/mismatches and analyzing internal plausibility.",
+{
+  "reason": "2-4 sentences citing the most important core-signal matches/mismatches and any compatibility concerns.",
   "aspects_covered": ["aspect1", "aspect2", ...],
-  "survey_consistency": 1-10,
-  "key_aspect_match": 1-10,
-  "internal_plausibility": 1-10,
-}}
+  "survey_consistency": 0-5,
+  "key_aspect_match": 0-5,
+  "internal_plausibility": 0-5
+}
 
 Now evaluate:
 
@@ -68,9 +86,9 @@ PROFILE_EVAL_BUDGET = 384
 
 
 class ProfileEvalSchema(BaseModel):
-    survey_consistency: float = Field(ge=1.0, le=10.0)
-    key_aspect_match: float = Field(ge=1.0, le=10.0)
-    internal_plausibility: float = Field(ge=1.0, le=10.0)
+    survey_consistency: float = Field(ge=0, le=5)
+    key_aspect_match: float = Field(ge=0, le=5)
+    internal_plausibility: float = Field(ge=0, le=5)
 
 
 def profile_score(eval_model: BaseLM, profile: str, survey: str, embed_cfg: EmbedConfig, evaluation_cfg: GenerationConfig = None) -> Dict[str, float]:
