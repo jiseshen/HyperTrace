@@ -1,15 +1,3 @@
-"""
-Given a user's preference profile and a conversation history,
-prompt the model to rank candidate responses for the new message,
-and evaluate the ranking against the ground truth choice,
-as an online evaluation of the personalization method.
-
-Output format:
-{
-    "accuracy": 0 or 1,
-    "ranking_score": the linear ranking score of the prediction
-}
-"""
 import logging
 import re
 from model import GenerationConfig, BaseLM

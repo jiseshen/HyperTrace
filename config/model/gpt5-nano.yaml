@@ -1,5 +1,5 @@
 backend: "openai"
-model: "gpt-5"
+model: "gpt-5-nano"
 reasoning_effort: "minimal"
 reasoning_summary: null
 verbosity: "low"

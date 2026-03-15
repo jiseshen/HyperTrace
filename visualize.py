@@ -1,15 +1,18 @@
 import json
 import math
+import random
+from argparse import ArgumentParser
 from glob import glob
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
+from datasets import load_dataset
 
 
-ROOT = Path("result/gpt5-nano-prism_42")
+ROOT = Path("result/gpt5-nano-trace-prism_42")
 MIN_USERS_PER_TURN = 10
-SAVE_DIR = Path("result") / "gpt5-nano-prism-plots" / "v3"
+SAVE_ROOT = Path("result") / "gpt5-nano-trace-prism-plots"
 
 
 def load_json(path: Path) -> Dict[str, Any]:
@@ -46,6 +49,58 @@ def collect_user_files(root: Path) -> List[Path]:
     return files
 
 
+def collect_user_files_by_ids(root: Path, user_ids: List[str]) -> List[Path]:
+    files = []
+    missing = []
+    for uid in user_ids:
+        p = root / f"{uid}.json"
+        if p.exists():
+            files.append(p)
+        else:
+            missing.append(uid)
+    if not files:
+        raise FileNotFoundError(
+            f"No matching user JSON files found under: {root}. "
+            f"Requested IDs: {len(user_ids)}, missing: {len(missing)}."
+        )
+    if missing:
+        print(f"Warning: {len(missing)} sampled users have no result json under {root}.")
+    return files
+
+
+def sample_prism_user_ids(n_users: int = 1000, seed: int = 42) -> List[str]:
+    train_data = load_dataset("HannahRoseKirk/prism-alignment", "conversations")["train"]
+    user_order: List[str] = []
+    seen = set()
+    for rec in train_data:
+        uid = rec["user_id"]
+        if uid not in seen:
+            seen.add(uid)
+            user_order.append(uid)
+    if n_users > len(user_order):
+        raise ValueError(f"Requested n_users={n_users}, but dataset has only {len(user_order)} unique users.")
+    random.seed(seed)
+    return random.sample(user_order, n_users)
+
+
+def parse_index_range(index_range: str, total: int) -> tuple[int, int]:
+    try:
+        left, right = index_range.split(":", 1)
+        start = int(left) if left != "" else 0
+        end = int(right) if right != "" else total
+    except Exception as e:
+        raise ValueError(
+            f"Invalid --index-range '{index_range}'. Use slice-like format start:end, e.g. 0:100, 199:, :200, :."
+        ) from e
+    if start < 0 or end < 0:
+        raise ValueError(f"Invalid --index-range '{index_range}'. start/end must be non-negative.")
+    if start >= end:
+        raise ValueError(f"Invalid --index-range '{index_range}'. Must satisfy 0 <= start < end.")
+    if start >= total:
+        raise ValueError(f"Range start {start} out of bounds for total sampled users {total}.")
+    return start, min(end, total)
+
+
 def build_turnwise_averages(
     users: List[Dict[str, Any]],
     min_users_per_turn: int = 10,
@@ -56,6 +111,7 @@ def build_turnwise_averages(
     accuracy_avg: List[float] = []
     ranking_avg: List[float] = []
     gpt_avg: List[float] = []
+    rel_gpt_avg: List[float] = []
     sim_avg: List[float] = []
     rel_avg: List[float] = []
     counts: List[int] = []
@@ -64,6 +120,7 @@ def build_turnwise_averages(
         acc_vals: List[float] = []
         rank_vals: List[float] = []
         gpt_vals: List[float] = []
+        rel_gpt_vals: List[float] = []
         sim_vals: List[float] = []
         rel_vals: List[float] = []
 
@@ -85,6 +142,10 @@ def build_turnwise_averages(
             if v is not None:
                 gpt_vals.append(v)
 
+            v = safe_get(turn, "generation_metrics", "relative_gpt_score")
+            if v is not None:
+                rel_gpt_vals.append(v)
+
             v = safe_get(turn, "generation_metrics", "similarity_score")
             if v is not None:
                 sim_vals.append(v)
@@ -99,6 +160,7 @@ def build_turnwise_averages(
             len(acc_vals),
             len(rank_vals),
             len(gpt_vals),
+            len(rel_gpt_vals),
             len(sim_vals),
             len(rel_vals),
         )
@@ -111,6 +173,7 @@ def build_turnwise_averages(
         accuracy_avg.append(mean(acc_vals) if acc_vals else math.nan)
         ranking_avg.append(mean(rank_vals) if rank_vals else math.nan)
         gpt_avg.append(mean(gpt_vals) if gpt_vals else math.nan)
+        rel_gpt_avg.append(mean(rel_gpt_vals) if rel_gpt_vals else math.nan)
         sim_avg.append(mean(sim_vals) if sim_vals else math.nan)
         rel_avg.append(mean(rel_vals) if rel_vals else math.nan)
 
@@ -120,6 +183,7 @@ def build_turnwise_averages(
         "accuracy": accuracy_avg,
         "ranking_score": ranking_avg,
         "gpt_score": gpt_avg,
+        "relative_gpt_score": rel_gpt_avg,
         "similarity_score": sim_avg,
         "relative_score": rel_avg,
     }
@@ -216,7 +280,7 @@ def plot_profile_bar(profile_avg: Dict[str, float], save_path: Path) -> None:
     plt.close()
 
 
-def print_summary(turnwise: Dict[str, List[float]], profile_avg: Dict[str, float], n_users: int) -> None:
+def print_summary(turnwise: Dict[str, List[float]], profile_avg: Dict[str, float], n_users: int, save_dir: Path) -> None:
     print(f"Loaded users: {n_users}")
     print(f"Turn curve length after truncation (min {MIN_USERS_PER_TURN} users/turn): {len(turnwise['turn'])}")
     if turnwise["turn"]:
@@ -225,12 +289,33 @@ def print_summary(turnwise: Dict[str, List[float]], profile_avg: Dict[str, float
     print("Average profile metrics:")
     for k, v in profile_avg.items():
         print(f"  {k}: {v:.6f}" if v == v else f"  {k}: nan")
+    print(f"Saved plots to: {save_dir.resolve()}")
 
 
 def main() -> None:
-    ensure_dir(SAVE_DIR)
+    parser = ArgumentParser(description="Visualize PRISM tracing metrics.")
+    parser.add_argument("--run-name", type=str, default=str(ROOT), help="Result root containing user json files.")
+    parser.add_argument("--save-name", type=str, default=None, help="Subdirectory name under result/gpt5-nano-trace-prism-plots.")
+    parser.add_argument("--sample-size", type=int, default=1000, help="Sample size used to build user-id list from PRISM.")
+    parser.add_argument("--sample-seed", type=int, default=42, help="Random seed for PRISM user sampling.")
+    parser.add_argument("--index-range", type=str, default=None, help="Index range over sampled ids, format start:end (e.g. 0:100).")
+    args = parser.parse_args()
 
-    user_files = collect_user_files(ROOT)
+    record_path = Path("result") / args.run_name / "records"
+    save_path = Path("result") / args.run_name / "plots"
+    ensure_dir(save_path)
+
+    if args.index_range is None:
+        user_files = collect_user_files(record_path)
+    else:
+        sampled_ids = sample_prism_user_ids(n_users=args.sample_size, seed=args.sample_seed)
+        start, end = parse_index_range(args.index_range, len(sampled_ids))
+        target_ids = sampled_ids[start:end]
+        print(
+            f"Using sampled PRISM ids with seed={args.sample_seed}, n={args.sample_size}, "
+            f"slice={start}:{end} (count={len(target_ids)})."
+        )
+        user_files = collect_user_files_by_ids(record_path, target_ids)
     users = [load_json(p) for p in user_files]
 
     turnwise = build_turnwise_averages(users, min_users_per_turn=MIN_USERS_PER_TURN)
@@ -243,7 +328,7 @@ def main() -> None:
         turnwise["count"],
         title="Average Choice Accuracy vs Turn",
         ylabel="Choice Accuracy",
-        save_path=SAVE_DIR / "turn_choice_accuracy.png",
+        save_path=save_path / "turn_choice_accuracy.png",
         ylim=(0, 1.05),
     )
 
@@ -253,7 +338,7 @@ def main() -> None:
         turnwise["count"],
         title="Average Choice Ranking Score vs Turn",
         ylabel="Ranking Score",
-        save_path=SAVE_DIR / "turn_choice_ranking_score.png",
+        save_path=save_path / "turn_choice_ranking_score.png",
         ylim=(0, 1.05),
     )
 
@@ -263,7 +348,16 @@ def main() -> None:
         turnwise["count"],
         title="Average Generation GPT Score vs Turn",
         ylabel="GPT Score",
-        save_path=SAVE_DIR / "turn_generation_gpt_score.png",
+        save_path=save_path / "turn_generation_gpt_score.png",
+    )
+
+    plot_line(
+        turnwise["turn"],
+        turnwise["relative_gpt_score"],
+        turnwise["count"],
+        title="Average Generation Relative GPT Score vs Turn",
+        ylabel="Relative GPT Score",
+        save_path=save_path / "turn_generation_relative_gpt_score.png",
     )
 
     plot_line(
@@ -272,7 +366,7 @@ def main() -> None:
         turnwise["count"],
         title="Average Generation Similarity Score vs Turn",
         ylabel="Similarity Score",
-        save_path=SAVE_DIR / "turn_generation_similarity_score.png",
+        save_path=save_path / "turn_generation_similarity_score.png",
     )
 
     plot_line(
@@ -281,17 +375,16 @@ def main() -> None:
         turnwise["count"],
         title="Average Generation Relative Score vs Turn",
         ylabel="Relative Score",
-        save_path=SAVE_DIR / "turn_generation_relative_score.png",
+        save_path=save_path / "turn_generation_relative_score.png",
     )
 
     # 额外的 profile metrics 柱状图
     plot_profile_bar(
         profile_avg,
-        save_path=SAVE_DIR / "profile_metrics_bar.png",
+        save_path=save_path / "profile_metrics_bar.png",
     )
 
-    print_summary(turnwise, profile_avg, len(users))
-    print(f"Saved plots to: {SAVE_DIR.resolve()}")
+    print_summary(turnwise, profile_avg, len(users), save_path)
 
 
 if __name__ == "__main__":

@@ -143,7 +143,7 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     budget = UNIT_PERTURB_BUDGET * K
     try:
         output = context.model.generate(perturb_prompt, schema=PerturbSchema, cfg=context.generation_config, max_tokens=budget)["output"]
-    except Exception as e:
+    except Exception:
         logger.exception("Perturbation failed")
         return [h.id for h in hypotheses], weights.tolist(), None
     current_category = output['category']

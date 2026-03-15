@@ -56,7 +56,7 @@ Output valid, parsable JSON only:
 FILTER_BUDGET = 64
 logger = logging.getLogger(__name__)
 
-def softmax(logits: List[float], t: float = 1) -> np.ndarray:
+def bradley_terry_softmax(logits: List[float], t: float = 1) -> np.ndarray:
     scaled_logits = np.array(logits) / t
     exp_logits = np.exp(scaled_logits - np.max(scaled_logits))  # for numerical stability
     return exp_logits / np.sum(exp_logits)
@@ -65,7 +65,6 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     hypotheses = context.belief.get_hypotheses()
-    
     likelihood_prompts = [
         LIKELIHOOD_PROMPT.format(
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
@@ -75,6 +74,9 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
         ) for h in hypotheses
     ]
     c = len(current_turn.candidates)
+    if c < 2:
+        logger.warning("Only one candidate available; skipping likelihood weighting")
+        return {"invalid": len(hypotheses)}
     FilterSchema = create_model(
         "FilterSchema",
         scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), ...)
@@ -95,7 +97,7 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
     for h, o in zip(hypotheses, outputs):
         if o is None:
             invalid += 1
-        likelihood = softmax(o['scores'], t=0.5)[current_turn.chosen_idx] if o else softmax([3] * len(current_turn.candidates))[current_turn.chosen_idx]
+        likelihood = bradley_terry_softmax(o['scores'], t=context.tracer_config.bradley_terry_temp)[current_turn.chosen_idx] if o else bradley_terry_softmax([3] * len(current_turn.candidates))[current_turn.chosen_idx]
         update = Update(
             id=h.id,
             likelihood=float(likelihood)

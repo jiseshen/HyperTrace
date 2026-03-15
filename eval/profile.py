@@ -2,7 +2,7 @@ from model import BaseLM, GenerationConfig
 from typing import Dict
 from pydantic import BaseModel, Field
 from .utils import text_similarity, EmbedConfig
-
+import logging
 
 COMPARISON_PROMPT = """
 You are evaluating how well an inferred user preference profile aligns with a user's ground-truth survey.
@@ -83,7 +83,7 @@ Now evaluate:
 
 
 PROFILE_EVAL_BUDGET = 384
-
+logger = logging.getLogger(__name__)
 
 class ProfileEvalSchema(BaseModel):
     survey_consistency: float = Field(ge=0, le=5)
@@ -97,6 +97,7 @@ def profile_score(eval_model: BaseLM, profile: str, survey: str, embed_cfg: Embe
     try:
         response = eval_model.generate(prompt, schema=ProfileEvalSchema, cfg=evaluation_cfg, max_tokens=PROFILE_EVAL_BUDGET)["output"]
     except Exception as e:
+        logger.exception("Profile evaluation failed")
         return {"survey_consistency": None, "key_aspect_match": None, "internal_plausibility": None, "overall": None, "similarity": similarity, "error": str(e)}
     overall_score = 0.4 * response["survey_consistency"] + 0.4 * response["key_aspect_match"] + 0.2 * response["internal_plausibility"]
     return {

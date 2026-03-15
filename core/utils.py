@@ -11,10 +11,10 @@ class TracerConfig:
     allow_expand: bool = False
     allow_skip: bool = True
     n_hypotheses: int = 5
-    consolidate_alpha: float = 0.5        # The fraction of old priors to retain when consolidating
+    consolidate_alpha: float = 1        # The fraction of old priors to retain when consolidating
     similarity_threshold: float = 0.8     # Threshold for clustering hypotheses based on semantic similarity
     perturb_alpha: float = 0.3            # The fraction of total weight to split among new hypotheses when perturbing a cluster
-    summary_threshold: float = 0.1
+    bradley_terry_temp: float = 1.0       # Temperature parameter for Bradley-Terry model when updating belief
     max_history_turns: int = 3
     profile_top_p: float = 0.8
 

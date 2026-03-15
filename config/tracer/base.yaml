@@ -2,9 +2,8 @@ hierarchical: true
 allow_expand: false
 allow_skip: true
 n_hypotheses: 5
-consolidate_alpha: 1
+consolidate_alpha: 1.0
 similarity_threshold: 0.8
-perturb_alpha: 0.3
-summary_threshold: 0.1
+bradley_terry_temp: 1.0
 max_history_turns: 3
 profile_top_p: 0.8

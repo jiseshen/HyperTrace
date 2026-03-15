@@ -453,7 +453,7 @@ class WorkingBelief:
         for update in updates:
             if update.likelihood is not None:
                 i = local_positions[update.id].pop(0)
-                self.weights[i] = update.likelihood
+                self.weights[i] *= update.likelihood
         self.weights /= (self.weights.sum() + 1e-14)
         self.repo.update_hypotheses(updates)
     

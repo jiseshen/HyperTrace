@@ -7,7 +7,6 @@ from tqdm import tqdm
 from core.utils import TracerConfig
 from model import load_model, GenerationConfig, EmbedConfig
 import json
-from typing import Any
 
 
 def main():
@@ -26,9 +25,9 @@ def main():
     print(f"Loaded config: {config}")
     
     result_root = Path(args.result_root)
-    result_path = result_root / (args.result if args.result else f"{config['name']}_{config['seed']}")
+    result_path = result_root / (args.result if args.result else f"{config['name']}") / "records"
     result_path.mkdir(parents=True, exist_ok=True)
-    print(f"Results will be saved to: {result_path}")
+    print(f"Records will be saved to: {result_path}")
     
     user_data = load_data(config['dataset'], n_users=config['n_users'], seed=config['seed'])
     print(f"Loaded {len(user_data)} users from dataset {config['dataset']}")

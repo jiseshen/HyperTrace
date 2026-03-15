@@ -19,4 +19,4 @@ def relative_similarity_score(adapted: str, candidates: List[str], chosen_idx: i
     similarities = np.dot(candidate_vecs, adapted_vec)
     chosen_similarity = similarities[chosen_idx]
     rejected_similarities = np.delete(similarities, chosen_idx)
-    return float((chosen_similarity - np.mean(rejected_similarities)).item())
+    return float((chosen_similarity - np.max(rejected_similarities)).item())
