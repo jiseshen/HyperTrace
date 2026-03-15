@@ -2,8 +2,9 @@ from typing import Dict, List
 from datasets import load_dataset
 from .base import Turn, Conversation, UserData
 import random
+import math
 
-def group_by_turns(conversation_history: List[Dict]) -> List[Turn]:
+def group_by_turns(conversation_history: List[Dict], id_prefix: str) -> List[Turn]:
     turns = {}
     for msg in conversation_history:
         turn = msg.get("turn", 0)
@@ -23,7 +24,7 @@ def group_by_turns(conversation_history: List[Dict]) -> List[Turn]:
                 turns[turn]["chosen"] = content
     return [
         Turn(
-            turn=t,
+            turn_id=id_prefix + str(t),
             user_message=data["user_message"],
             candidates=data["candidates"],
             chosen=data["chosen"],
@@ -85,7 +86,7 @@ def load_prism(n_users: int = None, seed: int = 42) -> List[UserData]:
         for conv in user_conversations.get(uid, []):
             cid = conv['conversation_id']
             history = conv['conversation_history']
-            turns = group_by_turns(history)
+            turns = group_by_turns(history, id_prefix=uid + "_" + cid + "_")
             convs.append(Conversation(
                 conversation_id=cid,
                 turns=turns
@@ -99,16 +100,81 @@ def load_prism(n_users: int = None, seed: int = 42) -> List[UserData]:
     return users
 
 
+def percentile(values: List[float], p: float) -> float:
+    if not values:
+        return math.nan
+    xs = sorted(values)
+    if len(xs) == 1:
+        return xs[0]
+    pos = (len(xs) - 1) * p / 100.0
+    lo = int(math.floor(pos))
+    hi = int(math.ceil(pos))
+    if lo == hi:
+        return xs[lo]
+    w = pos - lo
+    return xs[lo] * (1.0 - w) + xs[hi] * w
+
+
+def summarize_numeric(name: str, values: List[float], percentiles: List[int] = [5, 25, 50, 75, 90, 95]) -> None:
+    if not values:
+        print(f"{name}: no data")
+        return
+    mean_v = sum(values) / len(values)
+    print(f"{name}:")
+    print(f"  count={len(values)}")
+    print(f"  mean={mean_v:.4f} min={min(values):.4f} max={max(values):.4f}")
+    print("  " + " ".join([f"p{p}={percentile(values, p):.4f}" for p in percentiles]))
+
+
+def print_dataset_stats(users: List[UserData]) -> None:
+    conv_turn_counts: List[int] = []
+    user_turn_counts: List[int] = []
+    candidate_word_counts: List[int] = []
+    n_conversations = 0
+    n_turns = 0
+    n_candidates = 0
+
+    for user in users:
+        total_turns = 0
+        for conv in user.conversations:
+            n_conversations += 1
+            turn_count = len(conv.turns)
+            conv_turn_counts.append(turn_count)
+            total_turns += turn_count
+            for turn in conv.turns:
+                n_turns += 1
+                for cand in turn.candidates:
+                    n_candidates += 1
+                    candidate_word_counts.append(len(cand.split()))
+                    if len(cand.split()) == 1:
+                        print(cand)
+        user_turn_counts.append(total_turns)
+
+    print("=== PRISM Dataset Stats ===")
+    print(f"users={len(users)} conversations={n_conversations} turns={n_turns} candidates={n_candidates}")
+    summarize_numeric("turns_per_conversation", [float(x) for x in conv_turn_counts])
+    summarize_numeric("turns_per_user", [float(x) for x in user_turn_counts])
+    summarize_numeric("candidate_word_count_per_turn_candidate", [float(x) for x in candidate_word_counts])
+
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Quick test for PRISM adapter output")
-    parser.add_argument("--user_id", type=str, default=None, help="User ID to load for preview")
+    parser.add_argument("--n-users", type=int, default=None, help="Number of users to sample for stats/debug (default: all users).")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed used when n-users is set.")
+    parser.add_argument("--print-stats", action="store_true", help="Print dataset stats.")
+    parser.add_argument("--print-preview", action="store_true", help="Print preview of loaded data for the first user.")
+    parser.add_argument("--user-id", type=str, default=None, help="User ID to load for preview")
     args = parser.parse_args()
 
-    if args.user_id is not None:
-        users = load_prism()
-        user = [user for user in users if user.user_id == args.user_id]
-    else:
-        user = load_prism(n_users=1)
-    print(user)
+    users = load_prism(n_users=args.n_users, seed=args.seed)
+    if args.print_stats:
+        print_dataset_stats(users)
+
+    if args.print_preview:
+        if args.user_id is not None:
+            selected = [user for user in users if user.user_id == args.user_id]
+            print(selected)
+        else:
+            print(users[:1])
