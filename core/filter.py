@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 import asyncio
 import logging
 import numpy as np
-from pydantic import create_model, conlist, confloat
+from pydantic import Field, create_model, conlist, confloat
 from core.utils import TracerContext
 from core.hypothesis_set import Update
 from data.base import Turn
@@ -79,7 +79,7 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
         return {"invalid": len(hypotheses)}
     FilterSchema = create_model(
         "FilterSchema",
-        scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), ...)
+        scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), Field(..., description=f"List of {c} alignment scores in 0-5 for each candidate response"))
     )
     
     try:

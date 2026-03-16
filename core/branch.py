@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from .hypothesis_set import WorkingBelief, Update
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from .utils import TracerContext
 from data import Turn
 from typing import Any, Dict, List, Literal, Optional
@@ -40,10 +40,10 @@ Update decision:
 - If relevance is "direct" or "partial":
     action="revise"
     Produce an updated hypothesis that:
-      * Incorporates new evidence,
-      * Reduces inconsistency,
+      * Incorporates ONLY evidence relevant to the current hypothesis' aspect/axis,
       * Remains specific (do not over-generalize),
-      * Keeps the original intent unless clearly contradicted.
+      * Preserves the original aspect/axis and scope (do NOT introduce new aspects),
+      * Keeps the original intent unless explicitly contradicted by the interaction.
 - If relevance is "none":
     action="replace"
     Produce a new hypothesis at similar specificity.
@@ -53,6 +53,7 @@ Category update rules:
 - Otherwise, keep the original category.
 - If the original category contains multiple labels, select the single most appropriate one based on the current evidence.
 - Do not introduce a new category unless clearly justified by the interaction.
+- The topic category serves only for organizational purposes and does not limit the scope of the hypothesis content. Focus on conversational style, value, or preference evidence in the content update.
 
 Output JSON only:
 
@@ -63,7 +64,7 @@ Output JSON only:
     "category": "string",
     "content": "string"
   }},
-  "evidence": "one short justification"
+  "justification": "one brief (1-2 sentences) justification of the update decision"
 }}
 
 Rules:
@@ -89,12 +90,13 @@ BRANCH_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class UpdatedHypothesisSchema(BaseModel):
-    category: str
-    content: str
+    category: str = Field(..., description="the category of current topic")
+    content: str = Field(..., description="the updated hypothesis content")
 
 class BranchSchema(BaseModel):
-    action: Literal["revise", "replace"]
-    relevance: Literal["direct", "partial", "none"]
+    action: Literal["revise", "replace"] = Field(..., description="revise | replace")
+    relevance: Literal["direct", "partial", "none"] = Field(..., description="direct | partial | none")
+    justification: str = Field(..., description="One brief (1-2 sentences) justification of the update decision")
     updated_hypothesis: UpdatedHypothesisSchema
 
 def branch_hypotheses(conversation_history: List[Turn], candidates: str, context: TracerContext) -> Optional[Dict[str, Any]]:

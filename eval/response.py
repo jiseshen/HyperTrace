@@ -1,6 +1,6 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Annotated
 from model import BaseLM, GenerationConfig
-from pydantic import create_model, confloat, conlist, constr
+from pydantic import Field, create_model, confloat, conlist, StringConstraints
 from data import Turn
 from .utils import text_similarity, relative_similarity_score, EmbedConfig
 import numpy as np
@@ -78,7 +78,8 @@ Scores are 0-5:
 Output valid, parsable JSON only without any extra commentary:
 {{
   "dimensions": ["...", "..."],
-  "scores": [s0, s1, ..., s{{c-1}}]
+  "scores": [s0, s1, ..., s{{c-1}}],
+  "justification": "a brief (1-2 sentences) explanation of the key similarities/differences between the Adapted response and each candidates."
 }}
 
 Rules:
@@ -97,7 +98,7 @@ c={c}
 
 GEN_BUDGET = 1024
 RESPONSE_MAX_WORD_COUNT = 400
-EVAL_BUDGET = 128
+EVAL_BUDGET = 384
 logger = logging.getLogger(__name__)
 
 def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], profile: str, embed_cfg: EmbedConfig, generation_cfg: Optional[GenerationConfig] = None, eval_model: Optional[BaseLM] = None, evaluation_cfg: Optional[GenerationConfig] = None) -> Dict[str, float]:
@@ -122,7 +123,8 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         evaluation_cfg = generation_cfg
     GenSchema = create_model(
         "GenSchema",
-        response=(constr(strip_whitespace=True, min_length=1), ...)
+        adaptation_plan=(list[str], Field(..., description="List of actionable constraints to adapt the response to the user preferences")),
+        response=(Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)], Field(..., description="the response to current user message adapted to the user preferences"))
     )
     try:
         generate_output = gen_model.generate(
@@ -146,8 +148,10 @@ def evaluate_generation(gen_model: BaseLM, conversation_history: List[Turn], pro
         c=c
     )
     EvalSchema = create_model(
-        "EvalSchema", 
-        scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), ...)
+        "EvalSchema",
+        dimensions=(list[str], Field(..., description="List of key dimensions used for evaluation")),
+        scores=(conlist(confloat(ge=0, le=5), min_length=c, max_length=c), Field(..., description=f"List of {c} similarity scores in 0-5 for each candidate response")),
+        justification=(str, Field(..., description="a brief explanation"))
     )
     try:
         evaluate_output = eval_model.generate(             

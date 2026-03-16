@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple, Annotated
 import logging
-from pydantic import BaseModel, create_model, conlist, StringConstraints
+from pydantic import BaseModel, Field, create_model, conlist, StringConstraints
 from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief
 from data.base import Turn
@@ -62,7 +62,7 @@ Task:
 - For each hypothesis, provide:
   * "content": a clear hypothesis describing a latent user preference.
   * "novel_axis": the new axis name (short phrase)
-  * "justification": why it explains the chosen response
+  * "justification": a brief (1-2 sentences) explanation of why it explains the chosen response
 
 Output JSON only:
 {{
@@ -88,8 +88,9 @@ K={K}
 """
 
 class PerturbedHypothesisSchema(BaseModel):
-    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    novel_axis: str
+    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(..., description="a perturbed hypothesis describing a latent user preference")
+    novel_axis: str = Field(..., description="the new axis name")
+    justification: str = Field(..., description="a brief justification")
 
 AXIS_BUDGET = 64
 MERGE_BUDGET = 256
@@ -137,8 +138,8 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     )
     PerturbSchema = create_model(
         "PerturbSchema",
-        category=(str, ...),
-        new_hypotheses=(conlist(PerturbedHypothesisSchema, min_length=K, max_length=K), ...)
+        category=(str, Field(..., description="the category of current topic")),
+        new_hypotheses=(conlist(PerturbedHypothesisSchema, min_length=K, max_length=K), Field(..., description=f"List of {K} perturbed hypotheses"))
     )
     budget = UNIT_PERTURB_BUDGET * K
     try:

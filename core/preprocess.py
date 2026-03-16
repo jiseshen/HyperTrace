@@ -1,6 +1,6 @@
 import asyncio
 from typing import Any, Dict, List, Optional, Tuple, Annotated
-from pydantic import BaseModel, conlist, create_model, StringConstraints
+from pydantic import BaseModel, Field, conlist, create_model, StringConstraints
 import logging
 from .utils import TracerContext
 from data.base import Turn
@@ -19,7 +19,7 @@ Return skip=true if EITHER holds:
 
 Output JSON only:
 {{
-  "reason": "a short justification about why to skip or not",
+  "reason": "a brief (1-2 sentences) justification about why to skip or not",
   "skip": boolean
 }}
 
@@ -80,10 +80,12 @@ UNIT_PREPROCESS_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class CandidateSchema(BaseModel):
-    preview: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    i: int = Field(..., description="the integer index of the candidate response")
+    preview: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(..., description="a compact preview of a candidate response")
 
 class SkipSchema(BaseModel):
-    skip: bool
+    reason: str = Field(..., description="a brief justification")
+    skip: bool = Field(..., description="whether to skip preference extraction for this turn")
 
 def compact_text(s: str, head: int = 200, tail: int = 100) -> str:
     if len(s) <= head + tail + 3:
@@ -123,7 +125,7 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
 
     PreprocessSchema = create_model(
         "PreprocessSchema",
-        processed_candidates=(conlist(CandidateSchema, min_length=n, max_length=n), ...)
+        processed_candidates=(conlist(CandidateSchema, min_length=n, max_length=n), Field(..., description=f"List of {n} processed candidates"))
     )
     try:
         output = context.model.generate(preprocess_prompt, schema=PreprocessSchema, cfg=context.generation_config, max_tokens=budget)["output"]

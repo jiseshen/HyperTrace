@@ -1,6 +1,5 @@
 from openai import OpenAI, AsyncOpenAI, APIError, RateLimitError
 from .base import BaseLM, GenerationConfig, GenerationOverrides
-from .utils import Parser, ParseError
 from pydantic import BaseModel
 from dataclasses import replace
 from typing import Optional, Union, Tuple, List, Dict, Any, Unpack
@@ -48,20 +47,20 @@ class OpenAIModel(BaseLM):
         else:
             kwargs["temperature"] = cfg.temperature
         return kwargs
-    
-    def generate(self, prompt: str, schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, **overrides: Unpack[GenerationOverrides]) -> Dict[str, str]:
-        # TODO: Use parse if schema
+
+    def generate(self, prompt: str, schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, **overrides: Unpack[GenerationOverrides]) -> Dict[str, Any]:
         cfg = self._resolve_cfg(cfg, overrides)
         retries = cfg.max_retries
         kwargs = self._build_responses_kwargs(prompt, cfg)
         for attempt in range(retries):
             try:
-                resp = self.client.responses.create(**kwargs)
-                output = resp.output_text
                 if schema:
-                    parser = Parser(schema)
-                    output = parser.parse(output)
-            except (APIError, RateLimitError, ParseError):
+                    resp = self.client.responses.parse(**kwargs, text_format=schema)
+                    output = resp.output_parsed.model_dump()
+                else:
+                    resp = self.client.responses.create(**kwargs)
+                    output = resp.output_text
+            except (APIError, RateLimitError):
                 if attempt == retries - 1:
                     raise
                 time.sleep(cfg.retry_delay)
@@ -70,21 +69,22 @@ class OpenAIModel(BaseLM):
                 return {"output": output, "reasoning": resp.output[0].summary[0].text}
             return {"output": output}
     
-    async def async_generate(self, prompts: list[str], schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides: Unpack[GenerationOverrides]) -> list[Union[Dict[str, str], Exception]]:
+    async def async_generate(self, prompts: list[str], schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides: Unpack[GenerationOverrides]) -> list[Union[Dict[str, Any], Exception]]:
         cfg = self._resolve_cfg(cfg, overrides)
         sem = asyncio.Semaphore(concurrency)
-        async def _one(prompt: str) -> Union[Dict[str, str], Exception]:
+        async def _one(prompt: str) -> Union[Dict[str, Any], Exception]:
             async with sem:
                 retries = cfg.max_retries
                 for attempt in range(retries):
                     try:
                         kwargs = self._build_responses_kwargs(prompt, cfg)
-                        resp = await self.async_client.responses.create(**kwargs)
-                        output = resp.output_text
                         if schema:
-                            parser = Parser(schema)
-                            output = parser.parse(output)
-                    except (APIError, RateLimitError, ParseError):
+                            resp = await self.async_client.responses.parse(**kwargs, text_format=schema)
+                            output = self._normalize_parsed_output(resp.output_parsed)
+                        else:
+                            resp = await self.async_client.responses.create(**kwargs)
+                            output = resp.output_text
+                    except (APIError, RateLimitError):
                         if attempt == retries - 1:
                             raise
                         await asyncio.sleep(cfg.retry_delay)

@@ -65,11 +65,11 @@ Constraints for C:
 
 Output ONLY the final JSON:
 {{
-  "reason": "2-4 sentences citing the most important core-signal matches/mismatches and any compatibility concerns.",
   "aspects_covered": ["aspect1", "aspect2", ...],
   "survey_consistency": 0-5,
   "key_aspect_match": 0-5,
   "internal_plausibility": 0-5
+  "justification": "2-4 sentences explaining the most important core-signal matches/mismatches.",
 }}
 
 Now evaluate:
@@ -86,10 +86,11 @@ PROFILE_EVAL_BUDGET = 384
 logger = logging.getLogger(__name__)
 
 class ProfileEvalSchema(BaseModel):
-    survey_consistency: float = Field(ge=0, le=5)
-    key_aspect_match: float = Field(ge=0, le=5)
-    internal_plausibility: float = Field(ge=0, le=5)
-
+    aspects_covered: list[str] = Field(..., description="List of key aspects that are covered in the profile")
+    survey_consistency: float = Field(ge=0, le=5, description="0-5 score for how well the profile captures the user's claimed preferences and expectations in the survey")
+    key_aspect_match: float = Field(ge=0, le=5, description="0-5 score for how well the profile covers the user's prioritized aspects")
+    internal_plausibility: float = Field(ge=0, le=5, description="0-5 score for the consistency and plausibility of the profile given user demographics")
+    justification: str = Field(..., description="a brief explanation")
 
 def profile_score(eval_model: BaseLM, profile: str, survey: str, embed_cfg: EmbedConfig, evaluation_cfg: GenerationConfig = None) -> Dict[str, float]:
     similarity = text_similarity(profile, survey, embed_cfg)

@@ -3,7 +3,7 @@ import re
 from model import GenerationConfig, BaseLM
 from data import Turn
 from typing import Dict, List
-from pydantic import create_model, conlist
+from pydantic import Field, create_model, conlist
 
 PREDICT_PROMPT = """
 You are ranking candidate responses for a user based on a given user preference profile.
@@ -15,29 +15,19 @@ Given:
 - Candidate responses. Each candidate has a unique ID in square brackets, such as [C1], [C2].
 
 Internally:
-- Compare each candidate response.
-- Consider observable differences only.
-- If the user profile is non-empty, evaluate alignment based on explicit signals in the profile.
+- Compare each candidate response over how likely the user is to prefer each one.
+- Evaluate alignment based on explicit signals in the profile.
 - If the profile is empty or clearly irrelevant to this turn, rank candidates based on overall quality, clarity, and usefulness.
 
-Possible dimensions (do not force-fit):
-- Underlying values
-- Information density
-- Structure
-- Level of abstraction
-- Framing
-- Actionability
-- Tone
-
 Then:
-Rank candidates from best to worst according to alignment (or overall quality if alignment is not applicable).
+Rank candidates from best to worst according to alignment to the user preference.
 
 Output Format:
 
 Return a JSON object:
 {{
-  "reason": "Brief explanation (2-3 sentences).",
-  "ranking": ["id1", "id2"]
+  "ranking": ["id1", "id2"],
+  "justification": "a brief (2-3 sentences) explanation of the ranking"
 }}
 
 Rules:
@@ -74,7 +64,11 @@ def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str
         c=c
     )
 
-    Schema = create_model("PredictSchema", ranking=(conlist(str, min_length=c, max_length=c), ...))
+    Schema = create_model(
+        "PredictSchema", 
+        ranking=(conlist(str, min_length=c, max_length=c), Field(..., description=f"List of {c} candidate IDs ranked from best to worst")),
+        justification=(str, Field(..., description="a brief explanation"))
+    )
     cfg = generation_cfg or GenerationConfig()
     prediction = None
     try:

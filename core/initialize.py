@@ -1,4 +1,4 @@
-from pydantic import BaseModel, create_model, conlist, StringConstraints
+from pydantic import BaseModel, create_model, conlist, StringConstraints, Field
 import logging
 from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
@@ -28,14 +28,14 @@ Then:
    This category is used only for organizing and retrieving hypotheses in the library. When making hypotheses, focus more on conversational style and value.
 
 2. Propose exactly {n_hypotheses} stable user preference hypotheses:
-- Each hypothesis should focus on a different aspect of preference or value that could explain the user's choice.
+- Each hypothesis should focus on a DIFFERENT aspect of preference or value that could explain the user's choice.
 - Reuse and revise relevant retrieved hypotheses when appropriate.
 - Otherwise generate new hypotheses.
 - For each hypothesis, provide:
   * "id": either the reused hypothesis ID or create a new unique ID (e.g., "new-1")
   * "action": "reuse" if reusing a retrieved hypothesis, or "new" if creating a new one
   * "content": a clear hypothesis describing a latent user preference.
-  * "justification": why it explains the chosen response
+  * "justification": a brief (1-2 sentences) explanation of why the hypothesis explains the user choice
 
 Output Format
 
@@ -75,9 +75,10 @@ UNIT_INITIALIZE_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class HypothesisSchema(BaseModel):
-    id: str
-    action: Literal["reuse", "new"]
-    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    id: str = Field(..., description="the ID of the hypothesis, either reused from retrieved hypotheses or newly created (e.g., 'new-1')")
+    action: Literal["reuse", "new"] = Field(..., description="reuse | new")
+    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(..., description="a clear hypothesis describing a latent user preference")
+    justification: str = Field(..., description="a brief justification of why this hypothesis explains the chosen response")
 
 def initialize_hypothesis(
     conversation_history: List[Turn],
@@ -101,8 +102,8 @@ def initialize_hypothesis(
     
     InitializeSchema = create_model(
         "InitializeSchema",
-        category=(str, ...),
-        hypotheses=(conlist(HypothesisSchema, min_length=context.tracer_config.n_hypotheses, max_length=context.tracer_config.n_hypotheses), ...)
+        category=(str, Field(..., description="the category of current topic")),
+        hypotheses=(conlist(HypothesisSchema, min_length=context.tracer_config.n_hypotheses, max_length=context.tracer_config.n_hypotheses), Field(..., description=f"List of {context.tracer_config.n_hypotheses} hypotheses explaining user preferences in different aspects"))
     )
     budget = UNIT_INITIALIZE_BUDGET * context.tracer_config.n_hypotheses
     try:
