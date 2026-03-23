@@ -9,7 +9,7 @@ import os
 import asyncio
 
 REASONING_PREFIXES = ("gpt-5", "o")
-REASONING_BUDGETS = {"none": 0, "minimal": 64, "low": 128, "medium": 256, "high": 1024}
+REASONING_BUDGETS = {"none": 0, "minimal": 128, "low": 1024, "medium": 4096, "high": 16384}
 
 
 class OpenAIModel(BaseLM):
@@ -80,7 +80,7 @@ class OpenAIModel(BaseLM):
                         kwargs = self._build_responses_kwargs(prompt, cfg)
                         if schema:
                             resp = await self.async_client.responses.parse(**kwargs, text_format=schema)
-                            output = self._normalize_parsed_output(resp.output_parsed)
+                            output = resp.output_parsed.model_dump()
                         else:
                             resp = await self.async_client.responses.create(**kwargs)
                             output = resp.output_text

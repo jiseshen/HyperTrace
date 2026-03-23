@@ -2,7 +2,7 @@ import logging
 import re
 from model import GenerationConfig, BaseLM
 from data import Turn
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 from pydantic import Field, create_model, conlist
 
 PREDICT_PROMPT = """
@@ -48,10 +48,16 @@ Current interaction:
 Number of candidates: {c}
 """
 
-PREDICT_BUDGET = 128
+PREDICT_BUDGET = 256
 logger = logging.getLogger(__name__)
 
-def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str, generation_cfg: GenerationConfig = None) -> Dict[str, float]:
+def predict_choice(
+    model: BaseLM,
+    conversation_history: List[Turn],
+    profile: str,
+    generation_cfg: GenerationConfig = None,
+    generation_overrides: Optional[Dict[str, Any]] = None
+) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     gt_choice = current_turn.chosen_idx + 1
@@ -70,9 +76,10 @@ def predict_choice(model: BaseLM, conversation_history: List[Turn], profile: str
         justification=(str, Field(..., description="a brief explanation"))
     )
     cfg = generation_cfg or GenerationConfig()
+    overrides = generation_overrides or {}
     prediction = None
     try:
-        prediction = model.generate(prompt, schema=Schema, cfg=cfg, max_tokens=PREDICT_BUDGET)["output"]
+        prediction = model.generate(prompt, schema=Schema, cfg=cfg, max_tokens=PREDICT_BUDGET, **overrides)["output"]
     except Exception as e:
         logger.exception("Prediction generation failed.")
         return {"success": False, "accuracy": 0.0, "ranking_score": 0.5, "reason": str(e)}

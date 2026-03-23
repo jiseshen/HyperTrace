@@ -1,0 +1,24 @@
+initialize_override:
+  reasoning_effort: "low"
+branch_override:
+  reasoning_effort: "low"
+perturb_override:
+  reasoning_effort: "medium"
+response_override:
+  reasoning_effort: "low"
+skip_override:
+  reasoning_effort: "minimal"
+preprocess_override:
+  reasoning_effort: "minimal"
+filter_override:
+  reasoning_effort: "minimal"
+axis_override:
+  reasoning_effort: "minimal"
+merge_override:
+  reasoning_effort: "minimal"
+summary_override:
+  reasoning_effort: "minimal"
+profile_override:
+  reasoning_effort: "minimal"
+prediction_override:
+  reasoning_effort: "minimal"

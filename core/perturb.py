@@ -101,7 +101,8 @@ logger = logging.getLogger(__name__)
 def perturb_hypotheses(conversation_history: List[Turn], candidates: str, similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
     hypotheses = context.belief.get_hypotheses()
     axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
-    axes = context.model.generate(axes_prompt, cfg=context.generation_config, max_tokens=AXIS_BUDGET)["output"]
+    axis_overrides = context.get_generation_overrides("axis_override")
+    axes = context.model.generate(axes_prompt, cfg=context.generation_config, max_tokens=AXIS_BUDGET, **axis_overrides)["output"]
     perturbed_hids, perturbed_weights = [], []
     invalid = 0
     for group in similar_groups:
@@ -127,7 +128,8 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     K = len(group) - 1
     merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
-    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=MERGE_BUDGET)["output"]
+    merge_overrides = context.get_generation_overrides("merge_override")
+    merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=MERGE_BUDGET, **merge_overrides)["output"]
 
     perturb_prompt = PERTURB_PROMPT.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
@@ -143,7 +145,8 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     )
     budget = UNIT_PERTURB_BUDGET * K
     try:
-        output = context.model.generate(perturb_prompt, schema=PerturbSchema, cfg=context.generation_config, max_tokens=budget)["output"]
+        perturb_overrides = context.get_generation_overrides("perturb_override")
+        output = context.model.generate(perturb_prompt, schema=PerturbSchema, cfg=context.generation_config, max_tokens=budget, **perturb_overrides)["output"]
     except Exception:
         logger.exception("Perturbation failed")
         return [h.id for h in hypotheses], weights.tolist(), None

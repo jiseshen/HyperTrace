@@ -1,0 +1,7 @@
+backend: "openai"
+model: "gpt-5.4-nano"
+reasoning_effort: "low"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5

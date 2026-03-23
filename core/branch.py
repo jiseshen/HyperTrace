@@ -113,9 +113,10 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
         ) for h in current_hypotheses
     ]
     try:
+        branch_overrides = context.get_generation_overrides("branch_override")
         async_outputs = asyncio.run(
             context.model.async_generate(
-                prompts, schema=BranchSchema, cfg=context.generation_config, max_tokens=BRANCH_BUDGET
+                prompts, schema=BranchSchema, cfg=context.generation_config, max_tokens=BRANCH_BUDGET, **branch_overrides
             )
         )
     except Exception:

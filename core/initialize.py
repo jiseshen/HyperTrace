@@ -107,7 +107,8 @@ def initialize_hypothesis(
     )
     budget = UNIT_INITIALIZE_BUDGET * context.tracer_config.n_hypotheses
     try:
-        output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config, max_tokens=budget)["output"]
+        initialize_overrides = context.get_generation_overrides("initialize_override")
+        output = context.model.generate(prompt, schema=InitializeSchema, cfg=context.generation_config, max_tokens=budget, **initialize_overrides)["output"]
     except Exception as e:
         logger.exception("Initialization failed")
         return {"success": False, "reason": str(e)}

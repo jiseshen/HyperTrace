@@ -99,8 +99,9 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
         candidates="\n".join([f"[{i}] {c}" for i, c in enumerate(current_turn.candidates)])
     )
     try:
+        skip_overrides = context.get_generation_overrides("skip_override")
         async_output = asyncio.run(
-            context.model.async_generate([skip_prompt for _ in range(context.tracer_config.n_hypotheses)], schema=SkipSchema, cfg=context.generation_config, max_tokens=SKIP_BUDGET)
+            context.model.async_generate([skip_prompt for _ in range(context.tracer_config.n_hypotheses)], schema=SkipSchema, cfg=context.generation_config, max_tokens=SKIP_BUDGET, **skip_overrides)
         )
     except Exception as e:
         logger.exception("Skip generation failed")
@@ -128,7 +129,8 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
         processed_candidates=(conlist(CandidateSchema, min_length=n, max_length=n), Field(..., description=f"List of {n} processed candidates"))
     )
     try:
-        output = context.model.generate(preprocess_prompt, schema=PreprocessSchema, cfg=context.generation_config, max_tokens=budget)["output"]
+        preprocess_overrides = context.get_generation_overrides("preprocess_override")
+        output = context.model.generate(preprocess_prompt, schema=PreprocessSchema, cfg=context.generation_config, max_tokens=budget, **preprocess_overrides)["output"]
     except Exception as e:
         logger.exception("Preprocessing failed")
         return "", {"success": False, "skip": False, "reason": str(e), "invalid": invalid}

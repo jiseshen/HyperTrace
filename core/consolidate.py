@@ -37,7 +37,8 @@ def deduplicate_group(group: List[str], context: TracerContext):
     hyps, _ = context.hypothesis_set[group]
     category = ", ".join(set(c for h in hyps for c in h.category.split(", ")))
     merge_prompt = CONSOLIDATE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hyps]))
-    merged_hypothesis = context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=CONSOLIDATE_BUDGET)["output"]
+    merge_overrides = context.get_generation_overrides("merge_override")
+    merged_hypothesis = context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=CONSOLIDATE_BUDGET, **merge_overrides)["output"]
     context.hypothesis_set.merge_hypotheses(group, {"category": category, "content": merged_hypothesis})
 
 def consolidate_hypotheses(conversation_history: List[Turn], context: TracerContext) -> Dict[str, Any]:

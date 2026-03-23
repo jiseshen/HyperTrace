@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from omegaconf import OmegaConf
 from pathlib import Path
 from tqdm import tqdm
-from core.utils import TracerConfig
+from core.utils import TracerConfig, OverrideConfig
 from model import load_model, GenerationConfig, EmbedConfig
 import json
 
@@ -22,7 +22,7 @@ def main():
     config = OmegaConf.load(config_root / args.config)
     OmegaConf.resolve(config)
     config = OmegaConf.to_container(config, resolve=True)
-    print(f"Loaded config: {config}")
+    print(f"Loaded config: {json.dumps(config, indent=4)}")
     
     result_root = Path(args.result_root)
     result_path = result_root / (args.result if args.result else f"{config['name']}") / "records"
@@ -33,19 +33,16 @@ def main():
     print(f"Loaded {len(user_data)} users from dataset {config['dataset']}")
 
     tracer_cfg = TracerConfig(**config["tracer"])
+    tracer_cfg.override = OverrideConfig(**config.get("override", {}))
     gen_cfg = GenerationConfig(**config["main_model"])
-    eval_cfg = GenerationConfig(**config["eval_model"])
     embed_cfg = EmbedConfig(**config["embed"])
     
     gen_model = load_model(backend=config["main_model"]["backend"], default_cfg=gen_cfg)
-    eval_model = load_model(backend=config["eval_model"]["backend"], default_cfg=eval_cfg)
     preference_tracer = PreferenceTracer(
         model=gen_model,
         generation_cfg=gen_cfg,
         tracer_cfg=tracer_cfg,
-        embed_cfg=embed_cfg,
-        evaluation_model=eval_model,
-        evaluation_cfg=eval_cfg
+        embed_cfg=embed_cfg
     )
 
     finished_ids = {p.stem for p in result_path.glob("*.json")}

@@ -72,7 +72,8 @@ def summarize_hypotheses(context: TracerContext) -> str:
         consolidated_hypotheses="\n\n".join([f"[G{i+1}] {h.content} (prior rank: {i+1})" for i, h in enumerate(top_consolidated_hypotheses)]),
         current_hypotheses="\n\n".join([f"[H{i+1}] {h.content} (weight: {w:.2f})" for i, (h, w) in enumerate(zip(hypotheses, weights))]),
     )
-    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET)["output"]
+    summary_overrides = context.get_generation_overrides("summary_override")
+    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET, **summary_overrides)["output"]
     return output
 
 
@@ -81,5 +82,6 @@ def summarize_profile(context: TracerContext) -> str:
     prompt = PROFILE_PROMPT.format(
         hypotheses="\n\n".join([h.format() for h in top_hypotheses])
     )
-    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET)["output"]
+    profile_overrides = context.get_generation_overrides("profile_override")
+    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET, **profile_overrides)["output"]
     return output

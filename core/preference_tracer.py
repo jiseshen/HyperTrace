@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TypedDict
 from .utils import TracerConfig, TracerContext
 from .hypothesis_set import HypothesisSet
 from data import UserData
@@ -11,11 +11,12 @@ from .filter import weight_hypothesis
 from .perturb import perturb_hypotheses
 from .summary import summarize_hypotheses, summarize_profile
 from .consolidate import consolidate_hypotheses
+from .response import generate_adapted_response
 
-from eval.prediction import predict_choice
-from eval.profile import profile_score
-from eval.response import evaluate_generation
-
+class Records(TypedDict):
+    user: str
+    turns: list[dict]
+    general_profile: Optional[str]
 
 class PreferenceTracer:
     def __init__(
@@ -24,14 +25,10 @@ class PreferenceTracer:
         model: BaseLM,
         generation_cfg: GenerationConfig,
         embed_cfg: EmbedConfig,
-        evaluation_model: Optional[BaseLM] = None,
-        evaluation_cfg: Optional[GenerationConfig] = None
     ):
         self.model = model
-        self.evaluation_model = evaluation_model or model
         self.base_generation_config = generation_cfg
         self.embed_config = embed_cfg
-        self.evaluation_config = evaluation_cfg or generation_cfg
         self.tracer_config = tracer_cfg
     
     def trace(self, user_data: UserData):
@@ -43,30 +40,18 @@ class PreferenceTracer:
             generation_config=self.base_generation_config
         )
         working_profile = ""
-        records = {"user": user_data.user_id, "turns": []}
+        records: Records = {"user": user_data.user_id, "turns": [], "general_profile": None}
         for conversation in user_data.conversations:
             initialized = False
             conversation_history = []
-            for i, turn in enumerate(conversation.turns):
+            for turn in conversation.turns:
                 turn_record = {}
                 conversation_history.append(turn)
-                
-                # Online Evaluation
-                turn_record["choice_metrics"] = predict_choice(
-                    model=self.model, 
-                    conversation_history=conversation_history, 
-                    profile=working_profile, 
-                    generation_cfg=self.base_generation_config
-                )
-                
-                turn_record["generation_metrics"] = evaluate_generation(
-                    gen_model=self.model,
+
+                turn_record["adapted"] = generate_adapted_response(
                     conversation_history=conversation_history, 
                     profile=working_profile,
-                    embed_cfg=self.embed_config,
-                    generation_cfg=self.base_generation_config,
-                    eval_model=self.evaluation_model,
-                    evaluation_cfg=self.evaluation_config
+                    context=context
                 )
 
                 # Online Update
@@ -96,14 +81,14 @@ class PreferenceTracer:
                 turn_record["hypotheses"] = context.belief.log_dict()
                 turn_record["summary"] = working_profile
                 records["turns"].append(turn_record)
+            
+            # Consolidate at the end of conversation
             if conversation_history and initialized:
                 records["turns"][-1]["consolidate"] = consolidate_hypotheses(conversation_history, context)
-        # Evaluate profile alignment
+                
+        # Export final profile for offline evaluation
         if context.current_belief is not None:
-            profile = summarize_profile(context)
-            records["profile_metrics"] = profile_score(self.evaluation_model, profile, user_data.gt_profile, self.embed_config, self.evaluation_config)
-        else:
-            records["profile_metrics"] = {"success": False, "reason": "Belief not initialized"}
+            records["final_profile"] = summarize_profile(context)
         return records
         
         

@@ -52,6 +52,7 @@ Output valid, parsable JSON only:
 [Hypothesis z]
 {hypothesis}
 """
+# TODO: Binary (True or false) scoring + 2 Examples steering
 
 FILTER_BUDGET = 64
 logger = logging.getLogger(__name__)
@@ -83,9 +84,10 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
     )
     
     try:
+        filter_overrides = context.get_generation_overrides("filter_override")
         async_outputs = asyncio.run(
             context.model.async_generate(
-                likelihood_prompts, schema=FilterSchema, cfg=context.generation_config, max_tokens=FILTER_BUDGET
+                likelihood_prompts, schema=FilterSchema, cfg=context.generation_config, max_tokens=FILTER_BUDGET, **filter_overrides
             )
         )
     except Exception:
