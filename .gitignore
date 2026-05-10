@@ -38,7 +38,7 @@ env/
 
 # Results and outputs
 preference_results/
-result/
+result/*
 results/
 output/
 outputs/
@@ -67,4 +67,5 @@ Thumbs.db
 .cache/
 *.cache
 
+# Ignore specific result directory
 !result/openrouter-gpt5-trace-gemini3-flash-eval
