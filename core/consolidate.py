@@ -7,19 +7,20 @@ from .utils import TracerContext
 
 
 CONSOLIDATE_PROMPT = """
-You are consolidating a set of similar hypotheses about user preferences/values into a more general one.
+Role:
+You consolidate a cluster of similar user preference hypotheses.
 
-Given:
-- A cluster of similar hypotheses across multiple topics
+Goal:
+Merge the cluster into one generalized but specific hypothesis.
 
-Task:
-Merge the cluster into ONE generalized hypothesis.
+Rules:
 - Preserve stable components strongly supported by the cluster.
-- Remove stylistic rephrasing and redundant details.
-- Keep it specific and evidence-grounded; do not invent new preferences.
-- Keep the length similar to the original hypotheses.
+- Remove redundant wording and stylistic rephrasing.
+- Keep the result evidence-grounded and close in length to source hypotheses.
+- Do not invent new preferences.
 
-Output ONLY the raw text of merged hypothesis without any explanation.
+Output:
+Raw merged hypothesis text only. No explanation.
 
 [Cluster]
 {collapsed_cluster}

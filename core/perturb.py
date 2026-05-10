@@ -6,65 +6,60 @@ from core.hypothesis_set import WorkingBelief
 from data.base import Turn
 
 AXIS_PROMPT = """
-You are extracting the explanatory axis along which a hypothesis z explains the user's preferences for each hypothesis.
+Role:
+You extract explanatory axes for a list of user preference hypotheses.
 
-Given:
-- A list of hypotheses about the user's latent preferences/values
+Goal:
+For each hypothesis, output the key latent axis it represents.
 
-Task:
-For each hypothesis, identify the key explanatory dimensions, 
-e.g., "The user likely values neutrality and objectivity in geopolitical discussions." explains the interaction through the dimension of "objectiveness".
-
-Output raw text only:
-"dimensions for hypothesis 1", "dimensions for hypothesis 2", ...
+Output:
+Raw text only, as a comma-separated list:
+"axis for hypothesis 1", "axis for hypothesis 2", ...
 
 Rules:
-- Use brief phrases for each dimension, without extra explanation.
-- It's possible that some hypotheses share the same dimension, don't force-distinguish them.
+- Use short noun phrases only.
+- No explanations, no extra text.
+- Hypotheses may share the same axis.
 
 [Hypotheses]
 {hypotheses}
 """
 
 MERGE_PROMPT = """
-You are merging a collapsed cluster of hypotheses about a user's latent preferences/values.
+Role:
+You merge a cluster of highly similar user preference hypotheses.
 
-Given:
-- A cluster of highly similar hypotheses
+Goal:
+Produce one canonical hypothesis.
 
-Task:
-Merge the cluster into ONE canonical hypothesis.
-- Preserve stable components strongly supported by the cluster.
-- Remove stylistic rephrasing and redundant details.
-- Keep it specific and evidence-grounded; do not invent new preferences.
+Rules:
+- Preserve stable components shared by the cluster.
+- Remove stylistic rephrasing and redundancy.
+- Keep it specific and evidence-grounded.
+- Do not invent new preferences.
 
-Output ONLY the raw text of merged hypothesis without any explanation.
+Output:
+Raw merged hypothesis text only. No explanation.
 
 [CollapsedCluster]
 {collapsed_cluster}
 """
 
 PERTURB_PROMPT = """
-You are generating new hypotheses for particle rejuvenation in a Sequential Monte Carlo personalization system.
+Role:
+You generate rejuvenation hypotheses for a Sequential Monte Carlo personalization system.
 
-Given:
-- Conversation history
-- Current user message and candidate responses (with choice indicated)
-- A summary of existing global explanation axes
-- The number K of new hypotheses to generate
+Goal:
+Generate K plausible new hypotheses that introduce new explanatory axes.
 
-Task:
-1. Identify the category/topic of the current conversation.
-2. Generate exactly K new hypotheses that:
-- Differ in underlying latent explanation (not tone-only rephrasing).
-- Each introduces a NEW explanation axis not already present in GlobalDiversitySummary.
-- Each remains plausible given the conversation.
-- For each hypothesis, provide:
-  * "content": a clear hypothesis describing a latent user preference.
-  * "novel_axis": the new axis name (short phrase)
-  * "justification": a brief (1-2 sentences) explanation of why it explains the chosen response
+Requirements:
+1. Identify one topic category for the current conversation.
+2. Generate exactly K new hypotheses.
+- Each hypothesis must reflect a distinct latent explanation (not surface rephrasing).
+- Each hypothesis must introduce an axis not already in GlobalDiversitySummary.
+- Each hypothesis must remain plausible under the conversation evidence.
 
-Output JSON only:
+Output (JSON only):
 {{
   "category": "a concise topic label for the current conversation",
   "new_hypotheses": [

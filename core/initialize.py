@@ -7,39 +7,21 @@ from typing import Any, Dict, List, Literal, Annotated
 
 
 INITIALIZATION_PROMPT = """
-You are initializing user preference hypotheses for a personalization pipeline. These hypotheses will guide future generation. Focus only on stable, evidence-supported signals from the most recent comparison between chosen and rejected responses.
+Role:
+You initialize user preference hypotheses for a personalization pipeline.
 
-Task
+Goal:
+Infer stable, evidence-supported hypotheses from the latest chosen-vs-rejected comparison.
 
-Given:
-- Conversation history (may be empty for first turn)
-- The latest user message
-- Candidate responses (whether chosen or rejected specified)
-- Previously retrieved hypotheses (may be empty)
+Procedure:
+1. Identify one topic category for organization/retrieval.
+2. Produce exactly {n_hypotheses} hypotheses.
+- Each hypothesis must cover a different explanatory aspect.
+- Prioritize conversational style/value preferences over topic facts.
+- Reuse relevant retrieved hypotheses when justified; otherwise create new ones.
+- Use user message as auxiliary evidence only when it clearly expresses preference signal.
 
-Internally:
-- Analyze primarily the differences among the candidate responses.
-- For hypotheses, focus on conversational style and underlying value preferences rather than specific topics.
-- Use the user message only as auxiliary evidence, when it clearly provides explicit feedback to previous interaction or preference signals.
-
-Then:
-
-1. Identify the category/topic of the current conversation.
-   This category is used only for organizing and retrieving hypotheses in the library. When making hypotheses, focus more on conversational style and value.
-
-2. Propose exactly {n_hypotheses} stable user preference hypotheses:
-- Each hypothesis should focus on a DIFFERENT aspect of preference or value that could explain the user's choice.
-- Reuse and revise relevant retrieved hypotheses when appropriate.
-- Otherwise generate new hypotheses.
-- For each hypothesis, provide:
-  * "id": either the reused hypothesis ID or create a new unique ID (e.g., "new-1")
-  * "action": "reuse" if reusing a retrieved hypothesis, or "new" if creating a new one
-  * "content": a clear hypothesis describing a latent user preference.
-  * "justification": a brief (1-2 sentences) explanation of why the hypothesis explains the user choice
-
-Output Format
-
-Return a JSON object:
+Output (JSON only):
 
 {{
   "category": "...",
@@ -54,20 +36,27 @@ Return a JSON object:
 }}
 
 Rules:
-- Output valid, parsable JSON only.
-- Always include all required fields, and produce exactly {n_hypotheses} hypotheses.
-- Ground each hypothesis in explicit evidence from the comparison.
+- Return valid JSON only.
+- Include all required fields.
+- Produce exactly {n_hypotheses} hypotheses.
+- Ground each hypothesis in explicit observed evidence.
 
-Conversation History:
+[Conversation History]
 {prev_turns}
 
-Current User Message:
+[Current User Message]
 {user_message}
 
-Candidate Responses:
+[Candidate Responses]
 {candidates}
 
-Previously Retrieved Hypotheses:
+Candidate Responses are provided as JSON list items with:
+- i: candidate index
+- summary: compact candidate summary
+- content: compact candidate content
+- choice: chosen | rejected
+
+[Previously Retrieved Hypotheses]
 {retrieved_hypotheses}
 """
 

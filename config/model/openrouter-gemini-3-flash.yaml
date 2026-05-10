@@ -1,0 +1,7 @@
+backend: "openrouter"
+model: "google/gemini-3-flash-preview"
+reasoning_effort: "minimal"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5

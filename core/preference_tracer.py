@@ -1,3 +1,4 @@
+import json
 from typing import Optional, TypedDict
 from .utils import TracerConfig, TracerContext
 from .hypothesis_set import HypothesisSet
@@ -55,28 +56,34 @@ class PreferenceTracer:
                 )
 
                 # Online Update
-                candidates, preprocess_status = preprocess_candidates(conversation_history, context)
+                structured_candidates, preprocess_status = preprocess_candidates(conversation_history, context)
                 turn_record["preprocess"] = preprocess_status
                 if not preprocess_status["success"] or preprocess_status["skip"]:
                     records["turns"].append(turn_record)
                     continue
+                candidates_with_choice = "[CandidateSet]\n" + json.dumps(structured_candidates, ensure_ascii=False, indent=2)
+                candidates_for_filter = "[CandidateSet]\n" + json.dumps(
+                    [{"i": item["i"], "summary": item["summary"], "content": item["content"]} for item in structured_candidates],
+                    ensure_ascii=False,
+                    indent=2,
+                )
                 if not initialized:
-                    initialize_record = initialize_hypothesis(conversation_history, candidates, context)
+                    initialize_record = initialize_hypothesis(conversation_history, candidates_with_choice, context)
                     turn_record["initialize"] = initialize_record
                     if not (initialized := initialize_record["success"]):
                         records["turns"].append(turn_record)
                         continue
                 else:
-                    branch_status = branch_hypotheses(conversation_history, candidates, context)
+                    branch_status = branch_hypotheses(conversation_history, candidates_with_choice, context)
                     turn_record["branch"] = branch_status
-                weight_status = weight_hypothesis(conversation_history, candidates, context)
+                weight_status = weight_hypothesis(conversation_history, candidates_for_filter, context)
                 turn_record["weight"] = weight_status
                 working_profile = summarize_hypotheses(context)
                 if (ess := context.belief.ess()) < self.tracer_config.n_hypotheses / 2:
                     similar_groups = context.belief.resample()
                 else:
                     similar_groups = context.belief.get_similarity_groups(threshold=self.tracer_config.similarity_threshold)
-                turn_record["perturb"] = perturb_hypotheses(conversation_history, candidates, similar_groups, context)
+                turn_record["perturb"] = perturb_hypotheses(conversation_history, candidates_with_choice, similar_groups, context)
                 turn_record["perturb"]["ess"] = ess
                 turn_record["hypotheses"] = context.belief.log_dict()
                 turn_record["summary"] = working_profile

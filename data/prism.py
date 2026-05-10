@@ -4,6 +4,8 @@ from .base import Turn, Conversation, UserData
 import random
 import math
 
+MIN_USER_TURNS = 20
+
 def group_by_turns(conversation_history: List[Dict], id_prefix: str) -> List[Turn]:
     turns = {}
     for msg in conversation_history:
@@ -76,10 +78,6 @@ def load_prism(n_users: int = None, seed: int = 42) -> List[UserData]:
     survey_data = load_dataset("HannahRoseKirk/prism-alignment", "survey")['train']
     survey_rec = {rec['user_id']: rec for rec in survey_data}
     
-    if n_users is not None:
-        random.seed(seed)
-        user_order = random.sample(user_order, n_users)
-
     users: List[UserData] = []
     for uid in user_order:
         convs = []
@@ -91,12 +89,18 @@ def load_prism(n_users: int = None, seed: int = 42) -> List[UserData]:
                 conversation_id=cid,
                 turns=turns
             ))
+        total_turns = sum(len(conv.turns) for conv in convs)
+        if total_turns < MIN_USER_TURNS:
+            continue
         gt_profile = extract_profile(survey_rec[uid])
         users.append(UserData(
             user_id=uid,
             conversations=convs,
             gt_profile=gt_profile
         ))
+    if n_users is not None and len(users) > n_users:
+        random.seed(seed)
+        users = random.sample(users, n_users)
     return users
 
 

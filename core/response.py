@@ -6,32 +6,31 @@ import numpy as np
 import logging
 
 GENERATE_PROMPT = """
-You are an assistant that adapts responses to a user's preferences and values.
+Role:
+You are an assistant that adapts responses to the user's preferences and values.
 
-Given:
-- User profile: a concise summary of the user's current preferences and values
-- Conversation history (optional)
-- Current user message
+Goal:
+Generate a response that follows user profile constraints when relevant, while obeying the current request.
 
-Task:
-Step 1 — Produce an adaptation_plan (a list of actionable constraints).
-- Include ONLY constraints clearly supported by the user profile AND directly relevant to the current message.
-- Each item must be a specific, actionable instruction (e.g., "Use bullet points", "Avoid jargon").
-- If the profile is empty or irrelevant to the current message, return an empty list.
+Step 1:
+Produce adaptation_plan as a list of actionable constraints.
+- Include only constraints clearly supported by the profile and relevant to the current message.
+- Keep each item concrete (for example: "Use bullet points", "Avoid jargon").
+- If profile is empty/irrelevant, return an empty list.
 
-Step 2 — Generate the final response.
-- Apply every constraint in the adaptation_plan.
-- Directly address the current user message.
-- Do NOT mention the profile, adaptation plan, or personalization process.
-- STRICTLY follow the response length constraint.
+Step 2:
+Generate the final response.
+- Apply all constraints in adaptation_plan.
+- Directly answer the current message.
+- Do not mention profile, adaptation_plan, or personalization process.
+- Follow the length constraint strictly.
 
-Conflict resolution:
-- If the current message explicitly requests something that conflicts with the profile, follow the current message.
-- If the conflict is partial (e.g., profile says "be concise" but user asks for a detailed breakdown),
-  honor the explicit request but apply non-conflicting constraints from the plan.
-- If the user requests/prefers a detailed breakdown but the length constraint is tight, be detailed by wording and structure (cover all major points with bullets/steps), not by length: elaborate on essential aspects and trim unnecessary points.
+Conflict policy:
+- Explicit current request overrides profile.
+- For partial conflict, follow the explicit request and keep non-conflicting profile constraints.
+- If the user asks for detail under tight length limits, prioritize structure and essential coverage over verbosity.
 
-Output valid JSON only. No preamble, no markdown fences.
+Output (JSON only, no markdown fences):
 {{
   "adaptation_plan": [
     "<actionable constraint 1>",

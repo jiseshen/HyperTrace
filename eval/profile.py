@@ -68,7 +68,7 @@ Output ONLY the final JSON:
   "aspects_covered": ["aspect1", "aspect2", ...],
   "survey_consistency": 0-5,
   "key_aspect_match": 0-5,
-  "internal_plausibility": 0-5
+  "internal_plausibility": 0-5,
   "justification": "2-4 sentences explaining the most important core-signal matches/mismatches.",
 }}
 

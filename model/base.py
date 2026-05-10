@@ -46,9 +46,5 @@ class BaseLM(ABC):
         ...
     
     @abstractmethod
-    def batch_generate(self, prompts: List[str], cfg: Optional[GenerationConfig], custom_ids: Optional[List[str]], metadata: Optional[Dict[str, str]], **overrides: Unpack[GenerationOverrides]) -> List[Union[str, Dict[str, Any]]]:
-        ...
-    
-    @abstractmethod
     async def async_generate(self, prompts: List[str], schema: Optional[type], cfg: Optional[GenerationConfig], concurrency: int, return_exceptions: bool, **overrides: Unpack[GenerationOverrides]) -> List[Union[str, Dict[str, Any]]]:
         ...

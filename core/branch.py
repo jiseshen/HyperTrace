@@ -10,52 +10,30 @@ from .consolidate import compute_importance
 
 
 BRANCHING_PROMPT = """
-You are updating ONE working hypothesis in a personalization pipeline.
-
-You are given:
-- The current hypothesis (category + content)
-- The latest user interaction: user message + candidate responses (chosen vs rejected)
-- (Optional) brief conversation history from previous turns
+Role:
+You update one working hypothesis in a personalization pipeline.
 
 Goal:
-Decide whether this interaction provides usable preference evidence for updating this hypothesis, and if so, how.
+Decide whether the latest interaction provides usable evidence for this hypothesis, and output either a revision or replacement.
 
-Step 1: Relevance
-Assess whether the interaction is relevant to this hypothesis:
-- relevance="direct" if the interaction directly supports or contradicts this hypothesis.
-- relevance="partial" if topic differs but the same underlying preference/value/style is evidenced.
-- relevance="none" if no meaningful support exists.
+Step 1 (relevance):
+- "direct": interaction clearly supports/contradicts this hypothesis.
+- "partial": same underlying preference axis appears with partial overlap.
+- "none": no meaningful evidence for this hypothesis.
 
-Step 2: Update
-Internally:
-- Compare chosen vs rejected to extract preference-relevant differences.
-- If user message acts as a follow-up or feedback to previous interaction, check for:
-  * Explicit corrections
-  * Stated preferences
-  * Constraints
-  * Dissatisfaction signals
-  * Consistent behavioral patterns
+Step 2 (action):
+- If relevance is "direct" or "partial": action="revise".
+  Keep the same axis/scope, stay specific, and only incorporate relevant evidence.
+- If relevance is "none": action="replace".
+  Write a new hypothesis with similar specificity.
 
-Update decision:
-- If relevance is "direct" or "partial":
-    action="revise"
-    Produce an updated hypothesis that:
-      * Incorporates ONLY evidence relevant to the current hypothesis' aspect/axis,
-      * Remains specific (do not over-generalize),
-      * Preserves the original aspect/axis and scope (do NOT introduce new aspects),
-      * Keeps the original intent unless explicitly contradicted by the interaction.
-- If relevance is "none":
-    action="replace"
-    Produce a new hypothesis at similar specificity.
+Category rules:
+- Keep original category unless current evidence clearly indicates shift.
+- If old category has multiple labels, keep the most appropriate one.
+- Do not add a new category without clear evidence.
+- Category is organizational only; hypothesis content should reflect preference evidence.
 
-Category update rules:
-- If the current turn provides clear evidence that the topic category has shifted, update the category accordingly.
-- Otherwise, keep the original category.
-- If the original category contains multiple labels, select the single most appropriate one based on the current evidence.
-- Do not introduce a new category unless clearly justified by the interaction.
-- The topic category serves only for organizational purposes and does not limit the scope of the hypothesis content. Focus on conversational style, value, or preference evidence in the content update.
-
-Output JSON only:
+Output (JSON only):
 
 {{
   "action": "revise" | "replace",
@@ -68,21 +46,27 @@ Output JSON only:
 }}
 
 Rules:
-- If action="revise": category should usually remain the same.
-- If action="replace": do not reference the old hypothesis in the new content.
-- Ground all updates strictly in observed evidence.
+- If action="revise", category usually remains unchanged.
+- If action="replace", do not mention the old hypothesis content.
+- Ground updates strictly in observed evidence.
 - Avoid speculation and over-generalization.
 
-Conversation History:
+[Conversation History]
 {prev_turns}
 
-Current User Message:
+[Current User Message]
 {user_message}
 
-Candidate Responses:
+[Candidate Responses]
 {candidates}
 
-Current Hypothesis:
+Candidate Responses are provided as JSON list items with:
+- i: candidate index
+- summary: compact candidate summary
+- content: compact candidate content
+- choice: chosen | rejected
+
+[Current Hypothesis]
 {current_hypothesis}
 """
 

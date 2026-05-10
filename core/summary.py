@@ -2,39 +2,30 @@ from .utils import TracerContext
 
 
 SUMMARY_PROMPT = """
-You are summarizing the current belief about a user's preferences using two sources:
-
-1) Global consolidated hypotheses (long-term): stable tendencies selected by top prior. 
-   - These DO NOT have per-hypothesis weights for the current turn.
-   - Treat them as background priors: usually stable but not necessarily active right now.
-
-2) Current-conversation hypotheses (short-term): hypotheses with posterior weights for this conversation.
-   - Treat these as primary evidence for what to do NOW.
+Role:
+You summarize current user preference beliefs from long-term and short-term hypothesis sources.
 
 Goal:
-Produce a concise, faithful summary that combines long-term tendencies with current-turn evidence.
+Write a concise, faithful summary for what the assistant should do now.
 
-How to weight the two sources:
-- Use current-conversation hypotheses as the main signal; reflect their relative weights in prominence and wording.
-- Use global hypotheses as secondary signal:
-  * include a global item if it is consistent with current evidence, OR
-  * include it if current hypothesis is general/weak/ambiguous, OR
-  * include it as a "stable baseline" that the current turn may temporarily override.
-- If global and current conflict, do NOT invent a resolution. State the dominant current explanation first (if current weight is concentrated), then mention the long-term baseline as a possible stable tendency.
+Evidence weighting:
+- Current-conversation hypotheses are primary evidence.
+- Global consolidated hypotheses are secondary background priors.
+- If current and global conflict, present the dominant current explanation first, then note global baseline as longer-term tendency.
 
-Output format:
-- 4-8 bullet points total, no other text.
+Output:
+- 4-8 bullet points only. No extra text.
 
-Strength mapping (must follow):
-- High-weight current items: MUST / STRONGLY / MAINLY
-- Medium-weight current items: SHOULD / GENERALLY
-- Low-weight but kept current items: MAY / SLIGHTLY
-- Global-only items: TENDS TO / OFTEN
+Strength mapping (required):
+- High-weight current: MUST / STRONGLY / MAINLY
+- Medium-weight current: SHOULD / GENERALLY
+- Low-weight current: MAY / SLIGHTLY
+- Global-only: TENDS TO / OFTEN
 
 Rules:
-- Preserve the meaning of hypotheses; do NOT invent new preferences.
-- Avoid duplicates: merge overlapping points into one bullet.
-- Prefer actionable tendencies (style/structure/expectations) over vague traits.
+- Preserve hypothesis meaning; do not invent new preferences.
+- Merge overlaps and remove duplicates.
+- Prefer actionable tendencies over vague traits.
 
 [Global consolidated hypotheses] (long-term, prior-top; no current-turn weights)
 {consolidated_hypotheses}
@@ -45,19 +36,17 @@ Rules:
 
 
 PROFILE_PROMPT = """
-You are compiling user preference profile from interaction evidence.
+Role:
+You compile a user preference profile from hypothesis evidence.
 
-Given:
-- A list of hypotheses about the user's latent preferences/values, each with an associated topic category.
-
-Task:
-Summarize the hypotheses into a concise profile that captures the user's core values and expectations for the AI assistant.
+Goal:
+Produce a concise profile of what the user values and expects from the assistant.
 
 Guidelines:
-- Analyze the hypotheses and focus on "what the user values", "what the user expects from the assistant", and "what aspects the user cares most about in the interaction".
-- The potential aspects include values, creativity, fluency, factuality, diversity, safety, personalisation and helpfulness.
-- If the hypotheses about values/preference reflect a strong likelihood of the user being a certain age (young, grown, senior), culture, religion, you MUST speculate and mention them as additional snippets
-- Output the raw profile text.
+- Focus on values, style, structure, factuality expectations, safety boundaries, and helpfulness preferences.
+- Only include claims supported by evidence in hypotheses.
+- Do not speculate about demographics or sensitive attributes without explicit evidence.
+- Output plain profile text only.
 
 [Hypotheses]
 {hypotheses}

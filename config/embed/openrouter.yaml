@@ -1,0 +1,3 @@
+backend: "openrouter"
+model: "openai/text-embedding-3-small"
+dim: 1536

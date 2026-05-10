@@ -1,0 +1,7 @@
+backend: "openrouter"
+model: "openai/gpt-5"
+reasoning_effort: "minimal"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5

@@ -9,33 +9,34 @@ from data.base import Turn
 
 
 LIKELIHOOD_PROMPT = """
-You are scoring alignment between candidate responses and a hypothesis z in order to estimate choice likelihood.
+Role:
+You are scoring candidate-hypothesis alignment for choice likelihood estimation.
 
-Definitions:
-- z: a single hypothesis about the user's latent preference/value. Assume z is TRUE.
-- candidates: multiple responses to the same user message.
+Given:
+- Hypothesis z (assume z is true)
+- Multiple candidates for the same user message
 
 Goal:
-For each candidate i, assign an ALIGNMENT SCORE s_i in 0-5 indicating how well the candidate matches z,
-based on preference-relevant differences (values/style/structure/constraints implied by z), NOT general quality.
+Assign each candidate i an alignment score s_i in [0, 5] for how well it matches z.
+Score relative alignment under z, not general response quality.
 
-Scoring anchors (use these strictly):
-5 = Best match to z; clearly satisfies z better than others (large margin)
-4 = Strong match; among the top or tied-top under z
-3 = Moderate match; plausible under z but not top
-2 = Weak match; conflicts with z in at least one important way
-1 = Poor match; largely mismatched to z
-0 = Opposes z or ignores it entirely
+Score anchors:
+- 5: best match to z with clear margin
+- 4: strong match, top or tied-top
+- 3: moderate match, plausible but not top
+- 2: weak match, conflicts on an important dimension
+- 1: poor match, largely mismatched
+- 0: opposes or ignores z
 
 Rules:
-- Compare candidates RELATIVELY under z. Do not score absolute correctness unless z explicitly cares about it.
-- If z is irrelevant to differences among candidates, give near-equal scores (e.g., all 3, or 3/3/2 with tiny variance).
-- Use the full range when justified; avoid defaulting to 3 unless genuinely ambiguous.
-- Do NOT invent preferences not stated in z or the user message.
-- The output list must have exactly the same length as the number of candidates.
-- scores[i] MUST correspond to candidate i in the given order. Do NOT reorder candidates.
+- Candidates are intentionally unlabeled; do not assume which one was chosen.
+- Compare candidates relatively under z.
+- If z does not explain candidate differences, keep scores near-equal.
+- Use wider score spread only when evidence supports it.
+- Do not invent preferences outside z and the user message.
+- Keep the original candidate order: scores[i] must map to candidate i.
 
-Output valid, parsable JSON only:
+Output (JSON only):
 {{
   "scores": [s0, s1, ...]
 }}
@@ -48,6 +49,12 @@ Output valid, parsable JSON only:
 
 [Candidate Responses]
 {candidates}
+
+Candidate Responses are provided as JSON list items with:
+- i: candidate index
+- summary: compact candidate summary
+- content: compact candidate content
+- There is no choice label in this input.
 
 [Hypothesis z]
 {hypothesis}

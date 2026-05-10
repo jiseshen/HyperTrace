@@ -2,26 +2,38 @@ import numpy as np
 from dataclasses import dataclass
 from typing import List
 
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
 @dataclass
 class EmbedConfig:
     backend: str = "openai"
     model: str = "text-embedding-3-small"
     dim: int = 1536
+    base_url: str | None = None
 
 
 _client, _backend = None, None
 
-def get_client(backend: str = "openai"):
+def get_client(backend: str = "openai", base_url: str | None = None):
     global _client, _backend
-    if _client is None or _backend != backend:
+    cache_key = f"{backend}:{base_url or ''}"
+    if _client is None or _backend != cache_key:
         if backend == "openai":
             from openai import OpenAI
             _client = OpenAI()
-            _backend = backend
+            _backend = cache_key
+        elif backend == "openrouter":
+            import os
+            from openai import OpenAI
+            _client = OpenAI(
+                api_key=os.getenv("OPENROUTER_API_KEY", "empty"),
+                base_url=base_url or os.getenv("OPENROUTER_API_BASE", OPENROUTER_BASE_URL),
+            )
+            _backend = cache_key
         elif backend == "gemini":
             from google import genai
             _client = genai.Client()
-            _backend = backend
+            _backend = cache_key
     return _client
 
 _model = None
@@ -50,8 +62,8 @@ def embed(
     """
     if isinstance(text, str):
         text = [text]
-    if embed_cfg.backend == "openai":
-        client = get_client(embed_cfg.backend)
+    if embed_cfg.backend in ("openai", "openrouter"):
+        client = get_client(embed_cfg.backend, embed_cfg.base_url)
         response = client.embeddings.create(
             model=embed_cfg.model,
             input=text
