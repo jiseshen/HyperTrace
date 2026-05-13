@@ -4,61 +4,8 @@ from .hypothesis_set import Hypothesis, WorkingBelief
 from data import Turn
 from .utils import TracerContext
 from typing import Any, Dict, List, Literal, Annotated
+from prompt.base import INITIALIZATION_PROMPT
 
-
-INITIALIZATION_PROMPT = """
-Role:
-You initialize user preference hypotheses for a personalization pipeline.
-
-Goal:
-Infer stable, evidence-supported hypotheses from the latest chosen-vs-rejected comparison.
-
-Procedure:
-1. Identify one topic category for organization/retrieval.
-2. Produce exactly {n_hypotheses} hypotheses.
-- Each hypothesis must cover a different explanatory aspect.
-- Prioritize conversational style/value preferences over topic facts.
-- Reuse relevant retrieved hypotheses when justified; otherwise create new ones.
-- Use user message as auxiliary evidence only when it clearly expresses preference signal.
-
-Output (JSON only):
-
-{{
-  "category": "...",
-  "hypotheses": [
-    {{
-      "id": "...",
-      "action": "reuse" | "new",
-      "content": "...",
-      "justification": "..."
-    }}
-  ]
-}}
-
-Rules:
-- Return valid JSON only.
-- Include all required fields.
-- Produce exactly {n_hypotheses} hypotheses.
-- Ground each hypothesis in explicit observed evidence.
-
-[Conversation History]
-{prev_turns}
-
-[Current User Message]
-{user_message}
-
-[Candidate Responses]
-{candidates}
-
-Candidate Responses are provided as JSON list items with:
-- i: candidate index
-- summary: compact candidate summary
-- content: compact candidate content
-- choice: chosen | rejected
-
-[Previously Retrieved Hypotheses]
-{retrieved_hypotheses}
-"""
 
 UNIT_INITIALIZE_BUDGET = 256
 logger = logging.getLogger(__name__)
@@ -81,7 +28,7 @@ def initialize_hypothesis(
         current_turn.user_message, top_k=context.tracer_config.n_hypotheses
     )
     
-    prompt = INITIALIZATION_PROMPT.format(
+    prompt = context.prompts.initialization.format(
         n_hypotheses=context.tracer_config.n_hypotheses,
         prev_turns="\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
         user_message=current_turn.user_message,

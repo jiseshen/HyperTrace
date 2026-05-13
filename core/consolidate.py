@@ -4,27 +4,8 @@ import numpy as np
 
 from data.base import Turn
 from .utils import TracerContext
+from prompt.base import CONSOLIDATE_PROMPT
 
-
-CONSOLIDATE_PROMPT = """
-Role:
-You consolidate a cluster of similar user preference hypotheses.
-
-Goal:
-Merge the cluster into one generalized but specific hypothesis.
-
-Rules:
-- Preserve stable components strongly supported by the cluster.
-- Remove redundant wording and stylistic rephrasing.
-- Keep the result evidence-grounded and close in length to source hypotheses.
-- Do not invent new preferences.
-
-Output:
-Raw merged hypothesis text only. No explanation.
-
-[Cluster]
-{collapsed_cluster}
-"""
 
 CONSOLIDATE_BUDGET = 256
 
@@ -37,7 +18,7 @@ def compute_importance(conversation_length: int, entropy: float) -> float:
 def deduplicate_group(group: List[str], context: TracerContext):
     hyps, _ = context.hypothesis_set[group]
     category = ", ".join(set(c for h in hyps for c in h.category.split(", ")))
-    merge_prompt = CONSOLIDATE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hyps]))
+    merge_prompt = context.prompts.consolidate.format(collapsed_cluster="\n\n".join([h.content for h in hyps]))
     merge_overrides = context.get_generation_overrides("merge_override")
     merged_hypothesis = context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=CONSOLIDATE_BUDGET, **merge_overrides)["output"]
     context.hypothesis_set.merge_hypotheses(group, {"category": category, "content": merged_hypothesis})

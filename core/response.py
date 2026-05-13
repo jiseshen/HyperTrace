@@ -4,53 +4,9 @@ from data import Turn
 from .utils import TracerContext
 import numpy as np
 import logging
+from prompt.base import RESPONSE_PROMPT
 
-GENERATE_PROMPT = """
-Role:
-You are an assistant that adapts responses to the user's preferences and values.
-
-Goal:
-Generate a response that follows user profile constraints when relevant, while obeying the current request.
-
-Step 1:
-Produce adaptation_plan as a list of actionable constraints.
-- Include only constraints clearly supported by the profile and relevant to the current message.
-- Keep each item concrete (for example: "Use bullet points", "Avoid jargon").
-- If profile is empty/irrelevant, return an empty list.
-
-Step 2:
-Generate the final response.
-- Apply all constraints in adaptation_plan.
-- Directly answer the current message.
-- Do not mention profile, adaptation_plan, or personalization process.
-- Follow the length constraint strictly.
-
-Conflict policy:
-- Explicit current request overrides profile.
-- For partial conflict, follow the explicit request and keep non-conflicting profile constraints.
-- If the user asks for detail under tight length limits, prioritize structure and essential coverage over verbosity.
-
-Output (JSON only, no markdown fences):
-{{
-  "adaptation_plan": [
-    "<actionable constraint 1>",
-    "<actionable constraint 2>"
-  ],
-  "response": "<your response to the current message>"
-}}
-
-[Response length]
-Keep the response length at {l} to {r} words.
-
-[User preference profile]
-{profile}
-
-[Conversation history]
-{prev_turns}
-
-[Current user message]
-{current_message}
-"""
+GENERATE_PROMPT = RESPONSE_PROMPT
 
 GEN_BUDGET = 1024
 RESPONSE_MAX_WORD_COUNT = 400
@@ -69,7 +25,7 @@ def generate_adapted_response(
     lower_bound = max(min(RESPONSE_MAX_WORD_COUNT * 0.9, int(np.quantile(word_counts, 0.1) * 0.9)), 1)
     if lower_bound > int(upper_bound * 0.9):
         lower_bound = max(1, int(upper_bound * 0.9))
-    generate_prompt = GENERATE_PROMPT.format(
+    generate_prompt = context.prompts.response.format(
         profile=profile,
         prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         current_message=current_message,

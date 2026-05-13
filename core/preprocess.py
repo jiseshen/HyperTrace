@@ -1,80 +1,10 @@
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple, Annotated
+from typing import Any, Dict, List, Tuple, Annotated
 from pydantic import BaseModel, Field, conlist, create_model, StringConstraints
 import logging
 from .utils import TracerContext
 from data.base import Turn
-
-SKIP_PROMPT = """
-Role:
-You are the gating module for an LLM personalization system.
-
-Goal:
-Decide whether this turn contains usable preference evidence.
-
-Set "skip": true if either condition is true:
-- The user message is only greeting/ack/filler and has no meaningful preference, value, stance, boundary, or constraint signal.
-- The candidate differences are not preference-relevant and are mainly correctness/completeness/minor wording differences.
-
-Important:
-- Do not skip only because the topic is sensitive or controversial.
-- Focus on preference signal, not toxicity level.
-
-Output (JSON only):
-{{
-  "reason": "a brief (1-2 sentences) justification about why to skip or not",
-  "skip": boolean
-}}
-
-[user_message]
-{user_message}
-
-[candidates]
-{candidates}
-"""
-
-PREPROCESSING_PROMPT = """
-Role:
-You are the preprocessing module for an LLM personalization system.
-
-Goal:
-Convert raw candidates into stable, compact summaries that preserve preference-relevant differences.
-
-Step 1:
-Identify 1-4 high-contrast dimensions across candidates.
-Use short canonical labels (examples: values, information_density, structure, actionability, tone, framing, abstraction).
-Only keep dimensions with clear contrast.
-
-Step 2:
-For each candidate, produce one concise summary (<50 words).
-- Summary must cover the listed dimensions for that candidate.
-- You may add at most one extra salient detail.
-- Do not restate the whole candidate.
-
-Output (JSON only):
-{{
-  "reason": "a short justification about the dimension identification",
-  "dimensions": ["dimension 1", ...],
-  "summarized_candidates": [
-    {{"i": 0, "summary": "a brief summary for candidate 0"}},
-    {{"i": 1, "summary": "a brief summary for candidate 1"}}
-  ]
-}}
-
-Rules:
-- Return valid JSON only (no markdown, no comments).
-- Use only provided candidates.
-- Preserve candidate indices exactly.
-- Return exactly one summarized candidate per input candidate.
-
-[user_message]
-{user_message}
-
-[candidates]
-{candidates}
-
-Generate exactly {n} items in summarized_candidates.
-"""
+from prompt.base import PREPROCESSING_PROMPT, SKIP_PROMPT
 
 SKIP_BUDGET = 128
 UNIT_PREPROCESS_BUDGET = 256
@@ -95,7 +25,7 @@ def compact_text(s: str, head: int = 200, tail: int = 100) -> str:
 
 def preprocess_candidates(conversation_history: List[Turn], context: TracerContext) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     current_turn = conversation_history[-1]
-    skip_prompt = SKIP_PROMPT.format(
+    skip_prompt = context.prompts.skip.format(
         user_message=current_turn.user_message,
         candidates="\n".join([f"[{i}] {c}" for i, c in enumerate(current_turn.candidates)])
     )
@@ -118,7 +48,7 @@ def preprocess_candidates(conversation_history: List[Turn], context: TracerConte
     if skip > len(skip_outputs) / 2:  # Majority vote to skip
         return [], {"success": True, "skip": True, "invalid": invalid}
     n = len(current_turn.candidates)
-    preprocess_prompt = PREPROCESSING_PROMPT.format(
+    preprocess_prompt = context.prompts.preprocessing.format(
         user_message=current_turn.user_message,
         candidates="\n".join([f"[{i}] {c}" for i, c in enumerate(current_turn.candidates)]),
         n=n

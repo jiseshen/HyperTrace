@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from data import Turn, UserData
 from model import BaseLM, EmbedConfig, GenerationConfig
+from prompt import PromptSet, prism_prompts
 
 from .prediction import predict_choice
 from .profile import profile_score
@@ -47,7 +48,9 @@ def evaluate_user_record(
     eval_model: BaseLM,
     eval_cfg: GenerationConfig,
     embed_cfg: EmbedConfig,
+    prompts: PromptSet = None,
 ) -> Dict[str, Any]:
+    prompt_set = prompts or prism_prompts()
     turn_contexts = _flatten_turn_contexts(user_data)
     record_turns = record.get("turns", [])
     n_eval_turns = min(len(record_turns), len(turn_contexts))
@@ -82,6 +85,7 @@ def evaluate_user_record(
             conversation_history=conversation_history,
             profile=profile_before_turn,
             generation_cfg=eval_cfg,
+            prompts=prompt_set,
         )
 
         if adapted_response:
@@ -91,6 +95,7 @@ def evaluate_user_record(
                 adapted_response=adapted_response,
                 embed_cfg=embed_cfg,
                 evaluation_cfg=eval_cfg,
+                prompts=prompt_set,
             )
             turn_metrics["adaptation"]["success"] = True
         else:
@@ -99,8 +104,12 @@ def evaluate_user_record(
                 "error": "Adapted response missing or unsuccessful.",
                 "gpt_score": None,
                 "relative_gpt_score": None,
+                "relative_mean_gpt_score": None,
+                "gpt_scores": [],
                 "similarity_score": None,
                 "relative_score": None,
+                "relative_mean_score": None,
+                "similarity_scores": [],
             }
 
         metrics["turns"].append(turn_metrics)
@@ -115,6 +124,7 @@ def evaluate_user_record(
             survey=user_data.gt_profile,
             embed_cfg=embed_cfg,
             evaluation_cfg=eval_cfg,
+            prompts=prompt_set,
         )
     else:
         metrics["profile_alignment"] = {"error": "Final profile missing."}
@@ -140,8 +150,10 @@ def summarize_user_metrics(metrics: Dict[str, Any]) -> Dict[str, Any]:
         "prediction_ranking_score": _mean(p.get("ranking_score") for p in valid_predictions),
         "adapt_gpt_score": _mean(a.get("gpt_score") for a in valid_adaptations),
         "adapt_relative_gpt_score": _mean(a.get("relative_gpt_score") for a in valid_adaptations),
+        "adapt_relative_mean_gpt_score": _mean(a.get("relative_mean_gpt_score") for a in valid_adaptations),
         "adapt_similarity_score": _mean(a.get("similarity_score") for a in valid_adaptations),
         "adapt_relative_score": _mean(a.get("relative_score") for a in valid_adaptations),
+        "adapt_relative_mean_score": _mean(a.get("relative_mean_score") for a in valid_adaptations),
         "profile_overall": profile_alignment.get("overall"),
         "profile_similarity": profile_alignment.get("similarity"),
         "profile_survey_consistency": profile_alignment.get("survey_consistency"),
@@ -183,15 +195,19 @@ def summarize_metrics(user_metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
             "prediction_ranking_score": _mean(p.get("ranking_score") for p in valid_turn_predictions),
             "adapt_gpt_score": _mean(a.get("gpt_score") for a in valid_turn_adaptations),
             "adapt_relative_gpt_score": _mean(a.get("relative_gpt_score") for a in valid_turn_adaptations),
+            "adapt_relative_mean_gpt_score": _mean(a.get("relative_mean_gpt_score") for a in valid_turn_adaptations),
             "adapt_similarity_score": _mean(a.get("similarity_score") for a in valid_turn_adaptations),
             "adapt_relative_score": _mean(a.get("relative_score") for a in valid_turn_adaptations),
+            "adapt_relative_mean_score": _mean(a.get("relative_mean_score") for a in valid_turn_adaptations),
         })
 
     average_adaptation = {
         "adapt_gpt_score": _mean(turn.get("adapt_gpt_score") for turn in online_turns),
         "adapt_relative_gpt_score": _mean(turn.get("adapt_relative_gpt_score") for turn in online_turns),
+        "adapt_relative_mean_gpt_score": _mean(turn.get("adapt_relative_mean_gpt_score") for turn in online_turns),
         "adapt_similarity_score": _mean(turn.get("adapt_similarity_score") for turn in online_turns),
         "adapt_relative_score": _mean(turn.get("adapt_relative_score") for turn in online_turns),
+        "adapt_relative_mean_score": _mean(turn.get("adapt_relative_mean_score") for turn in online_turns),
     }
 
     overall_prediction = {
@@ -203,8 +219,10 @@ def summarize_metrics(user_metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
     overall_adaptation = {
         "adapt_gpt_score": _mean(a.get("gpt_score") for a in valid_adaptations),
         "adapt_relative_gpt_score": _mean(a.get("relative_gpt_score") for a in valid_adaptations),
+        "adapt_relative_mean_gpt_score": _mean(a.get("relative_mean_gpt_score") for a in valid_adaptations),
         "adapt_similarity_score": _mean(a.get("similarity_score") for a in valid_adaptations),
         "adapt_relative_score": _mean(a.get("relative_score") for a in valid_adaptations),
+        "adapt_relative_mean_score": _mean(a.get("relative_mean_score") for a in valid_adaptations),
     }
 
     profile_alignment = {
@@ -237,7 +255,9 @@ def evaluate_records(
     eval_model: BaseLM,
     eval_cfg: GenerationConfig,
     embed_cfg: EmbedConfig,
+    prompts: PromptSet = None,
 ) -> Dict[str, Any]:
+    prompt_set = prompts or prism_prompts()
     users_by_id = {user.user_id: user for user in users}
     record_files = sorted(records_path.glob("*.json"))
     user_metrics: List[Dict[str, Any]] = []
@@ -258,6 +278,7 @@ def evaluate_records(
             eval_model=eval_model,
             eval_cfg=eval_cfg,
             embed_cfg=embed_cfg,
+            prompts=prompt_set,
         )
         _write_json(metrics_path / "users" / f"{user_id}.json", metrics)
         user_metrics.append(metrics)

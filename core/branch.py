@@ -7,68 +7,8 @@ from data import Turn
 from typing import Any, Dict, List, Literal, Optional
 from .initialize import initialize_hypothesis
 from .consolidate import compute_importance
+from prompt.base import BRANCHING_PROMPT
 
-
-BRANCHING_PROMPT = """
-Role:
-You update one working hypothesis in a personalization pipeline.
-
-Goal:
-Decide whether the latest interaction provides usable evidence for this hypothesis, and output either a revision or replacement.
-
-Step 1 (relevance):
-- "direct": interaction clearly supports/contradicts this hypothesis.
-- "partial": same underlying preference axis appears with partial overlap.
-- "none": no meaningful evidence for this hypothesis.
-
-Step 2 (action):
-- If relevance is "direct" or "partial": action="revise".
-  Keep the same axis/scope, stay specific, and only incorporate relevant evidence.
-- If relevance is "none": action="replace".
-  Write a new hypothesis with similar specificity.
-
-Category rules:
-- Keep original category unless current evidence clearly indicates shift.
-- If old category has multiple labels, keep the most appropriate one.
-- Do not add a new category without clear evidence.
-- Category is organizational only; hypothesis content should reflect preference evidence.
-
-Output (JSON only):
-
-{{
-  "action": "revise" | "replace",
-  "relevance": "direct" | "partial" | "none",
-  "updated_hypothesis": {{
-    "category": "string",
-    "content": "string"
-  }},
-  "justification": "one brief (1-2 sentences) justification of the update decision"
-}}
-
-Rules:
-- If action="revise", category usually remains unchanged.
-- If action="replace", do not mention the old hypothesis content.
-- Ground updates strictly in observed evidence.
-- Avoid speculation and over-generalization.
-
-[Conversation History]
-{prev_turns}
-
-[Current User Message]
-{user_message}
-
-[Candidate Responses]
-{candidates}
-
-Candidate Responses are provided as JSON list items with:
-- i: candidate index
-- summary: compact candidate summary
-- content: compact candidate content
-- choice: chosen | rejected
-
-[Current Hypothesis]
-{current_hypothesis}
-"""
 
 BRANCH_BUDGET = 256
 logger = logging.getLogger(__name__)
@@ -89,7 +29,7 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
     current_turn = conversation_history[-1]
     current_hypotheses, current_weights = context.belief[:]
     prompts = [
-        BRANCHING_PROMPT.format(
+        context.prompts.branching.format(
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
             user_message=current_turn.user_message,
             candidates=candidates,

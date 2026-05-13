@@ -8,6 +8,7 @@ import numpy as np
 from data import Turn, UserData
 from model import EmbedConfig, GenerationConfig
 from model.batch_queue_model import BatchQueueModel
+from prompt import PromptSet, prism_prompts
 from tqdm import tqdm
 
 from .branch import branch_hypotheses
@@ -83,12 +84,14 @@ class BatchPreferenceTracer:
         generation_cfg: GenerationConfig,
         embed_cfg: EmbedConfig,
         stage_workers: int = 64,
+        prompts: PromptSet = None,
     ):
         self.model = model
         self.base_generation_config = generation_cfg
         self.embed_config = embed_cfg
         self.tracer_config = tracer_cfg
         self.stage_workers = max(1, stage_workers)
+        self.prompts = prompts or prism_prompts()
         self._scheduler_tick_seconds = 0.1
         self._active_pool_stop_ratio = 0.1
         self._stop_requested = False
@@ -194,6 +197,7 @@ class BatchPreferenceTracer:
             hypothesis_set=hypothesis_set,
             tracer_config=self.tracer_config,
             generation_config=self.base_generation_config,
+            prompts=self.prompts,
         )
         records: Records = {
             "user": user.user_id,

@@ -4,49 +4,10 @@ from model import GenerationConfig, BaseLM
 from data import Turn
 from typing import Any, Dict, List, Optional
 from pydantic import Field, create_model, conlist
+from prompt import PromptSet, prism_prompts
+from prompt.base import PREDICTION_PROMPT
 
-PREDICT_PROMPT = """
-You are ranking candidate responses for a user based on a given user preference profile.
-
-Given:
-- User preference profile: a concise summary of the user's stable preferences, values, and communication style
-- Conversation history (optional)
-- Current user message
-- Candidate responses. Each candidate has a unique ID in square brackets, such as [C1], [C2].
-
-Internally:
-- Compare each candidate response over how likely the user is to prefer each one.
-- Evaluate alignment based on explicit signals in the profile.
-- If the profile is empty or clearly irrelevant to this turn, rank candidates based on overall quality, clarity, and usefulness.
-
-Then:
-Rank candidates from best to worst according to alignment to the user preference.
-
-Output Format:
-
-Return a JSON object:
-{{
-  "ranking": ["id1", "id2"],
-  "justification": "a brief (2-3 sentences) explanation of the ranking"
-}}
-
-Rules:
-- Output valid, parsable JSON only, without any extra commentary.
-- When referring to candidates in your output, use only their IDs (e.g., C1, C2).
-- Keep the number in the ranking exactly the same as the number of given candidates.
-- Do not invent preference signals not present in the profile.
-
-User preference profile:
-{profile}
-
-Conversation history:
-{prev_turns}
-
-Current interaction:
-{current_turn}
-
-Number of candidates: {c}
-"""
+PREDICT_PROMPT = PREDICTION_PROMPT
 
 PREDICT_BUDGET = 256
 logger = logging.getLogger(__name__)
@@ -56,14 +17,16 @@ def predict_choice(
     conversation_history: List[Turn],
     profile: str,
     generation_cfg: GenerationConfig = None,
-    generation_overrides: Optional[Dict[str, Any]] = None
+    generation_overrides: Optional[Dict[str, Any]] = None,
+    prompts: Optional[PromptSet] = None,
 ) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
     gt_choice = current_turn.chosen_idx + 1
     
     c = len(current_turn.candidates)
-    prompt = PREDICT_PROMPT.format(
+    prompt_set = prompts or prism_prompts()
+    prompt = prompt_set.prediction.format(
         profile=profile,
         prev_turns='\n\n'.join([turn.format(include_candidates=False) for turn in prev_turns]),
         current_turn=current_turn.format(include_candidates=True, include_choice=False),  # ids are (idx + 1)

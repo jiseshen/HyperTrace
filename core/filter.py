@@ -6,59 +6,9 @@ from pydantic import Field, create_model, conlist, confloat
 from core.utils import TracerContext
 from core.hypothesis_set import Update
 from data.base import Turn
+from prompt.base import LIKELIHOOD_PROMPT
 
 
-LIKELIHOOD_PROMPT = """
-Role:
-You are scoring candidate-hypothesis alignment for choice likelihood estimation.
-
-Given:
-- Hypothesis z (assume z is true)
-- Multiple candidates for the same user message
-
-Goal:
-Assign each candidate i an alignment score s_i in [0, 5] for how well it matches z.
-Score relative alignment under z, not general response quality.
-
-Score anchors:
-- 5: best match to z with clear margin
-- 4: strong match, top or tied-top
-- 3: moderate match, plausible but not top
-- 2: weak match, conflicts on an important dimension
-- 1: poor match, largely mismatched
-- 0: opposes or ignores z
-
-Rules:
-- Candidates are intentionally unlabeled; do not assume which one was chosen.
-- Compare candidates relatively under z.
-- If z does not explain candidate differences, keep scores near-equal.
-- Use wider score spread only when evidence supports it.
-- Do not invent preferences outside z and the user message.
-- Keep the original candidate order: scores[i] must map to candidate i.
-
-Output (JSON only):
-{{
-  "scores": [s0, s1, ...]
-}}
-
-[Conversation history]
-{prev_turns}
-
-[Current User Message]
-{user_message}
-
-[Candidate Responses]
-{candidates}
-
-Candidate Responses are provided as JSON list items with:
-- i: candidate index
-- summary: compact candidate summary
-- content: compact candidate content
-- There is no choice label in this input.
-
-[Hypothesis z]
-{hypothesis}
-"""
 # TODO: Binary (True or false) scoring + 2 Examples steering
 
 FILTER_BUDGET = 64
@@ -74,7 +24,7 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
     current_turn = conversation_history[-1]
     hypotheses = context.belief.get_hypotheses()
     likelihood_prompts = [
-        LIKELIHOOD_PROMPT.format(
+        context.prompts.likelihood.format(
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
             user_message=current_turn.user_message,
             candidates=candidates,

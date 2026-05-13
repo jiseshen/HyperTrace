@@ -9,7 +9,8 @@ def text_similarity(text1: str, text2: str, embed_cfg: EmbedConfig, embedding_pr
     vec = embed([text1, text2], embed_cfg=embed_cfg)
     return float(np.dot(vec[0], vec[1]).item())
 
-def relative_similarity_score(adapted: str, candidates: List[str], chosen_idx: int, embed_cfg: EmbedConfig, embedding_prompt: str | None = None) -> float:
+
+def candidate_similarity_scores(adapted: str, candidates: List[str], embed_cfg: EmbedConfig, embedding_prompt: str | None = None) -> List[float]:
     if embedding_prompt:
         adapted = f"{embedding_prompt}\n{adapted}"
         candidates = [f"{embedding_prompt}\n{c}" for c in candidates]
@@ -17,6 +18,11 @@ def relative_similarity_score(adapted: str, candidates: List[str], chosen_idx: i
     adapted_vec = vec[0]
     candidate_vecs = vec[1:]
     similarities = np.dot(candidate_vecs, adapted_vec)
+    return [float(score.item()) for score in similarities]
+
+
+def relative_similarity_score(adapted: str, candidates: List[str], chosen_idx: int, embed_cfg: EmbedConfig, embedding_prompt: str | None = None) -> float:
+    similarities = np.array(candidate_similarity_scores(adapted, candidates, embed_cfg, embedding_prompt))
     chosen_similarity = similarities[chosen_idx]
     rejected_similarities = np.delete(similarities, chosen_idx)
     return float((chosen_similarity - np.max(rejected_similarities)).item())

@@ -154,8 +154,6 @@ def build_turnwise_averages(
             if v is not None:
                 rel_vals.append(v)
 
-        # 用“至少有多少人参与了这个 turn”作为截断标准
-        # 这里取五类指标里样本数的最大值，避免因为某个字段偶尔缺失被过早截断
         n_present = max(
             len(acc_vals),
             len(rank_vals),

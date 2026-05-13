@@ -4,83 +4,7 @@ from pydantic import BaseModel, Field, create_model, conlist, StringConstraints
 from core.utils import TracerContext
 from core.hypothesis_set import WorkingBelief
 from data.base import Turn
-
-AXIS_PROMPT = """
-Role:
-You extract explanatory axes for a list of user preference hypotheses.
-
-Goal:
-For each hypothesis, output the key latent axis it represents.
-
-Output:
-Raw text only, as a comma-separated list:
-"axis for hypothesis 1", "axis for hypothesis 2", ...
-
-Rules:
-- Use short noun phrases only.
-- No explanations, no extra text.
-- Hypotheses may share the same axis.
-
-[Hypotheses]
-{hypotheses}
-"""
-
-MERGE_PROMPT = """
-Role:
-You merge a cluster of highly similar user preference hypotheses.
-
-Goal:
-Produce one canonical hypothesis.
-
-Rules:
-- Preserve stable components shared by the cluster.
-- Remove stylistic rephrasing and redundancy.
-- Keep it specific and evidence-grounded.
-- Do not invent new preferences.
-
-Output:
-Raw merged hypothesis text only. No explanation.
-
-[CollapsedCluster]
-{collapsed_cluster}
-"""
-
-PERTURB_PROMPT = """
-Role:
-You generate rejuvenation hypotheses for a Sequential Monte Carlo personalization system.
-
-Goal:
-Generate K plausible new hypotheses that introduce new explanatory axes.
-
-Requirements:
-1. Identify one topic category for the current conversation.
-2. Generate exactly K new hypotheses.
-- Each hypothesis must reflect a distinct latent explanation (not surface rephrasing).
-- Each hypothesis must introduce an axis not already in GlobalDiversitySummary.
-- Each hypothesis must remain plausible under the conversation evidence.
-
-Output (JSON only):
-{{
-  "category": "a concise topic label for the current conversation",
-  "new_hypotheses": [
-    {{"content": "...", "novel_axis": "...", "justification": "..."}}
-  ]
-}}
-
-[ConversationHistory]
-{conversation_history}
-
-[CurrentUserMessage]
-{user_message}
-
-[CandidateResponses]
-{candidates}
-
-[GlobalDiversitySummary]
-{global_axes_summary}
-
-K={K}
-"""
+from prompt.base import AXIS_PROMPT, MERGE_PROMPT, PERTURB_PROMPT
 
 class PerturbedHypothesisSchema(BaseModel):
     content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(..., description="a perturbed hypothesis describing a latent user preference")
@@ -95,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def perturb_hypotheses(conversation_history: List[Turn], candidates: str, similar_groups: List[List[int]], context: TracerContext) -> Dict[str, Any]:
     hypotheses = context.belief.get_hypotheses()
-    axes_prompt = AXIS_PROMPT.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
+    axes_prompt = context.prompts.axis.format(hypotheses="\n\n".join([h.content for h in hypotheses]))
     axis_overrides = context.get_generation_overrides("axis_override")
     axes = context.model.generate(axes_prompt, cfg=context.generation_config, max_tokens=AXIS_BUDGET, **axis_overrides)["output"]
     perturbed_hids, perturbed_weights = [], []
@@ -122,11 +46,11 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
     merged_prior = max([context.hypothesis_set.global_prior[h.id] for h in hypotheses])
     category = max([h.category for h in hypotheses], key=lambda c: c.count(",") if c else 0)
     K = len(group) - 1
-    merge_prompt = MERGE_PROMPT.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
+    merge_prompt = context.prompts.merge.format(collapsed_cluster="\n\n".join([h.content for h in hypotheses]))
     merge_overrides = context.get_generation_overrides("merge_override")
     merged_hypothesis = hypotheses[0].content if len(set(h.id for h in hypotheses)) == 1 else context.model.generate(merge_prompt, cfg=context.generation_config, max_tokens=MERGE_BUDGET, **merge_overrides)["output"]
 
-    perturb_prompt = PERTURB_PROMPT.format(
+    perturb_prompt = context.prompts.perturb.format(
         conversation_history="\n".join([turn.format(include_candidates=False) for turn in prev_turns]),
         user_message=current_turn.user_message,
         candidates=candidates,

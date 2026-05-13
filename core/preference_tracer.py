@@ -4,6 +4,7 @@ from .utils import TracerConfig, TracerContext
 from .hypothesis_set import HypothesisSet
 from data import UserData
 from model import BaseLM, GenerationConfig, EmbedConfig
+from prompt import PromptSet, prism_prompts
 
 from .preprocess import preprocess_candidates
 from .initialize import initialize_hypothesis
@@ -26,11 +27,13 @@ class PreferenceTracer:
         model: BaseLM,
         generation_cfg: GenerationConfig,
         embed_cfg: EmbedConfig,
+        prompts: PromptSet = None,
     ):
         self.model = model
         self.base_generation_config = generation_cfg
         self.embed_config = embed_cfg
         self.tracer_config = tracer_cfg
+        self.prompts = prompts or prism_prompts()
     
     def trace(self, user_data: UserData):
         hypothesis_set = HypothesisSet(n_hypotheses=self.tracer_config.n_hypotheses, embed_config=self.embed_config)
@@ -38,7 +41,8 @@ class PreferenceTracer:
             model=self.model,
             hypothesis_set=hypothesis_set,
             tracer_config=self.tracer_config,
-            generation_config=self.base_generation_config
+            generation_config=self.base_generation_config,
+            prompts=self.prompts,
         )
         working_profile = ""
         records: Records = {"user": user_data.user_id, "turns": [], "general_profile": None}

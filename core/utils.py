@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 from model import BaseLM, GenerationConfig
 from model.base import GenerationOverrides
+from prompt import PromptSet, prism_prompts
 
 if TYPE_CHECKING:
     from .hypothesis_set import HypothesisSet, WorkingBelief
@@ -67,6 +68,7 @@ class TracerContext:
     current_belief: Optional["WorkingBelief"] = None
     tracer_config: TracerConfig = field(default_factory=TracerConfig)
     generation_config: Optional[GenerationConfig] = field(default_factory=GenerationConfig)
+    prompts: PromptSet = field(default_factory=prism_prompts)
     
     @property
     def belief(self) -> "WorkingBelief":

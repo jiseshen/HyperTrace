@@ -10,6 +10,7 @@ from model import load_model, GenerationConfig, EmbedConfig
 from model.batch_queue_model import BatchQueueModel
 from model.openai_model import OpenAIModel
 from eval.runner import evaluate_records
+from prompt import load_prompt_adapter
 import json
 
 
@@ -44,6 +45,9 @@ def main():
     tracer_cfg = TracerConfig(**config["tracer"])
     tracer_cfg.override = OverrideConfig(**config.get("override", {}))
     embed_cfg = EmbedConfig(**config["embed"])
+    prompt_adapter_name = config.get("prompt_adapter", config["dataset"])
+    prompts = load_prompt_adapter(prompt_adapter_name)
+    print(f"Loaded prompt adapter: {prompt_adapter_name}")
 
     if not args.eval_only:
         gen_cfg = GenerationConfig(**config["main_model"])
@@ -70,6 +74,7 @@ def main():
                 tracer_cfg=tracer_cfg,
                 embed_cfg=embed_cfg,
                 stage_workers=args.batch_workers,
+                prompts=prompts,
             )
             try:
                 records_by_user = preference_tracer.trace_users(target_users)
@@ -84,7 +89,8 @@ def main():
                 model=gen_model,
                 generation_cfg=gen_cfg,
                 tracer_cfg=tracer_cfg,
-                embed_cfg=embed_cfg
+                embed_cfg=embed_cfg,
+                prompts=prompts,
             )
             pbar = tqdm(target_users, desc="Tracing preferences", unit="user")
             for user in pbar:
@@ -103,6 +109,7 @@ def main():
         eval_model=eval_model,
         eval_cfg=eval_cfg,
         embed_cfg=embed_cfg,
+        prompts=prompts,
     )
     print(f"Evaluated {summary['n_users']} users and {summary['n_turns']} turns")
 
