@@ -1,0 +1,10 @@
+name: "openrouter-gpt54-trace-gemini3-flash-eval"
+dataset: "prism"
+seed: 42
+n_users: 1000
+users_per_run: 10
+embed: "${include:embed/openrouter.yaml}"
+main_model: "${include:model/openrouter-gpt5.4.yaml}"
+eval_model: "${include:model/openrouter-gemini-3-flash.yaml}"
+tracer: "${include:tracer/base.yaml}"
+override: "${include:override/gpt5.yaml}"

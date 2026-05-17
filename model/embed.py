@@ -1,5 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
+import time
 from typing import List
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
@@ -10,6 +11,8 @@ class EmbedConfig:
     model: str = "text-embedding-3-small"
     dim: int = 1536
     base_url: str | None = None
+    max_retries: int = 3
+    retry_delay: float = 0.5
 
 
 _client, _backend = None, None
@@ -62,12 +65,37 @@ def embed(
     """
     if isinstance(text, str):
         text = [text]
+    if len(text) == 0:
+        return np.empty((0, embed_cfg.dim), dtype=np.float32)
     if embed_cfg.backend in ("openai", "openrouter"):
+        from openai import APIError, RateLimitError
+
         client = get_client(embed_cfg.backend, embed_cfg.base_url)
-        response = client.embeddings.create(
-            model=embed_cfg.model,
-            input=text
-        )
+        last_error = None
+        for attempt in range(embed_cfg.max_retries):
+            try:
+                response = client.embeddings.create(
+                    model=embed_cfg.model,
+                    input=text
+                )
+                if not response.data:
+                    raise ValueError("No embedding data received")
+                if len(response.data) != len(text):
+                    raise ValueError(
+                        "Embedding response length mismatch "
+                        f"(inputs={len(text)}, outputs={len(response.data)})"
+                )
+                break
+            except (APIError, RateLimitError, ValueError) as exc:
+                last_error = exc
+                if attempt == embed_cfg.max_retries - 1:
+                    raise RuntimeError(
+                        "Embedding request failed after retries "
+                        f"(backend={embed_cfg.backend}, model={embed_cfg.model}, "
+                        f"inputs={len(text)}, max_retries={embed_cfg.max_retries}, "
+                        f"texts={text!r})"
+                    ) from last_error
+                time.sleep(embed_cfg.retry_delay)
         vec = np.array([d.embedding for d in sorted(response.data, key=lambda x: x.index)], dtype=np.float32)
         vec = vec / (np.linalg.norm(vec, axis=1, keepdims=True) + 1e-14)
         return vec

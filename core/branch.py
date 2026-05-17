@@ -1,10 +1,10 @@
 import asyncio
 import logging
 from .hypothesis_set import WorkingBelief, Update
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 from .utils import TracerContext
 from data import Turn
-from typing import Any, Dict, List, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional
 from .initialize import initialize_hypothesis
 from .consolidate import compute_importance
 from prompt.base import BRANCHING_PROMPT
@@ -14,8 +14,8 @@ BRANCH_BUDGET = 256
 logger = logging.getLogger(__name__)
 
 class UpdatedHypothesisSchema(BaseModel):
-    category: str = Field(..., description="the category of current topic")
-    content: str = Field(..., description="the updated hypothesis content")
+    category: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(..., description="the category of current topic")
+    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(..., description="the updated hypothesis content")
 
 class BranchSchema(BaseModel):
     action: Literal["revise", "replace"] = Field(..., description="revise | replace")

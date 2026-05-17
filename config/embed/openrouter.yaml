@@ -1,3 +1,5 @@
 backend: "openrouter"
 model: "openai/text-embedding-3-small"
 dim: 1536
+max_retries: 10
+retry_delay: 2.0

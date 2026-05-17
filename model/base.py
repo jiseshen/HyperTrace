@@ -9,6 +9,7 @@ class GenerationConfig:
     base_url: Optional[str] = None
     model: str = "gpt-5-nano"
     max_tokens: int = 128
+    max_tokens_extra: int = 0
     temperature: float = 0.0
     top_p: float = 0.95
     top_k: int = 20
@@ -22,10 +23,12 @@ class GenerationConfig:
     completion_window: str = "24h"
     poll_interval: float = 60.0
     timeout: Optional[float] = None
+    extra_body: Optional[Dict[str, Any]] = None
 
 class GenerationOverrides(TypedDict, total=False):
     model: str
     max_tokens: int
+    max_tokens_extra: int
     temperature: float
     top_p: float
     top_k: int
@@ -39,6 +42,7 @@ class GenerationOverrides(TypedDict, total=False):
     completion_window: str
     poll_interval: float
     timeout: Optional[float]
+    extra_body: Optional[Dict[str, Any]]
 
 class BaseLM(ABC):
     @abstractmethod

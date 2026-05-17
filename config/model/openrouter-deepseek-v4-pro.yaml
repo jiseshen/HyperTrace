@@ -1,0 +1,10 @@
+backend: "openrouter"
+model: "deepseek/deepseek-v4-pro"
+max_tokens_extra: 8192
+temperature: 1.0
+top_p: 1.0
+reasoning_effort: "high"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5

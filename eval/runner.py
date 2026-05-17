@@ -272,6 +272,11 @@ def evaluate_records(
         if user_data is None:
             continue
 
+        user_metrics_path = metrics_path / "users" / f"{user_id}.json"
+        if user_metrics_path.exists():
+            user_metrics.append(_load_record(user_metrics_path))
+            continue
+
         metrics = evaluate_user_record(
             user_data=user_data,
             record=record,
@@ -280,7 +285,7 @@ def evaluate_records(
             embed_cfg=embed_cfg,
             prompts=prompt_set,
         )
-        _write_json(metrics_path / "users" / f"{user_id}.json", metrics)
+        _write_json(user_metrics_path, metrics)
         user_metrics.append(metrics)
 
     summary = summarize_metrics(user_metrics)

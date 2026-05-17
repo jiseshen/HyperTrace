@@ -53,10 +53,15 @@ def main():
         gen_cfg = GenerationConfig(**config["main_model"])
         gen_model = load_model(backend=config["main_model"]["backend"], default_cfg=gen_cfg)
         finished_ids = {p.stem for p in result_path.glob("*.json")}
-        target_users = [ud for ud in user_data if ud.user_id not in finished_ids][:config['users_per_run']]
-        if finished_ids:
-            print(f"Skipping {len(finished_ids)} finished users")
-        print(f"Running preference tracing for {len(target_users)} users")
+        target_user_count = min(config['users_per_run'], len(user_data))
+        target_sample = user_data[:target_user_count]
+        finished_target_ids = {ud.user_id for ud in target_sample if ud.user_id in finished_ids}
+        target_users = [ud for ud in target_sample if ud.user_id not in finished_ids]
+        if finished_target_ids:
+            print(f"Skipping {len(finished_target_ids)} finished users in target sample")
+        if len(finished_ids) > len(finished_target_ids):
+            print(f"Ignoring {len(finished_ids) - len(finished_target_ids)} finished users outside target sample")
+        print(f"Running preference tracing for {len(target_users)} users to reach {target_user_count} total users")
         if args.use_batch:
             if isinstance(gen_model, BatchQueueModel):
                 queue_model = gen_model

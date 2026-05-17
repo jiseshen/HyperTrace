@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class TaskOverride:
     model: Optional[str] = None
     reasoning_effort: Optional[str] = None
+    max_tokens_extra: Optional[int] = None
 
 
 @dataclass
@@ -87,4 +88,6 @@ class TracerContext:
             overrides["model"] = task_override.model
         if task_override.reasoning_effort:
             overrides["reasoning_effort"] = task_override.reasoning_effort
+        if task_override.max_tokens_extra is not None:
+            overrides["max_tokens_extra"] = task_override.max_tokens_extra
         return overrides

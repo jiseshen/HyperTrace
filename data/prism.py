@@ -98,9 +98,9 @@ def load_prism(n_users: int = None, seed: int = 42) -> List[UserData]:
             conversations=convs,
             gt_profile=gt_profile
         ))
-    if n_users is not None and len(users) > n_users:
+    if n_users is not None:
         random.seed(seed)
-        users = random.sample(users, n_users)
+        users = random.sample(users, min(n_users, len(users)))
     return users
 
 

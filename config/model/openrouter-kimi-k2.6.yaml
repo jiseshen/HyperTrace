@@ -1,0 +1,10 @@
+backend: "openrouter"
+model: "moonshotai/kimi-k2.6"
+max_tokens_extra: 0
+temperature: 0.6
+top_p: 0.95
+reasoning_effort: "none"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5

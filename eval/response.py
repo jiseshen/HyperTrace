@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 from model import BaseLM, GenerationConfig
 from pydantic import Field, create_model, confloat, conlist
 from data import Turn
-from .utils import candidate_similarity_scores, EmbedConfig
+from .utils import EmbeddingInputTooLongError, candidate_similarity_scores, EmbedConfig
 import logging
 from prompt import PromptSet, prism_prompts
 from prompt.base import RESPONSE_EVALUATION_PROMPT
@@ -24,7 +24,21 @@ def evaluate_generation(
 ) -> Dict[str, Any]:
     current_turn = conversation_history[-1]
     c = len(current_turn.candidates)
-    similarity_scores = candidate_similarity_scores(adapted_response, current_turn.candidates, embed_cfg)
+    try:
+        similarity_scores = candidate_similarity_scores(adapted_response, current_turn.candidates, embed_cfg)
+    except EmbeddingInputTooLongError as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "gpt_score": None,
+            "relative_gpt_score": None,
+            "relative_mean_gpt_score": None,
+            "gpt_scores": [],
+            "similarity_score": None,
+            "relative_score": None,
+            "relative_mean_score": None,
+            "similarity_scores": [],
+        }
     similarity_score = similarity_scores[current_turn.chosen_idx]
     rejected_similarity_scores = [
         score for idx, score in enumerate(similarity_scores)

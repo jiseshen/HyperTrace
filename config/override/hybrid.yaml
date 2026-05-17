@@ -1,0 +1,36 @@
+initialize_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
+branch_override:
+  model: "openai/gpt-5-mini"
+  reasoning_effort: "minimal"
+perturb_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "low"
+response_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
+skip_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
+preprocess_override:
+  model: "openai/gpt-5-mini"
+  reasoning_effort: "minimal"
+filter_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
+axis_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
+merge_override:
+  model: "openai/gpt-5-mini"
+  reasoning_effort: "minimal"
+summary_override:
+  model: "openai/gpt-5-mini"
+  reasoning_effort: "minimal"
+profile_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
+prediction_override:
+  model: "openai/gpt-5"
+  reasoning_effort: "minimal"
