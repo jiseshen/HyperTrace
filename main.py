@@ -9,9 +9,19 @@ from core.utils import TracerConfig, OverrideConfig
 from model import load_model, GenerationConfig, EmbedConfig
 from model.batch_queue_model import BatchQueueModel
 from model.openai_model import OpenAIModel
+from model.openrouter_model import OpenRouterModel
 from eval.runner import evaluate_records
 from prompt import load_prompt_adapter
 import json
+
+
+def dump_provider_report(run_path: Path, model):
+    if not isinstance(model, OpenRouterModel):
+        return
+    report_path = run_path / "provider_report.json"
+    with report_path.open("w") as f:
+        json.dump(model.provider_report(), f, indent=4)
+    print(f"Provider report saved to: {report_path}")
 
 
 def main():
@@ -103,6 +113,7 @@ def main():
                 records = preference_tracer.trace(user)
                 with open(result_path / f"{user.user_id}.json", "w") as f:
                     json.dump(records, f, indent=4)
+        dump_provider_report(run_path, gen_model)
 
     eval_cfg = GenerationConfig(**config["eval_model"])
     eval_model = load_model(backend=config["eval_model"]["backend"], default_cfg=eval_cfg)

@@ -1,0 +1,9 @@
+User Preference Cheatsheet:
+- Prefers concise, structured, bullet-point or list-style answers.
+- Values concrete, actionable suggestions over abstract discussion.
+- Likes coverage at both individual and system/policy levels for the same topic.
+- Appreciates brief cause-effect explanations linking actions to outcomes.
+- Neutral, straightforward tone without fluff.
+- Dislikes vagueness, truncation, or incomplete thoughts.
+- (Tentative) Favors pragmatic, balanced recommendations over ideological takes.
+- (Tentative) Likes inclusion of diversified strategies with practical examples.

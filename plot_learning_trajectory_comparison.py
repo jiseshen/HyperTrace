@@ -1,4 +1,5 @@
 import argparse
+import csv
 import json
 import math
 from pathlib import Path
@@ -12,10 +13,18 @@ import numpy as np
 
 
 LINE_METRICS = [
-    ("prediction_accuracy", "Prediction Accuracy", (0.0, 1.05)),
+    ("prediction_accuracy", "Prediction Accuracy", None),
     ("adapt_relative_gpt_score", "Adapt Relative GPT Score", None),
     ("adapt_relative_score", "Adapt Relative Embedding Score", None),
 ]
+PROFILE_KEYS = [
+    "survey_consistency",
+    "key_aspect_match",
+    "internal_plausibility",
+    "overall",
+    "similarity",
+]
+AFTER_TURN = 20
 
 
 def load_json(path: Path) -> Dict[str, Any]:
@@ -107,6 +116,63 @@ def profile_overall(user: Dict[str, Any]) -> Optional[float]:
     return safe_float((user.get("profile_alignment") or {}).get("overall"))
 
 
+def profile_averages(users: Dict[str, Dict[str, Any]]) -> Dict[str, float]:
+    buckets = {key: [] for key in PROFILE_KEYS}
+    for user in users.values():
+        profile = user.get("profile_alignment") or {}
+        summary = user.get("summary") or {}
+        for key in PROFILE_KEYS:
+            value = safe_float(profile.get(key))
+            if value is None:
+                value = safe_float(summary.get(f"profile_{key}"))
+            if value is not None:
+                buckets[key].append(value)
+    return {
+        key: float(np.mean(values)) if values else math.nan
+        for key, values in buckets.items()
+    }
+
+
+def per_user_after20_mean(users: Dict[str, Dict[str, Any]], metric: str) -> Optional[float]:
+    per_user = []
+    for user in users.values():
+        values = [
+            turn_metric(turn, metric)
+            for idx, turn in enumerate(user.get("turns", []))
+            if idx >= AFTER_TURN
+        ]
+        values = [value for value in values if value is not None]
+        if values:
+            per_user.append(sum(values) / len(values))
+    return mean(per_user)
+
+
+def per_user_delta_from_first(users: Dict[str, Dict[str, Any]], metric: str) -> Optional[float]:
+    deltas = []
+    for user in users.values():
+        turns = user.get("turns", [])
+        if not turns:
+            continue
+        first = turn_metric(turns[0], metric)
+        if first is None:
+            continue
+        later_values = [
+            turn_metric(turn, metric)
+            for idx, turn in enumerate(turns)
+            if idx >= AFTER_TURN
+        ]
+        later_values = [value for value in later_values if value is not None]
+        if later_values:
+            deltas.append(sum(later_values) / len(later_values) - first)
+    return mean(deltas)
+
+
+def format_num(value: Optional[float]) -> str:
+    if value is None or math.isnan(value):
+        return "nan"
+    return f"{value:.4f}"
+
+
 def build_turn_series(
     users: Dict[str, Dict[str, Any]],
     metric: str,
@@ -195,7 +261,7 @@ def plot_learning_trajectories(
                 markersize=3,
                 linewidth=2.3,
                 color=color,
-                label=f"{label} smooth",
+                label=f"{label} smooth" if show_raw else label,
             )
         if "relative" in metric:
             ax.axhline(0.0, color="gray", linestyle="--", linewidth=1, alpha=0.5)
@@ -239,6 +305,43 @@ def plot_learning_trajectories(
     plt.close(fig)
 
 
+def write_table(
+    result_users: List[Tuple[str, Dict[str, Dict[str, Any]]]],
+    output: Path,
+) -> None:
+    rows: List[Dict[str, str]] = []
+    for label, users in result_users:
+        prof = profile_averages(users)
+        row = {"run": label, "n_users": str(len(users))}
+        for metric, _, _ in LINE_METRICS:
+            short = metric.replace("prediction_", "pred_").replace("adapt_", "")
+            row[f"{short}_after20"] = format_num(per_user_after20_mean(users, metric))
+            row[f"{short}_delta_after20_vs_turn0"] = format_num(
+                per_user_delta_from_first(users, metric)
+            )
+        for key in PROFILE_KEYS:
+            row[f"profile_{key}"] = format_num(prof[key])
+        rows.append(row)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    md_path = output.with_suffix(".md")
+    with md_path.open("w", encoding="utf-8") as f:
+        headers = list(rows[0].keys())
+        f.write("| " + " | ".join(headers) + " |\n")
+        f.write("| " + " | ".join(["---"] * len(headers)) + " |\n")
+        for row in rows:
+            f.write("| " + " | ".join(row[h] for h in headers) + " |\n")
+
+    print(f"Saved table: {output}")
+    print(f"Saved markdown table: {md_path}")
+    print(md_path.read_text(encoding="utf-8"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Compare learning trajectories across multiple result directories.")
     parser.add_argument(
@@ -256,7 +359,7 @@ def main() -> None:
         help="Result root whose records define the skip-ratio filter. Defaults to the first --result path.",
     )
     parser.add_argument("--n-users", type=int, default=0, help="Number of matched users to plot; 0 means all matched users.")
-    parser.add_argument("--min-users-per-turn", type=int, default=5)
+    parser.add_argument("--min-users-per-turn", type=int, default=10)
     parser.add_argument("--max-reference-skip-ratio", type=float, default=0.75)
     parser.add_argument("--smooth-window", type=int, default=5)
     parser.add_argument("--show-raw", action="store_true")
@@ -265,6 +368,11 @@ def main() -> None:
         "--output",
         type=Path,
         default=Path("result/plots/learning_trajectory_comparison.png"),
+    )
+    parser.add_argument(
+        "--table-output",
+        type=Path,
+        default=Path("result/plots/learning_trajectory_comparison_table.csv"),
     )
     args = parser.parse_args()
 
@@ -289,6 +397,7 @@ def main() -> None:
         show_raw=args.show_raw,
         raw_alpha=args.raw_alpha,
     )
+    write_table(result_users=result_users, output=args.table_output)
 
     print(f"Reference result: {reference_result}")
     print(f"Users excluded by reference skip ratio > {args.max_reference_skip_ratio}: {len(excluded)}")

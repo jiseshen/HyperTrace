@@ -1,252 +1,54 @@
 from dataclasses import replace
 
-from .base import PromptSet, base_prompts
+from .base import PromptInserts, PromptSet, compose_prompts
 
 
-PERSONAMEM_INITIALIZATION_PROMPT = """
-Role:
-You initialize user preference hypotheses for a PersonaMem-v2 personalization pipeline.
-
-Goal:
-Infer stable, evidence-supported hypotheses from the latest chosen-vs-rejected personalized answer comparison.
-
-Procedure:
-1. Identify one topic category for organization/retrieval.
-2. Produce exactly {n_hypotheses} hypotheses.
-- Each hypothesis must cover a different explanatory aspect.
-- Prioritize user-specific preferences, communication style, values, constraints, and safe personalization cues.
-- Reuse relevant retrieved hypotheses when justified; otherwise create new ones.
-- Use the user message as auxiliary evidence only when it clearly expresses preference signal.
-
-Output (JSON only):
-
-{{
-  "category": "...",
-  "hypotheses": [
-    {{
-      "id": "...",
-      "action": "reuse" | "new",
-      "content": "...",
-      "justification": "..."
-    }}
-  ]
-}}
-
-Rules:
-- Return valid JSON only.
-- Include all required fields.
-- Produce exactly {n_hypotheses} hypotheses.
-- Ground each hypothesis in explicit observed evidence.
+PERSONAMEM_TRACE_INSERTS = PromptInserts(
+    skip="""PersonaMem-v2 focus:
+- Treat subtle implicit persona evidence as usable when candidate differences depend on user-specific context, needs, constraints, preference updates, ownership, or privacy boundaries.
+- Do not skip realistic daily chatbot tasks used by PersonaMem-v2, including writing/email refinement, translation, social/chat messages, troubleshooting, health/therapy consultation, knowledge queries, travel/event/fashion/lifestyle questions, or multimodal-style questions, when they may contain implicit user information.
+- Skip only when the message is filler/administrative or clearly user-agnostic irrelevant content such as public math/coding benchmark material where the candidate contrast is just correctness and no user-specific information is present.
+- Do not skip only because the signal is not a wording/style preference.""",
+    preprocessing="""PersonaMem-v2 dimension guidance:
+- Prefer dimensions that explain user alignment, not just surface wording.
+- Useful labels include user_specific_need, stable_preference, preference_update, ownership, privacy_boundary, task_context, communication_style, and safety_constraint.
+- Mark chosen/rejected differences that reveal what information about the user should or should not guide future answers.""",
+    initialization="""PersonaMem-v2 task guidance:
+- Prioritize user-specific preferences, needs, constraints, communication style, values, and safe personalization cues over generic answer quality.
+- The chosen vs rejected candidate labels are online tracing evidence and must be used to infer what better aligns with this user.
+- Treat do-not-remember and sensitive/private signals as boundaries or safe abstractions, not facts to retain verbatim.""",
+    likelihood="""PersonaMem-v2 scoring guidance:
+- Score relative personalization alignment under z, not generic response quality.
+- Reward candidates that satisfy the user's inferred needs, constraints, stable or updated preferences, and safe memory boundaries.
+- Do not reward demographic stereotypes, forbidden memory retention, ownership mistakes, or exact sensitive/private details.""",
+    branching="""PersonaMem-v2 task guidance:
 - Compare chosen vs rejected candidates for personalization signal, not generic answer quality alone.
-- Do not infer preferences from demographics or identity alone.
-- Do not attribute preferences about other people to the user.
+- Update toward current evidence when it indicates a preference change.
+- Preserve ownership: preferences about another person are not the user's own preferences.
 - Treat do-not-remember and sensitive/private signals as boundaries or safe abstractions, not facts to retain verbatim.
-
-[Conversation History]
-{prev_turns}
-
-[Current User Message]
-{user_message}
-
-[Candidate Responses]
-{candidates}
-
-Candidate Responses are provided as JSON list items with:
-- i: candidate index
-- summary: compact candidate summary
-- content: compact candidate content
-- choice: chosen | rejected
-
-[Previously Retrieved Hypotheses]
-{retrieved_hypotheses}
-"""
-
-PERSONAMEM_BRANCHING_PROMPT = """
-Role:
-You update one working hypothesis in a PersonaMem-v2 personalization pipeline.
-
-Goal:
-Decide whether the latest chosen-vs-rejected personalized answer comparison provides usable evidence for this hypothesis, and output either a revision or replacement.
-
-Step 1 (relevance):
-- "direct": interaction clearly supports/contradicts this hypothesis.
-- "partial": same underlying preference axis appears with partial overlap.
-- "none": no meaningful evidence for this hypothesis.
-
-Step 2 (action):
-- If relevance is "direct" or "partial": action="revise".
-  Keep the same axis/scope, stay specific, and only incorporate relevant evidence.
-- If relevance is "none": action="replace".
-  Write a new hypothesis with similar specificity.
-
-Category rules:
-- Keep original category unless current evidence clearly indicates shift.
-- If old category has multiple labels, keep the most appropriate one.
-- Do not add a new category without clear evidence.
-- Category is organizational only; hypothesis content should reflect preference evidence.
-
-Output (JSON only):
-
-{{
-  "action": "revise" | "replace",
-  "relevance": "direct" | "partial" | "none",
-  "updated_hypothesis": {{
-    "category": "string",
-    "content": "string"
-  }},
-  "justification": "one brief (1-2 sentences) justification of the update decision"
-}}
-
-Rules:
-- If action="revise", category usually remains unchanged.
-- If action="replace", do not mention the old hypothesis content.
-- Ground updates strictly in observed evidence.
-- Avoid speculation and over-generalization.
-- Compare chosen vs rejected candidates for personalization signal, not generic answer quality alone.
-- Do not infer preferences from demographics or identity alone.
-- Do not attribute preferences about other people to the user.
-- Treat do-not-remember and sensitive/private signals as boundaries or safe abstractions, not facts to retain verbatim.
-
-[Conversation History]
-{prev_turns}
-
-[Current User Message]
-{user_message}
-
-[Candidate Responses]
-{candidates}
-
-Candidate Responses are provided as JSON list items with:
-- i: candidate index
-- summary: compact candidate summary
-- content: compact candidate content
-- choice: chosen | rejected
-
-[Current Hypothesis]
-{current_hypothesis}
-"""
-
-PERSONAMEM_LIKELIHOOD_PROMPT = """
-Role:
-You are scoring candidate-hypothesis alignment for PersonaMem-v2 choice likelihood estimation.
-
-Given:
-- Hypothesis z (assume z is true)
-- Multiple candidates for the same user message
-
-Goal:
-Assign each candidate i an alignment score s_i in [0, 5] for how well it matches z.
-Score relative personalization alignment under z, not generic response quality.
-
-Score anchors:
-- 5: best personalized match to z with clear margin
-- 4: strong match, top or tied-top
-- 3: moderate match, plausible but not top
-- 2: weak match, conflicts on an important personalization dimension
-- 1: poor match, largely mismatched
-- 0: opposes or ignores z
-
-Rules:
-- Candidates are intentionally unlabeled; do not assume which one was chosen.
-- Compare candidates relatively under z.
-- If z does not explain candidate differences, keep scores near-equal.
-- Use wider score spread only when evidence supports it.
-- Do not invent preferences outside z and the user message.
-- Do not reward demographic stereotypes, forbidden memory retention, or exact sensitive/private details.
-- Keep the original candidate order: scores[i] must map to candidate i.
-
-Output (JSON only):
-{{
-  "scores": [s0, s1, ...]
-}}
-
-[Conversation history]
-{prev_turns}
-
-[Current User Message]
-{user_message}
-
-[Candidate Responses]
-{candidates}
-
-Candidate Responses are provided as JSON list items with:
-- i: candidate index
-- summary: compact candidate summary
-- content: compact candidate content
-- There is no choice label in this input.
-
-[Hypothesis z]
-{hypothesis}
-"""
-
-PERSONAMEM_PROFILE_PROMPT = """
-Role:
-You compile a PersonaMem-v2 user preference profile from hypothesis evidence.
-
-Goal:
-Produce a concise profile of what the user values and expects from the assistant.
-
-Guidelines:
+- Do not use or infer hidden PersonaMem-v2 benchmark metadata or ground-truth profiles.""",
+    summary="""PersonaMem-v2 guidance:
+- Summaries should capture actionable user-alignment information: stable preferences, current updated preferences, user needs, constraints, communication style, and safety/privacy boundaries.
+- Preserve ownership and do-not-remember boundaries; do not convert them into ordinary positive preferences.""",
+    profile="""PersonaMem-v2 guidance:
 - Focus on stable preferences, communication style, values, constraints, updated preferences, safety boundaries, and helpfulness expectations.
-- Only include claims supported by evidence in hypotheses.
+- Include only information supported by online chosen/rejected evidence.
 - Do not infer preferences from demographics or identity alone.
 - Do not attribute preferences about other people to the user.
 - Do not retain exact sensitive/private details; use safe abstractions only when relevant.
-- Respect do-not-remember boundaries as boundaries, not as positive remembered facts.
-- Output plain profile text only.
-
-[Hypotheses]
-{hypotheses}
-"""
-
-PERSONAMEM_RESPONSE_PROMPT = """
-Role:
-You are an assistant that adapts responses to the user's preferences and values.
-
-Goal:
-Generate a response that follows user profile constraints when relevant, while obeying the current request.
-
-Step 1:
-Produce adaptation_plan as a list of actionable constraints.
-- Include only constraints clearly supported by the profile and relevant to the current message.
-- Keep each item concrete (for example: "Use bullet points", "Avoid jargon").
-- If profile is empty/irrelevant, return an empty list.
-
-Step 2:
-Generate the final response.
-- Apply all constraints in adaptation_plan.
-- Directly answer the current message.
-- Do not mention profile, adaptation_plan, or personalization process.
-- Follow the length constraint strictly.
-
-Conflict policy:
-- Explicit current request overrides profile.
-- For partial conflict, follow the explicit request and keep non-conflicting profile constraints.
-- If the user asks for detail under tight length limits, prioritize structure and essential coverage over verbosity.
+- Respect do-not-remember boundaries as boundaries, not as positive remembered facts.""",
+    response="""PersonaMem-v2 guidance:
 - Respect do-not-remember boundaries in the profile.
 - Do not reveal exact sensitive/private details; use only safe abstractions when relevant.
+- Apply user-specific needs and constraints only when relevant to the current message.""",
+    prediction="""PersonaMem-v2 guidance:
+- Rank by likely user alignment with the inferred profile, including stable or updated preferences, user-specific constraints, ownership, and safety boundaries.
+- Do not reward stereotype-based personalization or forbidden private-detail use.""",
+    response_evaluation="""PersonaMem-v2 guidance:
+- Similarity dimensions may include user-specific need, stable_or_updated_preference, ownership, privacy_boundary, task_context, communication_style, and safety_constraint.
+- Score similarity on personalization behavior, not generic fluency alone.""",
+)
 
-Output (JSON only, no markdown fences):
-{{
-  "adaptation_plan": [
-    "<actionable constraint 1>",
-    "<actionable constraint 2>"
-  ],
-  "response": "<your response to the current message>"
-}}
-
-[Response length]
-Keep the response length at {l} to {r} words.
-
-[User preference profile]
-{profile}
-
-[Conversation history]
-{prev_turns}
-
-[Current user message]
-{current_message}
-"""
 
 PERSONAMEM_PROFILE_EVALUATION_PROMPT = """
 You are evaluating how well an inferred user preference profile aligns with PersonaMem-v2 ground truth.
@@ -316,11 +118,6 @@ Now evaluate:
 
 def personamem_prompts() -> PromptSet:
     return replace(
-        base_prompts(),
-        initialization=PERSONAMEM_INITIALIZATION_PROMPT,
-        likelihood=PERSONAMEM_LIKELIHOOD_PROMPT,
-        branching=PERSONAMEM_BRANCHING_PROMPT,
-        profile=PERSONAMEM_PROFILE_PROMPT,
-        response=PERSONAMEM_RESPONSE_PROMPT,
+        compose_prompts(PERSONAMEM_TRACE_INSERTS),
         profile_evaluation=PERSONAMEM_PROFILE_EVALUATION_PROMPT,
     )

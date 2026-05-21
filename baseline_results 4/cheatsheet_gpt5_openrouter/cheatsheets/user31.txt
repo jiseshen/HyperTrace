@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- Values concise, friendly greetings with a brief positive vibe.
+- Appreciates a polite, reciprocal invitation to engage.
+- Likes a warm, encouraging tone without being overly formal.
+- Prefers brief, direct answers over elaboration.
+- Accepts a clear, honest “I don’t know” and explicit limits when uncertain.
+- Prefers acknowledgment and courtesy (e.g., using their name) rather than shifting focus to the assistant’s interests.
+- Prefers sticking to the user’s topic without speculative additions.
+- (Tentative) Enjoys being addressed by name.
+- Appreciates explicit acknowledgment of previously shared information and thanks when the user provides it.
+- Likes answers that restate and affirm user-provided facts or doubts before giving the direct answer or next step.

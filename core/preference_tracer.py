@@ -1,5 +1,5 @@
 import json
-from typing import Optional, TypedDict
+from typing import Callable, Optional, TypedDict
 from .utils import TracerConfig, TracerContext
 from .hypothesis_set import HypothesisSet
 from data import UserData
@@ -11,7 +11,7 @@ from .initialize import initialize_hypothesis
 from .branch import branch_hypotheses
 from .filter import weight_hypothesis
 from .perturb import perturb_hypotheses
-from .summary import summarize_hypotheses, summarize_profile
+from .summary import summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
 from .consolidate import consolidate_hypotheses
 from .response import generate_adapted_response
 
@@ -19,6 +19,8 @@ class Records(TypedDict):
     user: str
     turns: list[dict]
     general_profile: Optional[str]
+
+ProgressHook = Callable[[str, int, int], None]
 
 class PreferenceTracer:
     def __init__(
@@ -28,12 +30,14 @@ class PreferenceTracer:
         generation_cfg: GenerationConfig,
         embed_cfg: EmbedConfig,
         prompts: PromptSet = None,
+        progress_hook: Optional[ProgressHook] = None,
     ):
         self.model = model
         self.base_generation_config = generation_cfg
         self.embed_config = embed_cfg
         self.tracer_config = tracer_cfg
         self.prompts = prompts or prism_prompts()
+        self.progress_hook = progress_hook
     
     def trace(self, user_data: UserData):
         hypothesis_set = HypothesisSet(n_hypotheses=self.tracer_config.n_hypotheses, embed_config=self.embed_config)
@@ -46,12 +50,30 @@ class PreferenceTracer:
         )
         working_profile = ""
         records: Records = {"user": user_data.user_id, "turns": [], "general_profile": None}
+        total_turns = sum(len(conversation.turns) for conversation in user_data.conversations)
+        turn_index = 0
         for conversation in user_data.conversations:
             initialized = False
             conversation_history = []
             for turn in conversation.turns:
+                turn_index += 1
+                if self.progress_hook:
+                    self.progress_hook(user_data.user_id, turn_index, total_turns)
                 turn_record = {}
                 conversation_history.append(turn)
+                if (
+                    len(conversation_history) == 1
+                    and len(context.hypothesis_set.hypotheses) > context.tracer_config.n_hypotheses
+                ):
+                    try:
+                        retrieved_profile = summarize_retrieved_hypotheses(turn.user_message, context)
+                    except Exception as e:
+                        retrieved_profile = ""
+                        turn_record["pre_adapt_retrieved_summary"] = {"success": False, "reason": str(e)}
+                    if retrieved_profile:
+                        working_profile = retrieved_profile
+                        turn_record["summary"] = working_profile
+                        turn_record["pre_adapt_retrieved_summary"] = {"success": True}
 
                 turn_record["adapted"] = generate_adapted_response(
                     conversation_history=conversation_history, 
@@ -63,6 +85,8 @@ class PreferenceTracer:
                 structured_candidates, preprocess_status = preprocess_candidates(conversation_history, context)
                 turn_record["preprocess"] = preprocess_status
                 if not preprocess_status["success"] or preprocess_status["skip"]:
+                    if working_profile:
+                        turn_record["summary"] = working_profile
                     records["turns"].append(turn_record)
                     continue
                 candidates_with_choice = "[CandidateSet]\n" + json.dumps(structured_candidates, ensure_ascii=False, indent=2)

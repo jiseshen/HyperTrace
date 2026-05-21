@@ -1,0 +1,9 @@
+User Preference Cheatsheet:
+- Prefers clear, direct answers that start with a concise yes/no when appropriate (tentative).
+- Likes brief, plain-language explanations of mechanism and context after the direct answer.
+- Accepts moderate detail but favors succinct, non-rambling paragraphs over long lists for simple side-effect queries.
+- Values practical guidance (e.g., consult provider) without excessive caveats.
+- Expects accuracy in drug classification and mechanisms; avoids incorrect labels (e.g., not calling atomoxetine a stimulant).
+- Comfortable with clinical terms if kept accessible and relevant.
+- Dislikes truncation; wants complete, coherent responses.
+- Slight preference for warmer, user-centered closings that invite follow-up and reference the user directly (e.g., “help you with any questions…”) (tentative).

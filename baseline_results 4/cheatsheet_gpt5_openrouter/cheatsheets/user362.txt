@@ -1,0 +1,4 @@
+User Preference Cheatsheet:
+- Tone: Clear, measured, and non-alarmist; explicitly acknowledges lack of body/consciousness/agency and avoids speculation.
+- Content: Directly acknowledges real risks of AI misuse and references safeguards (human rights, dignity, wellbeing, testing, oversight) without making promises or predicting the future.
+- Structure/Length: Concise, direct answer first, followed by brief explanation of limitations and responsible AI principles (tentative).

@@ -251,6 +251,10 @@ class HypothesisSet:
         self.category_counts: Dict[str, int] = {}
         self.next_hypothesis_id: int = 1
 
+    @staticmethod
+    def _embedding_text(hypothesis: Hypothesis) -> str:
+        return f"Category: {hypothesis.category}\nContent: {hypothesis.content}"
+
     def _allocate_hid(self) -> str:
         while True:
             hid = f"h{self.next_hypothesis_id}"
@@ -290,7 +294,7 @@ class HypothesisSet:
                 self.global_prior[hid] = prior
             else:
                 self.global_prior[hid] = self.base_prior
-            contents.append(h.content)
+            contents.append(self._embedding_text(h))
             hids.append(hid)
         if contents:
             self.vector_store.store(contents, keys=hids)
@@ -326,8 +330,11 @@ class HypothesisSet:
             if update.content is not None:
                 if hyp.content != update.content:
                     changed_ids.append(hid)
-                    changed_contents.append(update.content)
                 hyp.content = update.content
+            if hid not in changed_ids and update.category is not None:
+                changed_ids.append(hid)
+            if hid in changed_ids:
+                changed_contents.append(self._embedding_text(hyp))
         if changed_ids:
             self.vector_store.update(changed_ids, changed_contents)
         

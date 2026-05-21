@@ -16,6 +16,21 @@ def summarize_hypotheses(context: TracerContext) -> str:
     return output
 
 
+def summarize_retrieved_hypotheses(query: str, context: TracerContext) -> str:
+    retrieved_hypotheses, _ = context.hypothesis_set.retrieve_hypotheses(
+        query,
+        top_k=context.tracer_config.n_hypotheses,
+    )
+    if not retrieved_hypotheses:
+        return ""
+    prompt = context.prompts.profile.format(
+        hypotheses="\n\n".join([h.format() for h in retrieved_hypotheses])
+    )
+    summary_overrides = context.get_generation_overrides("summary_override")
+    output = context.model.generate(prompt, cfg=context.generation_config, max_tokens=SUMMARY_BUDGET, **summary_overrides)["output"]
+    return output
+
+
 def summarize_profile(context: TracerContext) -> str:
     top_hypotheses = context.hypothesis_set.top_p_retrieve(p=context.tracer_config.profile_top_p)
     prompt = context.prompts.profile.format(

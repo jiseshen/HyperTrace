@@ -6,9 +6,11 @@ from typing import Optional, Union, List, Dict, Any, Unpack
 import time
 import os
 import asyncio
+import logging
 
 REASONING_PREFIXES = ("gpt-5", "o")
 REASONING_BUDGETS = {"none": 0, "minimal": 128, "low": 1024, "medium": 4096, "high": 16384}
+logger = logging.getLogger(__name__)
 
 
 class OpenAIModel(BaseLM):
@@ -17,7 +19,9 @@ class OpenAIModel(BaseLM):
         self.default_cfg = default_cfg or GenerationConfig()
         self.base_url = self.default_cfg.base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
-        self.async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+
+    def _make_async_client(self) -> AsyncOpenAI:
+        return AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
     
     def _resolve_cfg(self, cfg: Optional[GenerationConfig], overrides: dict) -> GenerationConfig:
         cfg = cfg or self.default_cfg
@@ -71,28 +75,35 @@ class OpenAIModel(BaseLM):
     async def async_generate(self, prompts: list[str], schema: Optional[type[BaseModel]] = None, cfg: Optional[GenerationConfig] = None, concurrency: int = 5, return_exceptions: bool = True, **overrides: Unpack[GenerationOverrides]) -> list[Union[Dict[str, Any], Exception]]:
         cfg = self._resolve_cfg(cfg, overrides)
         sem = asyncio.Semaphore(concurrency)
-        async def _one(prompt: str) -> Union[Dict[str, Any], Exception]:
-            async with sem:
-                retries = cfg.max_retries
-                for attempt in range(retries):
-                    try:
-                        kwargs = self._build_responses_kwargs(prompt, cfg)
-                        if schema:
-                            resp = await self.async_client.responses.parse(**kwargs, text_format=schema)
-                            output = resp.output_parsed.model_dump()
-                        else:
-                            resp = await self.async_client.responses.create(**kwargs)
-                            output = resp.output_text
-                    except (APIError, RateLimitError):
-                        if attempt == retries - 1:
-                            raise
-                        await asyncio.sleep(cfg.retry_delay)
-                        continue
-                    if cfg.reasoning_summary:
-                        return {"output": output, "reasoning": resp.output[0].summary[0].text}
-                    return {"output": output}
-        tasks = [_one(p) for p in prompts]
-        return await asyncio.gather(*tasks, return_exceptions=return_exceptions)
+        async with self._make_async_client() as async_client:
+            async def _one(prompt: str) -> Union[Dict[str, Any], Exception]:
+                async with sem:
+                    retries = cfg.max_retries
+                    for attempt in range(retries):
+                        try:
+                            kwargs = self._build_responses_kwargs(prompt, cfg)
+                            if schema:
+                                resp = await async_client.responses.parse(**kwargs, text_format=schema)
+                                output = resp.output_parsed.model_dump()
+                            else:
+                                resp = await async_client.responses.create(**kwargs)
+                                output = resp.output_text
+                        except (APIError, RateLimitError):
+                            if attempt == retries - 1:
+                                raise
+                            await asyncio.sleep(cfg.retry_delay)
+                            continue
+                        if cfg.reasoning_summary:
+                            return {"output": output, "reasoning": resp.output[0].summary[0].text}
+                        return {"output": output}
+            tasks = [_one(p) for p in prompts]
+            return await asyncio.gather(*tasks, return_exceptions=return_exceptions)
+
+    def close(self) -> None:
+        try:
+            self.client.close()
+        except Exception:
+            logger.warning("OpenAI sync client close failed; ignoring during cleanup.", exc_info=True)
         
     def _build_batch_line(self, prompt: str, cfg: GenerationConfig, custom_id: str) -> Dict[str, Any]:
         body = self._build_responses_kwargs(prompt, cfg)

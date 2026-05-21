@@ -20,6 +20,30 @@ class PromptSet:
     profile_evaluation: str
 
 
+@dataclass(frozen=True)
+class PromptInserts:
+    skip: str = ""
+    preprocessing: str = ""
+    initialization: str = ""
+    likelihood: str = ""
+    branching: str = ""
+    summary: str = ""
+    profile: str = ""
+    response: str = ""
+    prediction: str = ""
+    response_evaluation: str = ""
+    profile_evaluation: str = ""
+
+
+def _insert_after(prompt: str, anchor: str, insert: str) -> str:
+    insert = insert.strip()
+    if not insert:
+        return prompt
+    if anchor not in prompt:
+        raise ValueError(f"Prompt anchor not found: {anchor}")
+    return prompt.replace(anchor, f"{anchor}\n{insert}", 1)
+
+
 SKIP_PROMPT = """
 Role:
 You are the gating module for an LLM personalization system.
@@ -30,10 +54,12 @@ Decide whether this turn contains usable preference evidence.
 Set "skip": true if either condition is true:
 - The user message is only greeting/ack/filler and has no meaningful preference, value, stance, boundary, or constraint signal.
 - The candidate differences are not preference-relevant and are mainly correctness/completeness/minor wording differences.
+- The turn is an objective, user-agnostic task where the candidates differ only in factual correctness, calculation, code correctness, or generic completeness.
 
 Important:
 - Do not skip only because the topic is sensitive or controversial.
 - Focus on preference signal, not toxicity level.
+- Do not skip realistic user tasks when the message or candidate contrast may reveal implicit personalization evidence.
 
 Output (JSON only):
 {{
@@ -102,7 +128,6 @@ Procedure:
 1. Identify one topic category for organization/retrieval.
 2. Produce exactly {n_hypotheses} hypotheses.
 - Each hypothesis must cover a different explanatory aspect.
-- Prioritize conversational style/value preferences over topic facts.
 - Reuse relevant retrieved hypotheses when justified; otherwise create new ones.
 - Use current user message as auxiliary evidence when it clearly expresses preference signal as explicit feedback/critic.
 
@@ -396,7 +421,6 @@ Goal:
 Produce a concise profile of what the user values and expects from the assistant.
 
 Guidelines:
-- Focus on values, style, structure, factuality expectations, safety boundaries, and helpfulness preferences.
 - Only include claims supported by evidence in hypotheses.
 - Do not speculate about demographics or sensitive attributes without explicit evidence.
 - Output plain profile text only.
@@ -456,7 +480,7 @@ PREDICTION_PROMPT = """
 You are ranking candidate responses for a user based on a given user preference profile.
 
 Given:
-- User preference profile: a concise summary of the user's stable preferences, values, and communication style
+- User preference profile: a concise summary of the user's stable preferences and constraints
 - Conversation history (optional)
 - Current user message
 - Candidate responses. Each candidate has a unique ID in square brackets, such as [C1], [C2].
@@ -538,63 +562,45 @@ c={c}
 """
 
 PROFILE_EVALUATION_PROMPT = """
-You are evaluating how well an inferred user preference profile aligns with a user's ground-truth survey.
+You are evaluating how well an inferred user preference profile aligns with ground truth.
 
 Inputs:
-- Survey records (ground truth, possibly partial):
-  - Basic demographics (age, gender; religion/ethnicity may be "prefer not to say")
-  - Self descriptions (values/explicit preferences)
-  - System string (expectations for AI interaction)
-  - Prioritized aspects and less-prioritized aspects (if provided)
+- Ground truth records (possibly partial)
 - Inferred profile: a user preference profile inferred from conversation history.
 
 Key principles:
-1) Partial GT: Do NOT treat missing survey fields as negatives. Extra details in the inferred profile are NOT wrong by default.
-2) Core-signal focus: Many surveys are sparse. Scoring should emphasize whether the inferred profile captures the CLEAR, CENTRAL traits that are explicitly present, even if there are only 1-2 such traits.
-3) Hard contradictions: Penalize only when the inferred profile clearly contradicts explicit survey information.
-4) Demographics as compatibility check (very weak):
-   - Demographics are NOT used to "infer" preferences.
-   - Use them only to detect obvious incompatibilities or surprising assumptions when survey is silent.
-   - If religion is not provided or is "prefer not to say", do NOT use religion-based reasoning at all.
-5) Topic-agnostic: Ignore topic-specific interests unless they encode stable preference signals.
+1) Partial GT: Do NOT treat missing ground-truth fields as negatives. Extra details in the inferred profile are NOT wrong by default.
+2) Core-signal focus: Scoring should emphasize whether the inferred profile captures the CLEAR, CENTRAL traits that are explicitly present.
+3) Hard contradictions: Penalize only when the inferred profile clearly contradicts explicit ground truth.
 
 Evaluate three aspects (each 0-5):
 
-A) Survey Consistency (explicit signal capture + non-contradiction)
+A) Ground Truth Consistency (explicit signal capture + non-contradiction)
 Rubric:
-5 = Captures the survey's clearest core preference(s)/expectation(s) and shows no contradictions (even if survey is brief).
+5 = Captures the clearest core preference(s)/expectation(s) and shows no contradictions.
 4 = Mostly captures the core signal; minor omissions or slight ambiguity; no hard conflicts.
 3 = Partial capture: gets some signal right but misses/blur a key core point OR contains an ambiguous tension.
-2 = Weak alignment: misses the core survey signal OR includes one clear contradiction to an explicit survey statement.
+2 = Weak alignment: misses the core ground-truth signal OR includes one clear contradiction.
 1 = Very weak: multiple clear contradictions or systematically mischaracterizes the core signal.
 0 = Opposite: directly contradicts the main explicit survey preference(s).
 
-B) Key Aspect Match (prioritized aspects, if provided)
+B) Key Aspect Match
 Rubric:
-5 = Covers most prioritized aspects with correct emphasis; avoids overemphasizing less-prioritized aspects.
-4 = Covers several prioritized aspects; emphasis mostly right with small drift.
-3 = Covers some prioritized aspects but misses key ones or spreads emphasis too broadly.
-2 = Mentions few prioritized aspects; noticeably focuses on less-prioritized aspects.
-1 = Barely covers prioritized aspects; emphasis largely misaligned.
-0 = Fails to reflect prioritized aspects at all.
-If the survey does NOT provide prioritized aspects, set key_aspect_match=3 by default unless there is strong evidence to go higher/lower.
+5 = Covers most important aspects with correct emphasis.
+4 = Covers several important aspects; emphasis mostly right with small drift.
+3 = Covers some important aspects but misses key ones or spreads emphasis too broadly.
+2 = Mentions few important aspects or focuses on irrelevant/generic traits.
+1 = Barely covers important aspects; emphasis largely misaligned.
+0 = Fails to reflect important aspects at all.
 
-C) Internal Plausibility (demographic compatibility check)
-Interpretation:
-- This is NOT stereotype-based profiling and NOT used to infer preferences.
-- It is only a sanity check for obvious incompatibilities with provided demographics.
-
+C) Internal Plausibility
 Rubric:
-5 = No demographic incompatibilities; profile makes compatible claims.
+5 = Profile is coherent and contains no unsupported assumptions.
 4 = Generally compatible; a small stretch but not clearly incompatible.
-3 = Neutral/unknown: demographics provide little usable constraint OR the profile stays generic/compatible.
-2 = Some questionable assumptions given demographics (unnecessary leaps), but not outright incompatible.
-1 = Clearly incompatible assumptions with provided demographics.
+3 = Neutral/unknown: profile stays generic/compatible.
+2 = Some questionable assumptions, but not outright incompatible.
+1 = Clearly unsupported assumptions.
 0 = Multiple strong incompatibilities.
-
-Constraints for C:
-- Use religion-based compatibility checks ONLY if religion is explicitly provided and not "prefer not to say".
-- If demographics are missing/withheld, score C mainly by internal coherence and default toward 3 unless clearly problematic.
 
 Output ONLY the final JSON:
 {{
@@ -615,21 +621,70 @@ Now evaluate:
 """
 
 
-def base_prompts() -> PromptSet:
+def compose_prompts(inserts: PromptInserts | None = None) -> PromptSet:
+    inserts = inserts or PromptInserts()
     return PromptSet(
-        skip=SKIP_PROMPT,
-        preprocessing=PREPROCESSING_PROMPT,
-        initialization=INITIALIZATION_PROMPT,
-        likelihood=LIKELIHOOD_PROMPT,
-        branching=BRANCHING_PROMPT,
+        skip=_insert_after(
+            SKIP_PROMPT,
+            "- Focus on preference signal, not toxicity level.",
+            inserts.skip,
+        ),
+        preprocessing=_insert_after(
+            PREPROCESSING_PROMPT,
+            "Only keep dimensions with detectable contrast.",
+            inserts.preprocessing,
+        ),
+        initialization=_insert_after(
+            INITIALIZATION_PROMPT,
+            "- Each hypothesis must cover a different explanatory aspect.",
+            inserts.initialization,
+        ),
+        likelihood=_insert_after(
+            LIKELIHOOD_PROMPT,
+            "- Keep the original candidate order: scores[i] must map to candidate i.",
+            inserts.likelihood,
+        ),
+        branching=_insert_after(
+            BRANCHING_PROMPT,
+            "- Avoid speculation and over-generalization.",
+            inserts.branching,
+        ),
         axis=AXIS_PROMPT,
         merge=MERGE_PROMPT,
         perturb=PERTURB_PROMPT,
         consolidate=CONSOLIDATE_PROMPT,
-        summary=SUMMARY_PROMPT,
-        profile=PROFILE_PROMPT,
-        response=RESPONSE_PROMPT,
-        prediction=PREDICTION_PROMPT,
-        response_evaluation=RESPONSE_EVALUATION_PROMPT,
-        profile_evaluation=PROFILE_EVALUATION_PROMPT,
+        summary=_insert_after(
+            SUMMARY_PROMPT,
+            "- Prefer actionable tendencies over vague traits.",
+            inserts.summary,
+        ),
+        profile=_insert_after(
+            PROFILE_PROMPT,
+            "Guidelines:",
+            inserts.profile,
+        ),
+        response=_insert_after(
+            RESPONSE_PROMPT,
+            "- If the user asks for detail under tight length limits, prioritize structure and essential coverage over verbosity.",
+            inserts.response,
+        ),
+        prediction=_insert_after(
+            PREDICTION_PROMPT,
+            "- Do not invent preference signals not present in the profile.",
+            inserts.prediction,
+        ),
+        response_evaluation=_insert_after(
+            RESPONSE_EVALUATION_PROMPT,
+            "- Use the same dimensions for scoring all candidates.",
+            inserts.response_evaluation,
+        ),
+        profile_evaluation=_insert_after(
+            PROFILE_EVALUATION_PROMPT,
+            "3) Hard contradictions: Penalize only when the inferred profile clearly contradicts explicit ground truth.",
+            inserts.profile_evaluation,
+        ),
     )
+
+
+def base_prompts() -> PromptSet:
+    return compose_prompts()

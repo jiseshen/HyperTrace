@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- Accepts concise, nuanced corrections to oversimplified claims
+- Prefers balanced, evidence-informed framing (e.g., “associated with” vs. causal claims)
+- Values clear distinction between correlation and causation
+- Likes acknowledgment of complexity and multifactor factors without moralizing
+- Favors matter-of-fact, concise tone with minimal fluff
+- Prefers summarizing tradeoffs and mechanisms (e.g., harm reduction, regulation) over absolutes
+- Appreciates high-level synthesis with offer to elaborate if needed
+- Avoids definitive prescriptions; emphasizes comprehensive, evidence-based approaches
+- Comfortable with cautious qualifiers and scope limits
+- Brief, directly relevant data points acceptable if helpful (tentative)

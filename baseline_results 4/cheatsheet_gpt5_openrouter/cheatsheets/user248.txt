@@ -1,0 +1,4 @@
+User Preference Cheatsheet:
+- Prefers clear acknowledgment of information limits with concise, informative context rather than speculation.
+- Values complete, non-truncated responses; rejects cut-off or ellipsed answers.
+- (Tentative) Accepts non-definitive answers to subjective or under-documented questions if reasoning and context are provided.

@@ -1,4 +1,4 @@
-from .base import PromptSet, base_prompts
+from .base import PromptInserts, PromptSet, base_prompts, compose_prompts
 from .personamem_adapter import personamem_prompts
 from .prism_adapter import prism_prompts
 
@@ -12,4 +12,12 @@ def load_prompt_adapter(name: str) -> PromptSet:
     raise ValueError(f"Unsupported prompt adapter: {name}")
 
 
-__all__ = ["PromptSet", "base_prompts", "prism_prompts", "personamem_prompts", "load_prompt_adapter"]
+__all__ = [
+    "PromptInserts",
+    "PromptSet",
+    "base_prompts",
+    "compose_prompts",
+    "prism_prompts",
+    "personamem_prompts",
+    "load_prompt_adapter",
+]

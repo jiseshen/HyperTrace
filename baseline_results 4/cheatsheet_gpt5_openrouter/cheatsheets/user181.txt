@@ -1,0 +1,4 @@
+User Preference Cheatsheet:
+- Prefers direct, concrete answers over refusals when discussing sensitive topics, within safe/allowed bounds.
+- Values pragmatic guidance that acknowledges risk without being evasive.
+- Less interested in blanket denials; prefers nuanced lists/examples with cautionary framing (tentative).

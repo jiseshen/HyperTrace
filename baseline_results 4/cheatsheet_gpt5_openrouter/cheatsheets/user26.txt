@@ -1,0 +1,8 @@
+User Preference Cheatsheet:
+- Prefers concise, direct responses.
+- Values brief factual acknowledgment of AI nature (no breaks/sleep).
+- Likes a clear availability statement (24/7, continuous operation).
+- Appreciates a short, action-oriented follow-up question inviting the next request.
+- Neutral-professional tone; minimal fluff.
+- Slight preference for “How else can I assist you today?” phrasing over “How may I assist you now?” (tentative).
+- Brief, functional self-description acceptable (tentative).

@@ -19,7 +19,7 @@ from .initialize import initialize_hypothesis
 from .perturb import perturb_hypotheses
 from .preprocess import preprocess_candidates
 from .response import generate_adapted_response
-from .summary import summarize_hypotheses, summarize_profile
+from .summary import summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
 from .utils import TracerConfig, TracerContext
 
 
@@ -34,8 +34,10 @@ class Records(TypedDict, total=False):
 
 Phase = Literal[
     "start_turn",
+    "pre_adapt_summary",
     "adapted",
     "preprocess",
+    "skip_summary",
     "update",
     "filter",
     "summary",
@@ -282,6 +284,29 @@ class BatchPreferenceTracer:
             state.turn_record = {}
             state.candidates_with_choice = None
             state.candidates_for_filter = None
+            if (
+                state.turn_idx == 0
+                and len(state.context.hypothesis_set.hypotheses) > state.context.tracer_config.n_hypotheses
+            ):
+                state.phase = "pre_adapt_summary"
+                return
+            state.phase = "adapted"
+            return
+
+        if state.phase == "pre_adapt_summary":
+            try:
+                current_turn = state.conversation_history[-1]
+                retrieved_profile = summarize_retrieved_hypotheses(
+                    current_turn.user_message,
+                    state.context,
+                )
+            except Exception as e:
+                retrieved_profile = ""
+                state.turn_record["pre_adapt_retrieved_summary"] = {"success": False, "reason": str(e)}
+            if retrieved_profile:
+                state.working_profile = retrieved_profile
+                state.turn_record["summary"] = state.working_profile
+                state.turn_record["pre_adapt_retrieved_summary"] = {"success": True}
             state.phase = "adapted"
             return
 
@@ -301,7 +326,7 @@ class BatchPreferenceTracer:
             )
             state.turn_record["preprocess"] = preprocess_status
             if not preprocess_status["success"] or preprocess_status["skip"]:
-                state.phase = "finalize_turn"
+                state.phase = "skip_summary"
                 return
 
             state.candidates_with_choice = "[CandidateSet]\n" + json.dumps(
@@ -322,6 +347,12 @@ class BatchPreferenceTracer:
                 indent=2,
             )
             state.phase = "update"
+            return
+
+        if state.phase == "skip_summary":
+            if state.working_profile:
+                state.turn_record["summary"] = state.working_profile
+            state.phase = "finalize_turn"
             return
 
         if state.phase == "update":

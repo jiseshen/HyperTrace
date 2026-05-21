@@ -6,6 +6,8 @@ from glob import glob
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from datasets import load_dataset
 
@@ -38,12 +40,34 @@ def mean(xs: List[float]) -> Optional[float]:
     return sum(xs) / len(xs) if xs else None
 
 
+def centered_moving_average(values: List[float], window: int) -> List[float]:
+    if window <= 1:
+        return list(values)
+    n = len(values)
+    if n == 0:
+        return []
+    half = window // 2
+    smoothed: List[float] = []
+    for i in range(n):
+        left = max(0, i - half)
+        right = min(n, i + half + 1)
+        smoothed.append(sum(values[left:right]) / (right - left))
+    return smoothed
+
+
 def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+def resolve_run_path(run_name: str) -> Path:
+    path = Path(run_name)
+    if path.exists():
+        return path
+    return Path("result") / run_name
+
+
 def collect_user_files(root: Path) -> List[Path]:
-    files = sorted(Path(p) for p in glob(str(root / "user*.json")))
+    files = sorted(Path(p) for p in glob(str(root / "*.json")))
     if not files:
         raise FileNotFoundError(f"No user JSON files found under: {root}")
     return files
@@ -214,9 +238,22 @@ def plot_line(
     ylabel: str,
     save_path: Path,
     ylim: Optional[tuple] = None,
+    smooth_window: int = 1,
+    raw_alpha: float = 0.25,
 ) -> None:
     plt.figure(figsize=(10, 6))
-    plt.plot(x, y, marker="o", linewidth=2)
+    if smooth_window > 1:
+        plt.plot(x, y, marker="o", linewidth=1.2, alpha=raw_alpha, label="raw")
+        plt.plot(
+            x,
+            centered_moving_average(y, smooth_window),
+            marker="o",
+            linewidth=2.4,
+            label=f"smooth, w={smooth_window}",
+        )
+        plt.legend()
+    else:
+        plt.plot(x, y, marker="o", linewidth=2)
     plt.xlabel("Turn Index")
     plt.ylabel(ylabel)
     plt.title(title)
@@ -240,6 +277,41 @@ def plot_line(
     plt.tight_layout()
     plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.close()
+
+
+def plot_summary_line(
+    online_turns: List[Dict[str, Any]],
+    metric: str,
+    count_metric: str,
+    title: str,
+    ylabel: str,
+    save_path: Path,
+    ylim: Optional[tuple] = None,
+    smooth_window: int = 1,
+    raw_alpha: float = 0.25,
+) -> None:
+    xs: List[int] = []
+    ys: List[float] = []
+    counts: List[int] = []
+    for item in online_turns:
+        value = safe_get(item, metric)
+        if value is None:
+            continue
+        count_value = safe_get(item, count_metric) or safe_get(item, "n_users") or 0
+        xs.append(int(item["turn_index"]))
+        ys.append(value)
+        counts.append(int(count_value))
+    plot_line(
+        xs,
+        ys,
+        counts,
+        title=title,
+        ylabel=ylabel,
+        save_path=save_path,
+        ylim=ylim,
+        smooth_window=smooth_window,
+        raw_alpha=raw_alpha,
+    )
 
 
 def plot_profile_bar(profile_avg: Dict[str, float], save_path: Path) -> None:
@@ -278,6 +350,68 @@ def plot_profile_bar(profile_avg: Dict[str, float], save_path: Path) -> None:
     plt.close()
 
 
+def plot_current_summary(summary: Dict[str, Any], save_path: Path, smooth_window: int = 5, raw_alpha: float = 0.25) -> None:
+    ensure_dir(save_path)
+    online_turns = summary.get("online_turns", [])
+    if not online_turns:
+        raise ValueError("metrics/summary.json has no online_turns to visualize.")
+
+    specs = [
+        ("prediction_accuracy", "n_prediction_users", "Average Prediction Accuracy vs Turn", "Prediction Accuracy", "turn_prediction_accuracy.png", (0, 1.05)),
+        ("prediction_ranking_score", "n_prediction_users", "Average Prediction Ranking Score vs Turn", "Ranking Score", "turn_prediction_ranking_score.png", (0, 1.05)),
+        ("adapt_gpt_score", "n_adaptation_users", "Average Adapted Response GPT Score vs Turn", "GPT Score", "turn_adapt_gpt_score.png", None),
+        ("adapt_relative_gpt_score", "n_adaptation_users", "Average Adapted Response Relative GPT Score vs Turn", "Relative GPT Score", "turn_adapt_relative_gpt_score.png", None),
+        ("adapt_relative_mean_gpt_score", "n_adaptation_users", "Average Adapted Response Relative Mean GPT Score vs Turn", "Relative Mean GPT Score", "turn_adapt_relative_mean_gpt_score.png", None),
+        ("adapt_similarity_score", "n_adaptation_users", "Average Adapted Response Similarity vs Turn", "Similarity Score", "turn_adapt_similarity_score.png", None),
+        ("adapt_relative_score", "n_adaptation_users", "Average Adapted Response Relative Similarity vs Turn", "Relative Similarity", "turn_adapt_relative_score.png", None),
+        ("adapt_relative_mean_score", "n_adaptation_users", "Average Adapted Response Relative Mean Similarity vs Turn", "Relative Mean Similarity", "turn_adapt_relative_mean_score.png", None),
+    ]
+    for metric, count_metric, title, ylabel, filename, ylim in specs:
+        plot_summary_line(
+            online_turns=online_turns,
+            metric=metric,
+            count_metric=count_metric,
+            title=title,
+            ylabel=ylabel,
+            save_path=save_path / filename,
+            ylim=ylim,
+            smooth_window=smooth_window,
+            raw_alpha=raw_alpha,
+        )
+
+    profile_alignment = summary.get("profile_alignment", {})
+    profile_avg = {
+        "survey_consistency": safe_get(profile_alignment, "profile_survey_consistency") or math.nan,
+        "key_aspect_match": safe_get(profile_alignment, "profile_key_aspect_match") or math.nan,
+        "internal_plausibility": safe_get(profile_alignment, "profile_internal_plausibility") or math.nan,
+        "overall": safe_get(profile_alignment, "profile_overall") or math.nan,
+        "similarity": safe_get(profile_alignment, "profile_similarity") or math.nan,
+    }
+    plot_profile_bar(profile_avg, save_path / "profile_metrics_bar.png")
+
+    overview = {
+        "n_users": summary.get("n_users"),
+        "n_turns": summary.get("n_turns"),
+        "turn_curve_length": len(online_turns),
+        "last_turn_index": online_turns[-1].get("turn_index") if online_turns else None,
+        "overall_prediction": summary.get("overall_prediction"),
+        "overall_adaptation": summary.get("overall_adaptation"),
+        "average_adaptation": summary.get("average_adaptation"),
+        "profile_alignment": summary.get("profile_alignment"),
+        "smooth_window": smooth_window,
+    }
+    with (save_path / "visualization_summary.json").open("w", encoding="utf-8") as f:
+        json.dump(overview, f, ensure_ascii=False, indent=2)
+
+    print(f"Loaded users: {summary.get('n_users')}")
+    print(f"Loaded turns: {summary.get('n_turns')}")
+    print(f"Turn curve length: {len(online_turns)}")
+    if online_turns:
+        print(f"Last retained turn index: {online_turns[-1].get('turn_index')}")
+    print(f"Smooth window: {smooth_window}")
+    print(f"Saved plots to: {save_path.resolve()}")
+
+
 def print_summary(turnwise: Dict[str, List[float]], profile_avg: Dict[str, float], n_users: int, save_dir: Path) -> None:
     print(f"Loaded users: {n_users}")
     print(f"Turn curve length after truncation (min {MIN_USERS_PER_TURN} users/turn): {len(turnwise['turn'])}")
@@ -291,17 +425,31 @@ def print_summary(turnwise: Dict[str, List[float]], profile_avg: Dict[str, float
 
 
 def main() -> None:
-    parser = ArgumentParser(description="Visualize PRISM tracing metrics.")
+    parser = ArgumentParser(description="Visualize tracing metrics for a result run.")
     parser.add_argument("--run-name", type=str, default=str(ROOT), help="Result root containing user json files.")
     parser.add_argument("--save-name", type=str, default=None, help="Subdirectory name under result/gpt5-nano-trace-prism-plots.")
     parser.add_argument("--sample-size", type=int, default=1000, help="Sample size used to build user-id list from PRISM.")
     parser.add_argument("--sample-seed", type=int, default=42, help="Random seed for PRISM user sampling.")
     parser.add_argument("--index-range", type=str, default=None, help="Index range over sampled ids, format start:end (e.g. 0:100).")
+    parser.add_argument("--legacy-records", action="store_true", help="Use legacy per-record metric keys instead of metrics/summary.json.")
+    parser.add_argument("--smooth-window", type=int, default=5, help="Centered moving-average window size for turn-wise curves.")
+    parser.add_argument("--raw-alpha", type=float, default=0.25, help="Alpha for raw background lines when smoothing is enabled.")
     args = parser.parse_args()
 
-    record_path = Path("result") / args.run_name / "records"
-    save_path = Path("result") / args.run_name / "plots"
+    run_path = resolve_run_path(args.run_name)
+    record_path = run_path / "records"
+    save_path = run_path / "plots"
     ensure_dir(save_path)
+
+    summary_path = run_path / "metrics" / "summary.json"
+    if summary_path.exists() and not args.legacy_records:
+        plot_current_summary(
+            load_json(summary_path),
+            save_path,
+            smooth_window=args.smooth_window,
+            raw_alpha=args.raw_alpha,
+        )
+        return
 
     if args.index_range is None:
         user_files = collect_user_files(record_path)

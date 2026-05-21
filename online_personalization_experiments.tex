@@ -1,0 +1,130 @@
+% Required packages: graphicx, subcaption, booktabs.
+
+\section{Experiments}
+
+\subsection{Main Comparison}
+
+\paragraph{Experimental setting.}
+We compare preference tracing against three GPT-5-based online personalization baselines on
+the same matched users. The CoT baseline conditions on up to five previous rounds of dialogue
+and feedback as in-context examples, and learns to imitate the accepted answer. The RAG
+baseline stores observed dialogues in a vector database and retrieves the top five examples
+for each new user message. The dynamic cheatsheet baseline gives the model a freely editable
+user-profile notebook, which can be updated or extended after each dialogue and selection.
+Preference tracing instead maintains an explicit preference state and uses it for both
+response adaptation and preference prediction.
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/main_comparison_placeholder.png}
+        \caption{Online trajectories.}
+        \label{fig:main-comparison-traj}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \small
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lrrrrrrrrrrrr}
+        \toprule
+        Method & $N$ & Acc.$_{>20}$ & $\Delta$Acc. & GPT-RA$_{>20}$ & $\Delta$GPT-RA & Emb.-RA$_{>20}$ & $\Delta$Emb.-RA & Survey & Aspect & Plaus. & Overall & Sim. \\
+        \midrule
+        GPT-5 trace & 28 & 0.6134 & 0.4211 & 0.2267 & 0.9190 & -0.0010 & 0.0221 & 4.1429 & 3.8929 & 4.8571 & 4.1857 & 0.5366 \\
+        CoT & 28 & 0.5481 & 0.0865 & 0.0425 & 0.6579 & 0.0222 & 0.0549 & -- & -- & -- & -- & -- \\
+        RAG & 28 & 0.5808 & 0.1962 & 0.1248 & 0.8556 & 0.0363 & 0.1162 & -- & -- & -- & -- & -- \\
+        Cheatsheet & 28 & 0.4857 & 0.0242 & -0.2464 & 0.2152 & -0.0136 & 0.0130 & -- & -- & -- & -- & -- \\
+        \bottomrule
+        \end{tabular}
+        }
+        \caption{Aggregate metrics.}
+        \label{fig:main-comparison-table}
+    \end{subfigure}
+    \caption{
+    Main comparison on the matched-user evaluation split. The left panel shows turn-wise
+    prediction accuracy, relative GPT response alignment, relative embedding alignment, and
+    profile alignment. The right panel reports per-user means after turn 20 and their change
+    from turn 0; Acc. denotes preference-prediction accuracy, GPT-RA and Emb.-RA denote
+    relative response-alignment scores, and profile columns report rubric-based profile
+    alignment.
+    }
+    \label{fig:main-comparison}
+\end{figure*}
+
+\paragraph{Results.}
+Figure~\ref{fig:main-comparison} shows that preference tracing improves more steadily than
+the baselines and obtains the highest late-stage prediction accuracy. After turn 20,
+preference tracing reaches 0.6134 accuracy, compared with 0.5808 for RAG, 0.5481 for CoT,
+and 0.4857 for the dynamic cheatsheet baseline. Its relative GPT alignment is also strongest
+in the late stage, while the cheatsheet baseline remains negative. CoT has comparatively high
+response alignment during parts of the online process because raw previous responses are
+available as demonstrations, but this does not produce a stable accuracy-improvement signal.
+RAG is competitive on embedding alignment, suggesting that retrieval helps recover
+surface-similar evidence, but it remains below preference tracing on choice prediction.
+\emph{Placeholder: add the cross-benchmark comparison conclusion once the second benchmark
+result is finalized.}
+
+\subsection{Model Ablation}
+
+\paragraph{Experimental setting.}
+We next evaluate whether preference tracing depends on a particular strong proprietary
+backbone. We run the same tracing procedure with GPT-5, kimi-k2.6, GLM-5.1, DeepSeek-V4,
+Qwen3.5-397B-A17B, and Qwen3.5-9B. All variants use Gemini-3-flash as the LLM critic for
+response-alignment and profile-alignment evaluation, so differences reflect the tracing
+backbone rather than changes in the judge.
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/model_ablation_placeholder.png}
+        \caption{Online trajectories.}
+        \label{fig:model-ablation-traj}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \small
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lrrrrrrrrrrrr}
+        \toprule
+        Model & $N$ & Acc.$_{>20}$ & $\Delta$Acc. & GPT-RA$_{>20}$ & $\Delta$GPT-RA & Emb.-RA$_{>20}$ & $\Delta$Emb.-RA & Survey & Aspect & Plaus. & Overall & Sim. \\
+        \midrule
+        GPT-5 & 28 & 0.6134 & 0.4211 & 0.2267 & 0.9190 & -0.0010 & 0.0221 & 4.1429 & 3.8929 & 4.8571 & 4.1857 & 0.5366 \\
+        kimi-k2.6 & 28 & 0.4904 & 0.1827 & 0.0659 & 0.9505 & -0.0020 & 0.0592 & 3.0000 & 2.7500 & 4.5000 & 3.2000 & 0.5251 \\
+        GLM-5.1 & 28 & 0.5485 & 0.1639 & 0.0621 & 0.2544 & 0.0010 & 0.0546 & 3.2500 & 3.1071 & 4.6429 & 3.4714 & 0.5685 \\
+        DeepSeek-V4 & 28 & 0.6089 & 0.3012 & 0.2378 & 1.6609 & -0.0053 & 0.0464 & 3.4286 & 3.1786 & 4.5357 & 3.5500 & 0.5129 \\
+        Qwen3.5-397B-A17B & 28 & 0.5398 & 0.2706 & -0.0110 & 0.7582 & -0.0076 & 0.0496 & 2.8929 & 2.8214 & 4.1429 & 3.1143 & 0.5317 \\
+        Qwen3.5-9B & 28 & 0.5211 & 0.1750 & 0.0052 & 0.4475 & -0.0039 & 0.0473 & 3.1429 & 3.1071 & 4.3214 & 3.3643 & 0.5144 \\
+        \bottomrule
+        \end{tabular}
+        }
+        \caption{Aggregate metrics.}
+        \label{fig:model-ablation-table}
+    \end{subfigure}
+    \caption{
+    Model ablation under a fixed Gemini-3-flash critic. The left panel compares online
+    trajectories across tracing backbones, and the right panel reports the same late-stage
+    aggregate metrics as Figure~\ref{fig:main-comparison}.
+    }
+    \label{fig:model-ablation}
+\end{figure*}
+
+\paragraph{Results.}
+Figure~\ref{fig:model-ablation} shows that preference tracing yields useful online gains
+across recent open and closed models. All backbones improve in prediction accuracy relative
+to turn 0, and most maintain near-positive or positive late-stage relative response
+alignment. This suggests that the method decomposes personalization into capabilities that
+modern models broadly possess: simulating basic user preference choices, integrating evidence
+over interactions, and assigning stable comparative scores. The improvement therefore does
+not appear to rely on exceptionally strong long-horizon reasoning from the backbone.
+
+The ablation also reveals non-monotonic behavior with model size. Qwen3.5-9B is more stable
+than Qwen3.5-397B-A17B in late-stage relative GPT alignment and profile overall score,
+despite being much smaller. A plausible explanation is that scoring stability is especially
+important in the tracing loop: a larger model with less consistent comparative judgments may
+update the preference state less reliably. At the same time, GPT-5 remains strongest on
+profile alignment, indicating that accurate profile extraction still benefits from stronger
+domain-sensitive abstraction even when the online choice-improvement mechanism transfers
+across smaller models.
