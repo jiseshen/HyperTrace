@@ -28,7 +28,7 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
             user_message=current_turn.user_message,
             candidates=candidates,
-            hypothesis=h.format()
+            hypothesis=h.format(include_category=context.tracer_config.use_hypothesis_topics)
         ) for h in hypotheses
     ]
     c = len(current_turn.candidates)

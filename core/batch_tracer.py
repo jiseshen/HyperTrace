@@ -19,7 +19,7 @@ from .initialize import initialize_hypothesis
 from .perturb import perturb_hypotheses
 from .preprocess import preprocess_candidates
 from .response import generate_adapted_response
-from .summary import summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
+from .summary import retrieve_inference_profile, summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
 from .utils import TracerConfig, TracerContext
 
 
@@ -285,6 +285,8 @@ class BatchPreferenceTracer:
             state.candidates_with_choice = None
             state.candidates_for_filter = None
             if (
+                state.context.tracer_config.inference_profile_source == "working"
+                and
                 state.turn_idx == 0
                 and len(state.context.hypothesis_set.hypotheses) > state.context.tracer_config.n_hypotheses
             ):
@@ -311,9 +313,27 @@ class BatchPreferenceTracer:
             return
 
         if state.phase == "adapted":
+            inference_profile = state.working_profile
+            if state.context.tracer_config.inference_profile_source == "retrieved":
+                try:
+                    inference_profile, inference_retrieval = retrieve_inference_profile(
+                        state.conversation_history,
+                        state.context,
+                        fallback_profile=state.working_profile,
+                    )
+                    state.turn_record["inference_profile"] = inference_profile
+                    state.turn_record["inference_retrieval"] = inference_retrieval
+                except Exception as e:
+                    inference_profile = state.working_profile
+                    state.turn_record["inference_profile"] = inference_profile
+                    state.turn_record["inference_retrieval"] = {
+                        "source": "working_fallback",
+                        "reason": str(e),
+                        "retrieved": [],
+                    }
             state.turn_record["adapted"] = generate_adapted_response(
                 conversation_history=state.conversation_history,
-                profile=state.working_profile,
+                profile=inference_profile,
                 context=state.context,
             )
             state.phase = "preprocess"

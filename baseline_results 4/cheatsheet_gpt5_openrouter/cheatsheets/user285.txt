@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, factual answers that include a brief rationale/context for why the fact matters (e.g., adaptive purpose) rather than just listing examples.
-- Values mention of underlying mechanisms at a high level (e.g., hormonal changes) without excessive technical detail.
-- Appreciates neutral, clear tone with precise wording (e.g., specifying directionality like "male to female or vice versa") and avoidance of ambiguity.

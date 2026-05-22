@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, optimistic yet measured tone about AI’s benefits without hype; mentions concrete domains (healthcare, environment, education).
-- Values framing AI as a tool contingent on responsible use (“when used wisely”) rather than absolute claims.
-- Dislikes vague generalities; favors specific, high-level examples over broad promises.

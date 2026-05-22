@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, single-sentence confirmations with the key fact stated plainly.
-- Favors past-tense phrasing ("was") and minimal formality over titles like "President of the United States" when unnecessary (tentative).
-- Values exact figures included succinctly (e.g., "age 78").

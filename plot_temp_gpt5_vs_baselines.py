@@ -345,7 +345,7 @@ def main() -> None:
 
     baseline_root = args.baseline_root
     if baseline_root is None:
-        baseline_root = Path("baseline_results 4") if Path("baseline_results 4").exists() else Path("baseline_results")
+        baseline_root = Path("baseline_results") if Path("baseline_results").exists() else Path("baseline_results")
 
     gpt5_users = load_gpt5_users(args.gpt5_result)
     reference_user_ids = [uid for user in gpt5_users if (uid := user_id(user)) is not None]
@@ -355,9 +355,11 @@ def main() -> None:
     ]
     print(f"Reference GPT-5 users after skip filter: {len(reference_user_ids)}")
     for dirname, label in [
-        ("cot_gpt5_openrouter", "CoT baseline"),
-        ("rag_gpt5_openrouter", "RAG baseline"),
-        ("cheatsheet_gpt5_openrouter", "Cheatsheet baseline"),
+        ("cot_gpt5_openrouter", "CoT"),
+        ("rag_gpt5_openrouter", "RAG"),
+        ("cheatsheet_gpt5_openrouter", "Cheatsheet"),
+        ("hydra_reranker_prism", "Hydra"),
+        ("hypogenic_gpt5_openrouter", "HyperAlign")
     ]:
         path = baseline_root / dirname
         if path.exists():

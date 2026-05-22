@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, friendly acknowledgments that reference specific context/details from prior conversation.
-- Appreciates positive, upbeat closings (e.g., “Happy shopping!”) over generic service offers.
-- (Tentative) Dislikes boilerplate phrases like “let me know if you have any further questions or concerns.”

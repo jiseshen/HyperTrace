@@ -42,6 +42,21 @@ def _write_json(path: Path, data: Dict[str, Any]) -> None:
         json.dump(data, f, indent=4)
 
 
+def _metrics_cache_matches(
+    metrics: Dict[str, Any],
+    eval_model_name: str = None,
+    prediction_model_name: str = None,
+    eval_scope: str = None,
+) -> bool:
+    if eval_scope is not None and metrics.get("eval_scope") != eval_scope:
+        return False
+    if eval_model_name is not None and metrics.get("eval_model") != eval_model_name:
+        return False
+    if prediction_model_name is not None and metrics.get("prediction_model") != prediction_model_name:
+        return False
+    return True
+
+
 def evaluate_user_record(
     user_data: UserData,
     record: Dict[str, Any],
@@ -49,8 +64,16 @@ def evaluate_user_record(
     eval_cfg: GenerationConfig,
     embed_cfg: EmbedConfig,
     prompts: PromptSet = None,
+    prediction_model: BaseLM = None,
+    prediction_cfg: GenerationConfig = None,
+    eval_model_name: str = None,
+    prediction_model_name: str = None,
+    prediction_only: bool = False,
 ) -> Dict[str, Any]:
     prompt_set = prompts or prism_prompts()
+    prediction_model = prediction_model or eval_model
+    prediction_cfg = prediction_cfg or eval_cfg
+    eval_scope = "prediction_only" if prediction_only else "full"
     turn_contexts = _flatten_turn_contexts(user_data)
     record_turns = record.get("turns", [])
     n_eval_turns = min(len(record_turns), len(turn_contexts))
@@ -60,6 +83,9 @@ def evaluate_user_record(
         "n_record_turns": len(record_turns),
         "n_dataset_turns": len(turn_contexts),
         "turns": [],
+        "eval_model": eval_model_name,
+        "prediction_model": prediction_model_name or eval_model_name,
+        "eval_scope": eval_scope,
     }
     if len(record_turns) != len(turn_contexts):
         metrics["warning"] = (
@@ -81,14 +107,16 @@ def evaluate_user_record(
         }
 
         turn_metrics["prediction"] = predict_choice(
-            model=eval_model,
+            model=prediction_model,
             conversation_history=conversation_history,
-            profile=profile_before_turn,
-            generation_cfg=eval_cfg,
+            profile=turn_record.get("inference_profile") or profile_before_turn,
+            generation_cfg=prediction_cfg,
             prompts=prompt_set,
         )
 
-        if adapted_response:
+        if prediction_only:
+            pass
+        elif adapted_response:
             turn_metrics["adaptation"] = evaluate_generation(
                 eval_model=eval_model,
                 conversation_history=conversation_history,
@@ -117,7 +145,9 @@ def evaluate_user_record(
             profile_before_turn = turn_record["summary"]
 
     final_profile = record.get("final_profile")
-    if final_profile:
+    if prediction_only:
+        metrics["profile_alignment"] = {"skipped": True, "reason": "prediction_only"}
+    elif final_profile:
         metrics["profile_alignment"] = profile_score(
             eval_model=eval_model,
             profile=final_profile,
@@ -236,6 +266,9 @@ def summarize_metrics(user_metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "n_users": len(user_metrics),
         "n_turns": sum(len(metrics.get("turns", [])) for metrics in user_metrics),
+        "eval_scope": next((metrics.get("eval_scope") for metrics in user_metrics if metrics.get("eval_scope")), None),
+        "eval_model": next((metrics.get("eval_model") for metrics in user_metrics if metrics.get("eval_model")), None),
+        "prediction_model": next((metrics.get("prediction_model") for metrics in user_metrics if metrics.get("prediction_model")), None),
         "online_turns": online_turns,
         "overall_prediction": overall_prediction,
         "overall_adaptation": overall_adaptation,
@@ -256,6 +289,11 @@ def evaluate_records(
     eval_cfg: GenerationConfig,
     embed_cfg: EmbedConfig,
     prompts: PromptSet = None,
+    prediction_model: BaseLM = None,
+    prediction_cfg: GenerationConfig = None,
+    eval_model_name: str = None,
+    prediction_model_name: str = None,
+    prediction_only: bool = False,
 ) -> Dict[str, Any]:
     prompt_set = prompts or prism_prompts()
     users_by_id = {user.user_id: user for user in users}
@@ -274,8 +312,15 @@ def evaluate_records(
 
         user_metrics_path = metrics_path / "users" / f"{user_id}.json"
         if user_metrics_path.exists():
-            user_metrics.append(_load_record(user_metrics_path))
-            continue
+            cached_metrics = _load_record(user_metrics_path)
+            if _metrics_cache_matches(
+                cached_metrics,
+                eval_model_name=eval_model_name,
+                prediction_model_name=prediction_model_name,
+                eval_scope="prediction_only" if prediction_only else "full",
+            ):
+                user_metrics.append(cached_metrics)
+                continue
 
         metrics = evaluate_user_record(
             user_data=user_data,
@@ -284,6 +329,11 @@ def evaluate_records(
             eval_cfg=eval_cfg,
             embed_cfg=embed_cfg,
             prompts=prompt_set,
+            prediction_model=prediction_model,
+            prediction_cfg=prediction_cfg,
+            eval_model_name=eval_model_name,
+            prediction_model_name=prediction_model_name,
+            prediction_only=prediction_only,
         )
         _write_json(user_metrics_path, metrics)
         user_metrics.append(metrics)

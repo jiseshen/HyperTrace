@@ -15,13 +15,17 @@ from prompt import load_prompt_adapter
 import json
 
 
-def dump_provider_report(run_path: Path, model):
+def dump_provider_report(run_path: Path, model, filename: str = "provider_report.json"):
     if not isinstance(model, OpenRouterModel):
         return
-    report_path = run_path / "provider_report.json"
+    report_path = run_path / filename
     with report_path.open("w") as f:
         json.dump(model.provider_report(), f, indent=4)
     print(f"Provider report saved to: {report_path}")
+
+
+def model_name(config: dict) -> str:
+    return config.get("model", "unknown")
 
 
 def main():
@@ -115,18 +119,41 @@ def main():
                     json.dump(records, f, indent=4)
         dump_provider_report(run_path, gen_model)
 
-    eval_cfg = GenerationConfig(**config["eval_model"])
-    eval_model = load_model(backend=config["eval_model"]["backend"], default_cfg=eval_cfg)
+    eval_model_config = config["eval_model"]
+    prediction_model_config = config.get("prediction_model", eval_model_config)
+    eval_cfg = GenerationConfig(**eval_model_config)
+    prediction_cfg = GenerationConfig(**prediction_model_config)
+    eval_model = load_model(backend=eval_model_config["backend"], default_cfg=eval_cfg)
+    prediction_model = eval_model
+    if prediction_model_config != eval_model_config:
+        prediction_model = load_model(backend=prediction_model_config["backend"], default_cfg=prediction_cfg)
+    print(f"Eval model: {model_name(eval_model_config)}")
+    print(f"Prediction model: {model_name(prediction_model_config)}")
     print(f"Metrics will be saved to: {metrics_path}")
-    summary = evaluate_records(
-        users=user_data,
-        records_path=result_path,
-        metrics_path=metrics_path,
-        eval_model=eval_model,
-        eval_cfg=eval_cfg,
-        embed_cfg=embed_cfg,
-        prompts=prompts,
-    )
+    try:
+        summary = evaluate_records(
+            users=user_data,
+            records_path=result_path,
+            metrics_path=metrics_path,
+            eval_model=eval_model,
+            eval_cfg=eval_cfg,
+            embed_cfg=embed_cfg,
+            prompts=prompts,
+            prediction_model=prediction_model,
+            prediction_cfg=prediction_cfg,
+            eval_model_name=model_name(eval_model_config),
+            prediction_model_name=model_name(prediction_model_config),
+        )
+    finally:
+        if prediction_model is not eval_model:
+            dump_provider_report(run_path, prediction_model, "prediction_provider_report.json")
+            close = getattr(prediction_model, "close", None)
+            if close:
+                close()
+        dump_provider_report(run_path, eval_model, "eval_provider_report.json")
+        close = getattr(eval_model, "close", None)
+        if close:
+            close()
     print(f"Evaluated {summary['n_users']} users and {summary['n_turns']} turns")
 
 

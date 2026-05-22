@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Values a calm, empathetic reassurance about capabilities and limits, emphasizing no hidden agendas and developer-set safeguards.
-- Prefers concise, non-technical explanations over grand claims about “evolving” or humanity-scale missions.
-- Appreciates an open, invitational tone with optional next steps (e.g., offer readings or continue discussion).

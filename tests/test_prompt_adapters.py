@@ -104,6 +104,13 @@ class PromptAdapterTests(unittest.TestCase):
         self.assertIn("chosen vs rejected", prompts.initialization)
         self.assertIn("chosen vs rejected", prompts.branching)
         self.assertIn("user_specific_need", prompts.preprocessing)
+        self.assertIn("uses background", prompts.preprocessing)
+        self.assertIn("[background_fact]", prompts.initialization)
+        self.assertIn("PersonaMem memory units", prompts.initialization)
+        self.assertIn("A topic change by itself is not evidence", prompts.branching)
+        self.assertIn("action=\"revise\"", prompts.branching)
+        self.assertIn("profile cues are relevant", prompts.prediction)
+        self.assertIn("adaptation_plan", prompts.response)
         self.assertIn("do-not-remember", prompts.profile)
 
         for prompt_name in TRACE_PROMPT_NAMES:

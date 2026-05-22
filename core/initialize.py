@@ -33,7 +33,10 @@ def initialize_hypothesis(
         prev_turns="\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
         user_message=current_turn.user_message,
         candidates=candidates,
-        retrieved_hypotheses="\n".join([h.format() for h in candidate_hypotheses])
+        retrieved_hypotheses="\n".join([
+            h.format(include_category=context.tracer_config.use_hypothesis_topics)
+            for h in candidate_hypotheses
+        ])
     )
     
     InitializeSchema = create_model(

@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Values direct acknowledgment of mistakes or omissions and a clear, prompt explanation when a question wasn’t answered (tentative).
-- Prefers concise, to-the-point responses that address the query explicitly (tentative).
-- Unclear/insufficient signal from the latest interaction to refine preferences further (tentative).

@@ -33,7 +33,7 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             prev_turns="\n\n".join([turn.format(include_candidates=False) for turn in prev_turns[-context.tracer_config.max_history_turns:]]),
             user_message=current_turn.user_message,
             candidates=candidates,
-            current_hypothesis=h.format()
+            current_hypothesis=h.format(include_category=context.tracer_config.use_hypothesis_topics)
         ) for h in current_hypotheses
     ]
     try:
@@ -53,11 +53,30 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             replace += 1
         if output is None:
             invalid += 1
-    if replace > len(outputs) / 2:  # Vote to reinitialize
+    direct_update = context.tracer_config.hypothesis_update_mode in {"flat5", "retrieve_replace"}
+    if replace > len(outputs) / 2 and not direct_update:  # Vote to reinitialize
         context.belief.consolidate(compute_importance(len(conversation_history), context.current_belief.normalized_entropy()), context.tracer_config.consolidate_alpha)
         conversation_history[:] = conversation_history[-1:]  # Treat as a new conversation
         init_status = initialize_hypothesis(conversation_history, candidates, context)
         return {"reinit": True, **init_status, "replace": replace, "invalid": invalid}
+    if context.tracer_config.hypothesis_update_mode == "flat5":
+        updates = []
+        for h, o in zip(current_hypotheses, outputs):
+            if o is None:
+                continue
+            updates.append(Update(
+                id=h.id,
+                category=o["updated_hypothesis"]["category"],
+                content=o["updated_hypothesis"]["content"],
+            ))
+        if updates:
+            context.hypothesis_set.update_hypotheses(updates)
+        context.update_belief(WorkingBelief(
+            ids=[h.id for h in current_hypotheses],
+            priors=current_weights.tolist(),
+            repo=context.hypothesis_set,
+        ))
+        return {"replace": replace, "invalid": invalid, "flat5": True}
     updates = []
     revised_ids = []
     revised_weights = []
@@ -80,7 +99,7 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
             new.append(o['updated_hypothesis'])
             replaced_ids.append(h.id)
             replaced_weights.append(current_weights[i])
-    if replace > 0:
+    if replace > 0 and not direct_update:
         context.hypothesis_set.consolidate_belief(replaced_ids, replaced_weights, compute_importance(len(conversation_history), context.current_belief.normalized_entropy()), context.tracer_config.consolidate_alpha)
     if updates:
         context.hypothesis_set.update_hypotheses(updates)

@@ -7,3 +7,11 @@ similarity_threshold: 0.8
 bradley_terry_temp: 1.0
 max_history_turns: 3
 profile_top_p: 0.8
+inference_profile_source: "working"
+inference_retrieve_top_k: 12
+inference_retrieve_pool_k: 30
+inference_min_prior: 0.1
+summary_profile_source: "working"
+summary_retrieve_pool_k: 30
+summary_long_term_top_k: 5
+summary_min_prior: 0.1

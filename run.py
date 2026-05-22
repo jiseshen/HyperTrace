@@ -11,7 +11,7 @@ from tqdm import tqdm
 from core.preference_tracer import PreferenceTracer
 from core.utils import OverrideConfig, TracerConfig
 from data import UserData, load_data
-from eval.runner import _load_record, _write_json, evaluate_user_record, summarize_metrics
+from eval.runner import _load_record, _metrics_cache_matches, _write_json, evaluate_user_record, summarize_metrics
 from model import EmbedConfig, GenerationConfig, load_model
 from model.openrouter_model import OpenRouterModel
 from prompt import PromptSet, load_prompt_adapter
@@ -81,6 +81,18 @@ def dump_provider_report(path: Path, reports: List[Dict[str, Any]]) -> None:
     )
 
 
+def model_config(config: Dict[str, Any], key: str) -> Dict[str, Any]:
+    return config.get(key, config["eval_model"])
+
+
+def model_name(config: Dict[str, Any]) -> str:
+    return config.get("model", "unknown")
+
+
+def model_slug(name: str) -> str:
+    return "".join(ch if ch.isalnum() else "-" for ch in name.lower()).strip("-")
+
+
 def format_active(progress: Dict[str, Tuple[int, int]], limit: int = 4) -> str:
     items = sorted(progress.items())
     parts = [f"{user_id}:{turn}/{total}" for user_id, (turn, total) in items[:limit]]
@@ -130,9 +142,18 @@ def evaluate_one_user(
     config: Dict[str, Any],
     embed_cfg: EmbedConfig,
     prompts: PromptSet,
-) -> Tuple[str, Dict[str, Any], Optional[Dict[str, Any]]]:
-    eval_cfg = GenerationConfig(**config["eval_model"])
-    eval_model = load_model(backend=config["eval_model"]["backend"], default_cfg=eval_cfg)
+    prediction_only: bool = False,
+) -> Tuple[str, Dict[str, Any], Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    eval_model_config = config["eval_model"]
+    prediction_model_config = model_config(config, "prediction_model")
+    eval_cfg = GenerationConfig(**eval_model_config)
+    prediction_cfg = GenerationConfig(**prediction_model_config)
+    eval_model = None
+    if not prediction_only or prediction_model_config == eval_model_config:
+        eval_model = load_model(backend=eval_model_config["backend"], default_cfg=eval_cfg)
+    prediction_model = eval_model
+    if prediction_model_config != eval_model_config:
+        prediction_model = load_model(backend=prediction_model_config["backend"], default_cfg=prediction_cfg)
     try:
         record = _load_record(record_file)
         metrics = evaluate_user_record(
@@ -142,13 +163,28 @@ def evaluate_one_user(
             eval_cfg=eval_cfg,
             embed_cfg=embed_cfg,
             prompts=prompts,
+            prediction_model=prediction_model,
+            prediction_cfg=prediction_cfg,
+            eval_model_name=None if prediction_only else model_name(eval_model_config),
+            prediction_model_name=model_name(prediction_model_config),
+            prediction_only=prediction_only,
         )
-        report = eval_model.provider_report() if isinstance(eval_model, OpenRouterModel) else None
-        return metrics.get("user", user_data.user_id), metrics, report
+        eval_report = eval_model.provider_report() if isinstance(eval_model, OpenRouterModel) else None
+        prediction_report = (
+            prediction_model.provider_report()
+            if prediction_model is not eval_model and isinstance(prediction_model, OpenRouterModel)
+            else None
+        )
+        return metrics.get("user", user_data.user_id), metrics, eval_report, prediction_report
     finally:
-        close = getattr(eval_model, "close", None)
-        if close:
-            close()
+        if prediction_model is not eval_model:
+            close = getattr(prediction_model, "close", None)
+            if close:
+                close()
+        if eval_model is not None:
+            close = getattr(eval_model, "close", None)
+            if close:
+                close()
 
 
 def main() -> None:
@@ -160,15 +196,19 @@ def main() -> None:
     parser.add_argument("--trace-workers", type=int, default=4, help="Number of users to trace concurrently")
     parser.add_argument("--eval-workers", type=int, default=4, help="Number of user records to evaluate concurrently")
     parser.add_argument("--eval-only", action="store_true", help="Skip tracing and evaluate existing records only")
+    parser.add_argument("--prediction-only", action="store_true", help="Only run offline preference prediction metrics; skip response/profile evaluation")
+    parser.add_argument("--prediction-model-from-main", action="store_true", help="Use main_model as the offline preference prediction model")
+    parser.add_argument("--metrics-name", type=str, default=None, help="Metrics directory name under the run path; useful for prediction-only comparisons")
     args = parser.parse_args()
 
     config_root = Path(args.config_root)
     config = load_run_config(config_root, args.config)
+    if args.prediction_model_from_main:
+        config["prediction_model"] = config["main_model"]
     print(f"Loaded config: {json.dumps(config, indent=4)}")
 
     run_path = Path(args.result_root) / (args.result if args.result else config["name"])
     records_path = run_path / "records"
-    metrics_path = run_path / "metrics"
     records_path.mkdir(parents=True, exist_ok=True)
     print(f"Records will be saved to: {records_path}")
 
@@ -182,6 +222,19 @@ def main() -> None:
     prompt_adapter_name = config.get("prompt_adapter", config["dataset"])
     prompts = load_prompt_adapter(prompt_adapter_name)
     print(f"Loaded prompt adapter: {prompt_adapter_name}")
+    eval_model_config = config["eval_model"]
+    prediction_model_config = model_config(config, "prediction_model")
+    metrics_name = args.metrics_name
+    if metrics_name is None:
+        metrics_name = (
+            f"metrics_prediction_{model_slug(model_name(prediction_model_config))}"
+            if args.prediction_only
+            else "metrics"
+        )
+    metrics_path = run_path / metrics_name
+    print(f"Eval model: {model_name(eval_model_config)}")
+    print(f"Prediction model: {model_name(prediction_model_config)}")
+    print(f"Eval scope: {'prediction_only' if args.prediction_only else 'full'}")
 
     if not args.eval_only:
         target_sample, target_users, finished_target_ids = target_trace_users(
@@ -248,29 +301,52 @@ def main() -> None:
             continue
         user_metrics_path = metrics_users_path / f"{user_id}.json"
         if user_metrics_path.exists():
-            user_metrics.append(_load_record(user_metrics_path))
+            cached_metrics = _load_record(user_metrics_path)
+            if _metrics_cache_matches(
+                cached_metrics,
+                eval_model_name=None if args.prediction_only else model_name(eval_model_config),
+                prediction_model_name=model_name(prediction_model_config),
+                eval_scope="prediction_only" if args.prediction_only else "full",
+            ):
+                user_metrics.append(cached_metrics)
+            else:
+                eval_jobs.append((record_file, user_data))
         else:
             eval_jobs.append((record_file, user_data))
 
     print(f"Metrics will be saved to: {metrics_path}")
     eval_reports: List[Dict[str, Any]] = []
+    prediction_reports: List[Dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=max(1, args.eval_workers)) as executor:
         futures = {
-            executor.submit(evaluate_one_user, record_file, user_data, config, embed_cfg, prompts): user_data.user_id
+            executor.submit(
+                evaluate_one_user,
+                record_file,
+                user_data,
+                config,
+                embed_cfg,
+                prompts,
+                args.prediction_only,
+            ): user_data.user_id
             for record_file, user_data in eval_jobs
         }
         pbar = tqdm(as_completed(futures), total=len(futures), desc="Evaluating records", unit="user")
         for future in pbar:
             user_id = futures[future]
             pbar.set_postfix(user=user_id)
-            completed_user_id, metrics, report = future.result()
+            completed_user_id, metrics, eval_report, prediction_report = future.result()
             _write_json(metrics_users_path / f"{completed_user_id}.json", metrics)
             user_metrics.append(metrics)
-            if report:
-                eval_reports.append(report)
+            if eval_report:
+                eval_reports.append(eval_report)
+            if prediction_report:
+                prediction_reports.append(prediction_report)
     if eval_reports:
         dump_provider_report(run_path / "eval_provider_report.json", eval_reports)
         print(f"Eval provider report saved to: {run_path / 'eval_provider_report.json'}")
+    if prediction_reports:
+        dump_provider_report(run_path / "prediction_provider_report.json", prediction_reports)
+        print(f"Prediction provider report saved to: {run_path / 'prediction_provider_report.json'}")
 
     summary = summarize_metrics(user_metrics)
     _write_json(metrics_path / "summary.json", summary)

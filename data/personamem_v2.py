@@ -19,6 +19,7 @@ DATASET_CONFIG = "benchmark"
 DEFAULT_SPLIT = "benchmark_text"
 SUPPORTED_TEXT_SPLITS = {"benchmark_text", "train_text", "val_text"}
 PERSONAMEM_GT_MARKER = "[PersonaMem-v2 Ground Truth Profile]"
+MIN_USER_TURNS = 20
 
 
 def _parse_structured_value(value: Any) -> Any:
@@ -272,6 +273,7 @@ def _records_to_users(
     n_users: Optional[int],
     seed: int,
     split: str,
+    min_user_turns: int = MIN_USER_TURNS,
 ) -> List[UserData]:
     grouped: Dict[str, List[Dict[str, Any]]] = {}
     user_order: List[str] = []
@@ -304,6 +306,8 @@ def _records_to_users(
                     chosen_idx=chosen_idx,
                 )
             )
+        if len(turns) < min_user_turns:
+            continue
         users.append(
             UserData(
                 user_id=uid,
@@ -327,6 +331,7 @@ def load_personamem_v2(
     n_users: Optional[int] = None,
     seed: int = 42,
     split: str = DEFAULT_SPLIT,
+    min_user_turns: int = MIN_USER_TURNS,
 ) -> List[UserData]:
     if split not in SUPPORTED_TEXT_SPLITS:
         raise ValueError(
@@ -334,7 +339,13 @@ def load_personamem_v2(
             f"Use one of {sorted(SUPPORTED_TEXT_SPLITS)}."
         )
     dataset = load_dataset(DATASET_NAME, DATASET_CONFIG, split=split)
-    return _records_to_users(dataset, n_users=n_users, seed=seed, split=split)
+    return _records_to_users(
+        dataset,
+        n_users=n_users,
+        seed=seed,
+        split=split,
+        min_user_turns=min_user_turns,
+    )
 
 
 def _percentile(values: List[float], p: float) -> float:

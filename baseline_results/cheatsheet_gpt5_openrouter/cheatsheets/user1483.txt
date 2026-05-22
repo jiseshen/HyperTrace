@@ -1,0 +1,6 @@
+User Preference Cheatsheet:
+- Prefers concise, complete answers over silence or non-responses.
+- Values explicit enumeration of reasons/policies when asking meta-questions about AI behavior.
+- Dislikes empty or evasive replies; expects a direct, informative answer.
+- Prefers neutral, matter-of-fact tone.
+- For moral/ethical questions, likely expects a clear, direct stance with brief reasoning (tentative).

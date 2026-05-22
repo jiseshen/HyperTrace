@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, bulleted symptom lists that are comprehensive and clinically relevant, including key system-specific features (cardiovascular, ocular, skeletal) over vague or extraneous items.
-- Values precise medical terminology with brief clarifying parentheticals (e.g., “aortic aneurysm or dissection,” “pectus excavatum”), avoiding inaccuracies.
-- (Tentative) Appreciates inclusion of hallmark or diagnostic features beyond common traits (e.g., dural ectasia, lens issues) when listing conditions.

@@ -7,5 +7,5 @@ users_per_run: 50
 embed: "${include:embed/openrouter.yaml}"
 main_model: "${include:model/openrouter-gpt5.yaml}"
 eval_model: "${include:model/openrouter-gemini-3-flash.yaml}"
-tracer: "${include:tracer/base.yaml}"
+tracer: "${include:tracer/personamem_v2.yaml}"
 override: "${include:override/hybrid.yaml}"

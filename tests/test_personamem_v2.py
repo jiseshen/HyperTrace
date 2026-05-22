@@ -2,6 +2,7 @@ import json
 import unittest
 
 from data.personamem_v2 import (
+    MIN_USER_TURNS,
     _parse_incorrect_answers,
     _parse_user_query,
     _records_to_users,
@@ -57,8 +58,8 @@ class PersonaMemV2LoaderTests(unittest.TestCase):
             _record(correct_answer="chosen one"),
             _record(user_query="{'role': 'user', 'content': 'Second question'}", correct_answer="chosen two"),
         ]
-        users_a = _records_to_users(records, n_users=None, seed=123, split="benchmark_text")
-        users_b = _records_to_users(records, n_users=None, seed=123, split="benchmark_text")
+        users_a = _records_to_users(records, n_users=None, seed=123, split="benchmark_text", min_user_turns=1)
+        users_b = _records_to_users(records, n_users=None, seed=123, split="benchmark_text", min_user_turns=1)
 
         self.assertEqual(len(users_a), 1)
         self.assertEqual(users_a[0].user_id, "personamem_v2_7")
@@ -96,7 +97,7 @@ class PersonaMemV2LoaderTests(unittest.TestCase):
                 who="others",
             ),
         ]
-        profile = _records_to_users(records, n_users=None, seed=123, split="benchmark_text")[0].gt_profile
+        profile = _records_to_users(records, n_users=None, seed=123, split="benchmark_text", min_user_turns=1)[0].gt_profile
 
         self.assertIn("[PersonaMem-v2 Ground Truth Profile]", profile)
         self.assertIn("Prefers vegetable-forward home cooking", profile)
@@ -107,6 +108,22 @@ class PersonaMemV2LoaderTests(unittest.TestCase):
         self.assertNotIn("BAD1", profile)
         self.assertNotIn("craft beer", profile.lower())
         self.assertNotIn("123-45-6789", profile)
+
+    def test_filters_short_users_before_sampling(self):
+        short_records = [
+            _record(persona_id=1, user_query=f"{{'role': 'user', 'content': 'short {idx}'}}")
+            for idx in range(MIN_USER_TURNS - 1)
+        ]
+        long_records = [
+            _record(persona_id=2, user_query=f"{{'role': 'user', 'content': 'long {idx}'}}")
+            for idx in range(MIN_USER_TURNS)
+        ]
+
+        users = _records_to_users(short_records + long_records, n_users=1, seed=123, split="benchmark_text")
+
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0].user_id, "personamem_v2_2")
+        self.assertEqual(len(users[0].conversations[0].turns), MIN_USER_TURNS)
 
 
 if __name__ == "__main__":

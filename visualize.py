@@ -412,6 +412,67 @@ def plot_current_summary(summary: Dict[str, Any], save_path: Path, smooth_window
     print(f"Saved plots to: {save_path.resolve()}")
 
 
+def find_prediction_metric_dirs(run_path: Path, metrics_name: Optional[str]) -> List[Path]:
+    if metrics_name:
+        path = run_path / metrics_name
+        if not path.exists():
+            raise FileNotFoundError(f"Prediction metrics directory not found: {path}")
+        return [path]
+    return sorted(path for path in run_path.glob("metrics_prediction_*") if path.is_dir())
+
+
+def plot_prediction_model_accuracy(
+    summary: Dict[str, Any],
+    save_path: Path,
+    metrics_name: str,
+    smooth_window: int = 5,
+    raw_alpha: float = 0.25,
+) -> Path:
+    online_turns = summary.get("online_turns", [])
+    if not online_turns:
+        raise ValueError(f"{metrics_name}/summary.json has no online_turns to visualize.")
+
+    prediction_model = summary.get("prediction_model") or metrics_name.replace("metrics_prediction_", "")
+    filename = f"turn_prediction_accuracy_{metrics_name}.png"
+    plot_summary_line(
+        online_turns=online_turns,
+        metric="prediction_accuracy",
+        count_metric="n_prediction_users",
+        title=f"Average Prediction Accuracy vs Turn ({prediction_model})",
+        ylabel="Prediction Accuracy",
+        save_path=save_path / filename,
+        ylim=(0, 1.05),
+        smooth_window=smooth_window,
+        raw_alpha=raw_alpha,
+    )
+    return save_path / filename
+
+
+def plot_prediction_metric_summaries(
+    run_path: Path,
+    save_path: Path,
+    metrics_name: Optional[str],
+    smooth_window: int = 5,
+    raw_alpha: float = 0.25,
+) -> List[Path]:
+    plotted: List[Path] = []
+    for metrics_dir in find_prediction_metric_dirs(run_path, metrics_name):
+        summary_path = metrics_dir / "summary.json"
+        if not summary_path.exists():
+            print(f"Warning: skipping {metrics_dir}; missing summary.json.")
+            continue
+        output_path = plot_prediction_model_accuracy(
+            load_json(summary_path),
+            save_path,
+            metrics_name=metrics_dir.name,
+            smooth_window=smooth_window,
+            raw_alpha=raw_alpha,
+        )
+        plotted.append(output_path)
+        print(f"Saved prediction-model accuracy plot to: {output_path.resolve()}")
+    return plotted
+
+
 def print_summary(turnwise: Dict[str, List[float]], profile_avg: Dict[str, float], n_users: int, save_dir: Path) -> None:
     print(f"Loaded users: {n_users}")
     print(f"Turn curve length after truncation (min {MIN_USERS_PER_TURN} users/turn): {len(turnwise['turn'])}")
@@ -434,6 +495,12 @@ def main() -> None:
     parser.add_argument("--legacy-records", action="store_true", help="Use legacy per-record metric keys instead of metrics/summary.json.")
     parser.add_argument("--smooth-window", type=int, default=5, help="Centered moving-average window size for turn-wise curves.")
     parser.add_argument("--raw-alpha", type=float, default=0.25, help="Alpha for raw background lines when smoothing is enabled.")
+    parser.add_argument(
+        "--prediction-metrics-name",
+        type=str,
+        default=None,
+        help="Optional metrics_prediction_* directory name to plot as an extra prediction-model accuracy curve.",
+    )
     args = parser.parse_args()
 
     run_path = resolve_run_path(args.run_name)
@@ -446,6 +513,13 @@ def main() -> None:
         plot_current_summary(
             load_json(summary_path),
             save_path,
+            smooth_window=args.smooth_window,
+            raw_alpha=args.raw_alpha,
+        )
+        plot_prediction_metric_summaries(
+            run_path=run_path,
+            save_path=save_path,
+            metrics_name=args.prediction_metrics_name,
             smooth_window=args.smooth_window,
             raw_alpha=args.raw_alpha,
         )

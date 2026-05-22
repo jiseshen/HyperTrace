@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers precise, comparative facts with key figures (e.g., ranked emitters with approximate percentages)
-- Values concise, direct answers focused on the question without added advocacy or moral framing
-- Appreciates brief causal context after the core fact (e.g., industrialization, fossil fuels, population)

@@ -14,8 +14,10 @@ class Hypothesis:
     category: str
     content: str
     
-    def format(self) -> str:
-        return f"ID: {self.id}\nCategory: {self.category}\nContent: {self.content}\n"
+    def format(self, include_category: bool = True) -> str:
+        if include_category:
+            return f"ID: {self.id}\nCategory: {self.category}\nContent: {self.content}\n"
+        return f"ID: {self.id}\nContent: {self.content}\n"
     
 @dataclass
 class Update:
@@ -239,7 +241,8 @@ class HypothesisSet:
         self,
         *,
         n_hypotheses: int,
-        embed_config: EmbedConfig
+        embed_config: EmbedConfig,
+        use_topics: bool = True,
     ) -> None:
         self.vector_store = VectorStore(
             embed_cfg=embed_config,
@@ -250,9 +253,11 @@ class HypothesisSet:
         self.hypotheses: Dict[str, Hypothesis] = {}
         self.category_counts: Dict[str, int] = {}
         self.next_hypothesis_id: int = 1
+        self.use_topics = use_topics
 
-    @staticmethod
-    def _embedding_text(hypothesis: Hypothesis) -> str:
+    def _embedding_text(self, hypothesis: Hypothesis) -> str:
+        if not self.use_topics:
+            return hypothesis.content
         return f"Category: {hypothesis.category}\nContent: {hypothesis.content}"
 
     def _allocate_hid(self) -> str:
@@ -281,8 +286,9 @@ class HypothesisSet:
             category = hyp.category if isinstance(hyp, Hypothesis) else hyp["category"]
             content = hyp.content if isinstance(hyp, Hypothesis) else hyp["content"]
             prior = None if isinstance(hyp, Hypothesis) else hyp.get("prior")
-            cat = category
-            self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
+            cat = category if self.use_topics else ""
+            if self.use_topics:
+                self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
             hid = self._allocate_hid()
             h = Hypothesis(
                 id=hid,
@@ -314,6 +320,22 @@ class HypothesisSet:
         hypotheses = [self.hypotheses[hid] for hid in retrieved_ids]
         priors = [self.global_prior.get(hid, self.base_prior) for hid in retrieved_ids]
         return hypotheses, priors
+
+    def retrieve_hypotheses_with_scores(
+        self,
+        query: str,
+        top_k: int = 5,
+        exclude_ids: Optional[List[str]] = None,
+    ) -> Tuple[List[Hypothesis], List[float], List[float]]:
+        retrieved_ids, scores = self.vector_store.retrieve(
+            query,
+            top_k=top_k,
+            return_keys=True,
+            exclude_ids=exclude_ids,
+        )
+        hypotheses = [self.hypotheses[hid] for hid in retrieved_ids]
+        priors = [self.global_prior.get(hid, self.base_prior) for hid in retrieved_ids]
+        return hypotheses, priors, scores
     
     def update_hypotheses(
         self,
@@ -325,13 +347,13 @@ class HypothesisSet:
             hid = update.id
             hyp = self.hypotheses[hid]
             
-            if update.category is not None:
+            if self.use_topics and update.category is not None:
                 hyp.category = update.category
             if update.content is not None:
                 if hyp.content != update.content:
                     changed_ids.append(hid)
                 hyp.content = update.content
-            if hid not in changed_ids and update.category is not None:
+            if self.use_topics and hid not in changed_ids and update.category is not None:
                 changed_ids.append(hid)
             if hid in changed_ids:
                 changed_contents.append(self._embedding_text(hyp))
@@ -383,6 +405,15 @@ class HypothesisSet:
         for hid, w in zip(ids, weights):
             prev_prior = self.global_prior.get(hid)
             self.global_prior[hid] = prev_prior * (1 - alpha * importance) + w * alpha * importance
+
+    def replace_belief_priors(
+        self,
+        ids: List[str],
+        weights: np.ndarray,
+    ) -> None:
+        for hid, weight in zip(ids, weights):
+            if hid in self.global_prior:
+                self.global_prior[hid] = float(weight)
     
     def merge_hypotheses(
         self,
@@ -499,5 +530,12 @@ class WorkingBelief:
     def consolidate(self, importance: float = 0.5, alpha: float = 0.5):
         self.repo.consolidate_belief(self.ids, self.weights, importance=importance, alpha=alpha)
         
-    def log_dict(self) -> List[Dict[str, Union[str, float]]]:
-        return [asdict(self.repo.hypotheses[hid]) | {"weight": float(weight)} for hid, weight in zip(self.ids, self.weights)]
+    def log_dict(self, include_category: bool = True) -> List[Dict[str, Union[str, float]]]:
+        items = []
+        for hid, weight in zip(self.ids, self.weights):
+            item = asdict(self.repo.hypotheses[hid])
+            if not include_category:
+                item.pop("category", None)
+            item["weight"] = float(weight)
+            items.append(item)
+        return items

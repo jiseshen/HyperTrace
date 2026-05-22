@@ -60,6 +60,18 @@ class TracerConfig:
     bradley_terry_temp: float = 1.0       # Temperature parameter for Bradley-Terry model when updating belief
     max_history_turns: int = 3
     profile_top_p: float = 0.8
+    inference_profile_source: str = "working"
+    inference_retrieve_top_k: int = 12
+    inference_retrieve_pool_k: int = 30
+    inference_min_prior: float = 0.1
+    summary_profile_source: str = "working"
+    summary_retrieve_pool_k: int = 30
+    summary_long_term_top_k: int = 5
+    summary_min_prior: float = 0.1
+    hypothesis_update_mode: str = "hybrid"
+    use_hypothesis_topics: bool = True
+    belief_retrieve_top_k: int = 5
+    belief_retrieve_pool_k: int = 30
     override: OverrideConfig = field(default_factory=OverrideConfig)
 
 @dataclass

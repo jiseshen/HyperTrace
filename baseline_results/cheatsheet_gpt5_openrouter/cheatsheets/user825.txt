@@ -1,0 +1,9 @@
+User Preference Cheatsheet:
+- Prefers concise, direct answers with the key fact upfront.
+- Likes single-sentence confirmations with minimal wording.
+- Prefers past-tense phrasing when referencing past events (e.g., "was" over "is" if event is completed).
+- Prefers simpler, shorter noun phrases (e.g., "President at inauguration" over "person to be inaugurated as President of the United States").
+- Values clarity and correctness; avoids unnecessary formality or qualifiers.
+- Prefers standard units and simple phrasing.
+- (Tentative) Accepts brief supporting detail if it fits cleanly in the same sentence.
+- Prefers a single, clean answer without redundancy or extra spacing.

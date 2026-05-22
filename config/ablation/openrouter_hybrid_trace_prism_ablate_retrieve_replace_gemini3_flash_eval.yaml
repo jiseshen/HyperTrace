@@ -1,0 +1,28 @@
+name: "openrouter-hybrid-trace-prism-ablate-retrieve-replace-gemini3-flash-eval"
+dataset: "prism"
+prompt_adapter: "prism"
+seed: 42
+n_users: 1000
+users_per_run: 28
+embed: "${include:embed/openrouter.yaml}"
+main_model: "${include:model/openrouter-gpt5.yaml}"
+eval_model: "${include:model/openrouter-gemini-3-flash.yaml}"
+tracer:
+  hierarchical: true
+  allow_expand: false
+  allow_skip: true
+  n_hypotheses: 5
+  consolidate_alpha: 1.0
+  similarity_threshold: 0.8
+  bradley_terry_temp: 1.0
+  max_history_turns: 3
+  profile_top_p: 0.8
+  inference_profile_source: "retrieved"
+  inference_retrieve_top_k: 12
+  inference_retrieve_pool_k: 30
+  inference_min_prior: 0.1
+  hypothesis_update_mode: "retrieve_replace"
+  use_hypothesis_topics: true
+  belief_retrieve_top_k: 5
+  belief_retrieve_pool_k: 30
+override: "${include:override/hybrid.yaml}"

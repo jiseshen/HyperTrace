@@ -388,25 +388,27 @@ Goal:
 Write a concise, faithful summary for what the assistant should do now.
 
 Evidence weighting:
-- Current-conversation hypotheses are primary evidence.
-- Global consolidated hypotheses are secondary background priors.
-- If current and global conflict, present the dominant current explanation first, then note global baseline as longer-term tendency.
+- Current-conversation hypotheses and long-term hypotheses are complementary evidence sources.
+- Current hypotheses capture the latest posterior for this conversation.
+- Long-term hypotheses capture stable cross-conversation signals from memory.
+- Do not assume either source is always more important; preserve the stronger or more stable claim when evidence supports it.
+- If current and long-term hypotheses conflict, state the distinction instead of forcing one into the other.
 
 Output:
 - 4-8 bullet points only. No extra text.
 
-Strength mapping (required):
+Strength mapping:
 - High-weight current: MUST / STRONGLY / MAINLY
 - Medium-weight current: SHOULD / GENERALLY
 - Low-weight current: MAY / SLIGHTLY
-- Global-only: TENDS TO / OFTEN
+- Long-term only: TENDS TO / OFTEN
 
 Rules:
 - Preserve hypothesis meaning; do not invent new preferences.
 - Merge overlaps and remove duplicates.
 - Prefer actionable tendencies over vague traits.
 
-[Global consolidated hypotheses] (long-term, prior-top; no current-turn weights)
+[Long-term hypotheses] (prior-ranked; may include retrieved stable memory not in current belief)
 {consolidated_hypotheses}
 
 [Current hypotheses with weights] (for current conversation; weights sum to 1)

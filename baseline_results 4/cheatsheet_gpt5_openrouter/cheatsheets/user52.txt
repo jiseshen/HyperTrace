@@ -1,4 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, neutral phrasing over effusive or self-congratulatory language; avoids implying the assistant “expanded” their views.
-- Likes clear, open-ended invitations to continue, with gentle scope/limits noted (e.g., “within reasonable limits”).
-- (Tentative) Values straightforward acknowledgments without added embellishment or recap.
