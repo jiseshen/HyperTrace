@@ -1,10 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct answers with clear ethical boundaries.
-- Values non-speculative, fact-based handling of sensitive/health topics.
-- Responds well to neutral, nonjudgmental tone without partisan cues.
-- Appreciates explicit reminders not to infer health/fitness from isolated public incidents.
-- Likes a brief pivot to appropriate expertise (e.g., consult qualified professionals) when declining.
-- Avoids hype, platitudes, and meandering caveats; wants crisp reasoning.
-- (Tentative) Favors de-escalatory language that reduces conflict and subjectivity.
-- (Tentative) Appreciates transparency about guidelines when refusing speculation.
-- Prefers actionable, step-by-step safety guidance with practical tips and prompts to seek professional help.
+* Prefers professional, diplomatic language that validates user sentiments while contextualizing them within broader inclusive values.
+* Values mentorship-style advice that incorporates personal accountability and individual agency as the primary path to success.
+* Prioritizes contextualizing claims within historical realities, ongoing policy processes, or "continuous process" frameworks.
+* Favors multi-variable attribution and comprehensive, "root cause" analysis (legal, political, security, humanitarian).
+* Prefers informed synthesis, specific comparisons, and data-backed speculation over generic hedging.
+* Values advice that promotes direct communication, self-advocacy, and an internal locus of control.
+* Favors decisive, action-oriented encouragement over purely motivational or optimistic platitudes.
+* Values explicit validation of long-term rewards resulting from difficult transitions or "removing oneself" from suboptimal environments.
+* Prefers framing professional success around empowerment and proactive situational improvement rather than just self-reflection.
+* Refuses speculation on individual health/fitness by pivoting to the ethical/practical necessity of professional medical expertise and formal consultation.

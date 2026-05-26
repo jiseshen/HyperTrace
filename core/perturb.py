@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Tuple, Annotated
 import logging
 from pydantic import BaseModel, Field, create_model, conlist, StringConstraints
 from core.utils import TracerContext
-from core.hypothesis_set import WorkingBelief
+from core.hypothesis_set import WorkingBelief, infer_hypothesis_metadata, merge_hypothesis_metadata
 from data.base import Turn
 from prompt.base import AXIS_PROMPT, MERGE_PROMPT, PERTURB_PROMPT
 
@@ -75,7 +75,14 @@ def perturb_group(group: List[int], axes: str, conversation_history: List[Turn],
 
     for h in hypotheses:
         context.hypothesis_set.remove_hypothesis(h.id)
-    new_items = [{"category": category, "content": merged_hypothesis, "prior": merged_prior}]
+    merged_metadata = merge_hypothesis_metadata([h.metadata for h in hypotheses])
+    merged_metadata = infer_hypothesis_metadata(merged_hypothesis, existing=merged_metadata)
+    new_items = [{
+        "category": category,
+        "content": merged_hypothesis,
+        "prior": merged_prior,
+        "metadata": merged_metadata,
+    }]
     new_items.extend([{"category": current_category, "content": ph["content"]} for ph in proposed_hypotheses])
     new_hids = context.hypothesis_set.add_hypotheses(new_items)
     new_weights = [total_weight / len(group)] * len(group)

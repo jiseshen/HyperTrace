@@ -1,11 +1,11 @@
 User Preference Cheatsheet:
-- Prefers balanced, non-prescriptive answers that avoid coercive judgments about individuals.
-- Values acknowledgment of complexity and multiple perspectives on contentious issues.
-- Accepts brief, concrete considerations of broader impacts (e.g., employees, economy) when assessing proposals.
-- Appreciates principled reasoning referencing democratic processes and their limits (e.g., majority rule vs. rights/Rule of law).
-- Likes clear statements that decisions are context-dependent and not straightforward.
-- Tone: measured, respectful, even-handed; avoid incendiary or absolutist language.
-- Concise explanations over long arguments; avoid fluff.
-- Note controversies without taking sides; emphasize that reasonable people can disagree.
-- Avoid moralizing; focus on institutional/legal frameworks and alternatives to extreme measures.
-- Willingness to explore alternative solutions rather than endorsing punitive actions (tentative).
+* Prefers comprehensive explanations categorized by tool or methodology, emphasizing the "why," limitations, and version-specific evolutions.
+* Values organized formatting (code blocks, bullet points) and detailed exploration of trade-offs, data integrity, and scalability.
+* Prioritizes responses with explicit metadata (e.g., word counts) in the preface and proactive requests for project specifics in the conclusion.
+* Favors direct, synthesized paragraphs for non-technical queries over repetitive or overly structured list formats.
+* Values actionable advice on professional sustainability (boundary-setting, "no" lists, time-management).
+* Expects a definitive stance on ethical/policy issues grounded in human rights and systemic reform, yet values neutral, non-judgmental framing when queries target specific high-profile individuals.
+* Prioritizes logical resolutions connecting policy problems to broader causes and long-term societal impacts.
+* Values specific, tangible examples of alternative interventions (e.g., restorative justice) over abstract generalizations.
+* Prefers nuanced philosophical reflections on the limitations of majoritarianism/democracy when applied to individual rights or private property.
+* Prefers conversational acknowledgments that express helpfulness and openness to further questions over purely functional closures.

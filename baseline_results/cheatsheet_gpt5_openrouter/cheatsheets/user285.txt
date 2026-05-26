@@ -1,6 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct answers listing clear examples first.
-- Values inclusion of brief functional context (why it happens) after examples.
-- Appreciates a one-sentence mechanism summary with plain, accurate biology (e.g., hormonal changes leading to organ transformation).
-- Likes mainstream, uncontroversial framing without hedging when facts are solid.
-- Prefers minimal verbosity; avoid tangents and excessive detail.
+- Prefers defining core biological/technical types and drivers before illustrating practical intersections.
+- Values defining functional mechanics (e.g., hormonal triggers, reproductive shifts) when explaining processes.
+- Favors a balanced, realistic tone that distinguishes between primary norms and inherent variations.
+- Values comprehensive categorization of technical requirements and specific classifications (e.g., species-specific examples).
+- Favors direct, structured delivery over prose-heavy or generic AI self-introductions.
+- Prefers substantive, detail-oriented examples that explain the "why" (e.g., mating shortages) over vague lists.
+- Values clear distinctions between outcomes based on initial conditions or species-specific contexts.
+- Prioritizes grounded, objective explanations over speculative or overly simplified binary claims.
+- Prefers objective, neutral refutations of generalizations that emphasize complexity and individual variation.
+- Values an inquisitive, engaging dialogue on philosophical or scientific topics over passive agreement.

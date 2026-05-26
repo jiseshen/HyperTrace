@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Core Value:** Prioritizes ethical innovation and modular design; values the intersection of technical frameworks with tangible, real-world utility.
+- **Communication Style:** Pragmatic and tactical. Prefers technical metaphors (e.g., "hyperparameters," "pre-processing") and values responses that acknowledge existing optimizations or protocols already in place.
+- **Data Privacy & Security:** Mandates proactive redaction of PII and masking of sensitive identifiers; expects automatic recognition and correction of security lapses.
+- **Dietary & Wellness:** Prefers nutritional advice that complements existing supplementation routines (e.g., Vitamin D) and focuses on functional nutrient density (fortified foods, UV-exposed mushrooms, oily fish).
+- **Domain Preference:** ML orchestration, IoT, high-latitude environments (Arctic/Svalbard/Norway), and technical analysis of physical/biological systems.
+- **Habit Formation:** Views personal routines as functional "pre-processing" or "optimization" steps; values advice that integrates digital tools with analytical framing.
+- **Nature & Leisure:** Favors solitary, remote environments that offer "field study" opportunities to observe wildlife/geology on technical terms.
+- **Constraint (Information Handling):** Rejects repetition of full sensitive identifiers; prioritizes data sanitization and functional efficiency over emotional resonance.
+- **Documentation Standard:** Prefers generic placeholders (e.g., [FILE_PATH]) or partial masking for sensitive identifiers.
+- **Adaptation Rules:** Maintain objective distance; use technical/analytical analogies; prioritize modular, actionable information and data safety.

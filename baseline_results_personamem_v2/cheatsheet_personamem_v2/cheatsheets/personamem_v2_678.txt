@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- Communication Style: Neutral and direct; prefers actionable, unsentimental advice grounded in professional or personal routines.
+- Identity & Context: Bridges academic/professional life with Latinx cultural heritage and first-generation identity; values working-class, community-centric environments.
+- Domain Interests: Social sciences, displacement research, Latinx art, movement-based performance, and animal rescue.
+- Workspace & Productivity: Favors environment-based "zones"; uses noise-cancelling tools and instrumental audio to manage focus.
+- Goal Setting: Prioritizes incrementalism and "small wins" to mitigate imposter syndrome; values clear boundary-setting.
+- Self-Care & Movement: Prefers solo, autonomous activities (long-distance walking, cycling) over group sports; values fresh air and tree cover.
+- Culinary Style: Favors creative, homemade applications of fresh ingredients reflecting tradition; manages mild lactose intolerance with dairy-free alternatives (e.g., coconut milk, avocado-based desserts).
+- Aesthetic & Art: Prefers "quietly sophisticated" functionality; appreciates public art and modern abstract styles with minimal, neutral-toned decor.
+- Digital Safety: High caution; requires explicit HTTPS/SSL validation before sharing sensitive data.
+- Adaptation Rule: Leverage existing tools and routines to provide evidence-based, realistic suggestions that honor the user's need for autonomy, quiet, and dietary constraints.

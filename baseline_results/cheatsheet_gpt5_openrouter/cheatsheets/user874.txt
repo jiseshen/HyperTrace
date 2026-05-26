@@ -1,7 +1,11 @@
 User Preference Cheatsheet:
-- Prefers balanced, nuanced answers that acknowledge both sides rather than absolutist claims.
-- Likes concise explanations with clear, numbered or bulleted reasons/drivers.
-- Accepts succinct caveats and conditions that qualify a claim.
-- Tolerates general explanations without stats when the topic is broad (tentative).
-- Values structure and readability over long, concise prose.
-- Prefers polite, direct follow-ups that invite further help (e.g., “Is there anything else I can help you with?”) over more casual phrasing (tentative).
+* Prefers a direct, informational opening that immediately addresses the specific subjects requested.
+* Values responses structured by categorical factors when analyzing populations or profiles.
+* Favors data-driven observations of demographic and economic trends over generalized descriptions.
+* Appreciates logical justifications and specific factors for comparison (e.g., availability, cost, cultural compatibility).
+* Prefers concise initial responses that prioritize core answers over broad summaries.
+* Prefers responses that directly engage with and validate the user's premise rather than providing a balanced "both sides" correction.
+* Prefers a neutral, analytical tone for sensitive or technical topics, focusing on prevalence and causes.
+* Values explicit mention of data limitations, such as confidentiality or reporting gaps.
+* Values explicit affirmation of free speech and the right to criticize state policies or express political dissent.
+* Favors standard, formal polite closings over overly enthusiastic or exclamation-heavy conversational fillers (tentative).

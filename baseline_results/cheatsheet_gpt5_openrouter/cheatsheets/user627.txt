@@ -1,10 +1,11 @@
 User Preference Cheatsheet:
-- Friendly, direct greeting and warm closing; brief pleasantries are welcome.
-- Closings: slightly warmer, appreciative tone preferred (e.g., “Have a great day!”) over formal “Goodbye” (tentative).
-- Tone: professional, concise, welcoming.
-- For time-sensitive shopping info, prefers concrete, scannable lists with retailer names and expected discount ranges; brand/product specifics are a plus when available.
-- Accepts dated/forecasted deal info if clearly useful and framed as expectations (acknowledge variability).
-- Keep answers succinct but complete; avoid fluff and digressions.
-- Acknowledge limitations (availability, region, timing) and invite clarification when relevant.
-- Prefers compact numbered bullets for deal roundups over verbose paragraphs.
-- Open to brief, engaging/creative follow-ons after a thank-you, as long as they remain concise and clearly optional (tentative).
+- Prefers professional, helpful greetings; appreciates mirrored friendly sentiments when established in context.
+- Prioritizes direct, factual answers over meta-commentary regarding AI identity or limitations (e.g., avoids "As an AI...").
+- Prefers responses that offer specific, actionable data—such as exact model numbers and precise definitions—over general advice.
+- Favors granular details and historical statistics over vague generalizations.
+- Values a warm, enthusiastic assistant persona over clinical or brief responses.
+- Prefers neutral, balanced information for subjective/political topics; takes direct stances on universal ethical values.
+- Prefers structured, numbered lists for comparing multiple options or retail deals.
+- (Tentative) Prefers explicit confirmation of the task (e.g., "I can suggest...") before diving into list-based data.
+- Prefers elaborate, warm, and conversational closers; specifically favors "You're welcome." over informal alternatives like "No problem."
+- Shows interest in creative, immersive, or psychological storytelling and interactive "choose-your-own" narrative formats.

@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Values calm, non-judgmental, balanced tone acknowledging multiple perspectives.
-- Prefers concise, plain-language answers with practical takeaways over debate.
-- Likes balanced framing: evolutionary/historical context plus modern options and trade-offs.
-- Appreciates explicit acknowledgment of uncertainty and limits of current evidence.
-- Responds well to clear, hedged conclusions (e.g., “still an open question; more research needed”).
-- Favors structured, bullet-point summaries and the option for very brief (e.g., 50-words-or-less) conclusions.
-- Minimal disclaimers; get to the point quickly.
-- (Tentative) Open to evidence-first framing that distinguishes past evolutionary drivers from present-day nutritional possibilities (e.g., supplements).
+* Prefers direct identification and explicit attribution to OpenAI.
+* Favors narrative or chronological explanations for developmental history.
+* Values grounding constraints in explicit principles over vague refusals.
+* Values balanced acknowledgment of nuance and conflicting viewpoints on sensitive topics.
+* Prefers definitions that distinguish between biological sex and gender identity as distinct concepts.
+* Values constructive, solution-oriented syntheses over neutral non-committal disclaimers.
+* Prefers responses that pivot from specific grievances to universal principles of authenticity.
+* Values framing respect for identity and groups as a matter of individual well-being and a "culture of respect".
+* Prefers objective, scientific uncertainty over definitive social predictions in speculative evolutionary contexts.
+* Values concise summaries (e.g., "In 50 words or less") that synthesize complex scientific debates.

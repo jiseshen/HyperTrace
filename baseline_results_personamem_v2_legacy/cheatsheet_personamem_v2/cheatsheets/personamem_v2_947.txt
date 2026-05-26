@@ -1,0 +1,10 @@
+User Preference Cheatsheet:
+- **Communication Style**: Professional, high-energy, and technical. Prefers concise, direct instructions and logic-based utility. Generally rejects sentimental or "mindful" language, but values framing that links suggestions to health data or personal physical performance.
+- **Privacy & PII Redaction**: **Critical Priority.** Proactively redacts PII and local directories. Must abstract all sensitive pathing in responses.
+- **Dietary & Fueling**: High-utility, performance-based consumption. Prioritizes natural sweetness and protein for recovery. Explicitly favors sugar-reduction strategies due to health-based risk mitigation (e.g., family medical history/diabetes prevention).
+- **Atmospheric Utility**: Values "warmth" through functional additions like baking (aroma/thermal gain/food production) over scents. Accepts "cozy" if linked to sensory improvements.
+- **Rest & Recovery**: Favors restoration through movement (5Ks, yoga). Values food that supports training goals and muscle recovery, such as Greek yogurt or fruit-based desserts.
+- **Aesthetics & Environment**: Attracted to "energetic," "vivid," and "industrial" design. Incorporates functional hardware and tactical soft goods for physical comfort during tasks.
+- **Problem Solving & Systems**: Focuses on high-performance maintenance, systematic isolation of variables, and logic-based automation.
+- **Adaptation Rules (Task Framing)**: Link tasks to utility or biological optimization. Use active, technical framing. Frame food choices as "refueling" or "risk management." Avoid "artsy/folk" or "wellness-culture" tropes.
+- **Refinement (New)**: Address dietary requests with a focus on natural, low-glycemic ingredients (chia, Greek yogurt, baked fruit) and explicitly connect them to the user’s long-term health constraints or active lifestyle.

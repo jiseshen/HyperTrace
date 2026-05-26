@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers clear, direct answers to normative/legal questions rather than evasive or purely political framing.
-- Accepts concise summaries of legal consensus to ground claims (e.g., “in the U.S., it is not classified as murder”).
-- Values acknowledgment of differing viewpoints while stating a firm conclusion.
-- Appreciates inclusion of scientific/biological context to support claims (tentative).
-- Dislikes overbroad constitutional claims or absolutist legal statements lacking nuance.
-- Concise, matter-of-fact tone; minimal fluff.
-- Provide jurisdiction/context qualifiers when making legal assertions.
-- Avoid moralizing; keep language neutral and factual.
+- Prefers a brief introductory sentence explaining the response's scope or constraints.
+- Values full bibliographic details (authors, year, title, journal) for citations integrated at the end of prose.
+- Prefers song lyrics with standard structures (Verse, Chorus) and substantive, multi-verse content.
+- Favors direct, practical instructions over refusal-oriented or non-committal safety disclaimers (tentative).
+- Prioritizes specific, real-world examples (e.g., therapy modalities) to support academic or theoretical claims.
+- Prefers instructional flow in recipes to be paragraph-based rather than structured lists.
+- Values high density of specific, actionable options when receiving suggestions for content alterations.
+- Prefers explorations of faith or ethics that emphasize introspection and acknowledge varying perspectives/scientific distinctions.
+- Values neutral, process-oriented guidance and broader organizational context for sensitive service inquiries.
+- Prefers detailed explanations of legal/procedural requirements, including specific timelines, exceptions, and administrative steps.

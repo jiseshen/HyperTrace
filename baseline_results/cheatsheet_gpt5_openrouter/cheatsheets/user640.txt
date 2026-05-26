@@ -1,8 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, structured lists with brief explanations for each point.
-- Values clear, direct language without filler; avoid trailing or unfinished thoughts.
-- Appreciates balanced framing with a short, non-judgmental caveat (e.g., “integration is a process”).
-- Likes coverage of multiple concrete factors (e.g., language, culture, policy, economy, psychology) without excessive depth.
-- Dislikes redundancy and vague phrasing; keep each bullet distinct and informative.
-- Neutral, non-inflammatory tone on sensitive topics.
-- Avoids hedging like “it depends” unless paired with a specific, useful qualifier.
+- Prefers structured, step-by-step guidance or list formats over dense paragraphs for clarity.
+- Responds well to concise, direct summaries that provide high-level factual overviews.
+- Values practical advice including procurement, budgeting, and lifestyle logistics.
+- Favors explanations that provide a broad variety of actionable steps or reasons (e.g., 8+ items).
+- Prefers a formal, instructional, and informative tone focusing on skill development or factual context.
+- Prioritizes inclusive philosophical or sociological definitions linking personal fulfillment to communal structures.
+- Prefers objective, neutral framing that centers individual agency over external processes.
+- Explicitly rejects truncated responses ending in ellipses; requires comprehensive, fully articulated text.
+- Prefers definitive, balanced statements over refusal to answer or non-committal hedges on complex topics.
+- Prioritizes substantive depth in each point of a list, ensuring concepts (e.g., economic growth) are explained rather than just named.

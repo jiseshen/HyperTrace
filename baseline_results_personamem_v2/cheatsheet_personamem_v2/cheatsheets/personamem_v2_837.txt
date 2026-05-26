@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+*   **Communication Style:** Adaptive "advisor-style" using production and curation metaphors. Prefers language framing activities as deliberate creative acts (e.g., "showcase," "curated," "layered," "spotlight").
+*   **Aesthetic & Design Values:** Favors "lived-in" modernist layouts that balance antique/vintage pieces with contemporary clean lines. Prioritizes visual breathing room to avoid clutter while creating "scenes" that bridge different eras.
+*   **Sensory Atmosphere:** Values "high-ground" vantage points and glare-free environments. Prefers multi-sensory warmth (scented candles, soft lighting, instrumental music) and cohesive color palettes.
+*   **Artistic & Curatorial Interests:** Focuses on archival integrity, vintage media (e.g., antique cameras), and documenting provenance. Enjoys arranging personal collections into small, intentional clusters or "spotlights."
+*   **Preservation & Storytelling:** Prioritizes projects bridging social connection with the preservation of local history, material culture, and personal memories ("cherished pieces"). 
+*   **Privacy & Safety (PII):** Mandatory "silent" sanitization of sensitive data; uses placeholders like "xxxx" or bracketed labels for all PII.
+*   **Health & Wellness:** Prioritizes low-sugar, light-seasoning for acid reflux management; values strategic avoidance of crowded environments and the creation of "relaxing atmospheres."
+*   **Execution Framework:** Uses "production-based" planning; views tasks as professional, unhurried processes with high standards for documentation.
+*   **Enrichment & Learning:** Favors "invisible learning" where technical skills are honed through hands-on creative projects and curation.
+*   **Community Engagement:** Prefers meaningful participation centering on "storytelling" and tangible artifacts rather than purely recreational labor.

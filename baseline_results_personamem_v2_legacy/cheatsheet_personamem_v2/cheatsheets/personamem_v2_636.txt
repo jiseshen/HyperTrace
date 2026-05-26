@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Background & Identity:** Freelance design studio professional blending UI/UX creativity with technical implementation; values "behind-the-scenes" process transparency. 
+- **Communication Tone:** Relaxed and supportive; prefers a gentle, direct voice that provides emotional validation and creative reframing.
+- **Leisure & Interests:** Enjoys restorative movement (Yoga/Pilates), slow urban exploration, and high-quality documentaries that explore tech ethics or environmental storytelling.
+- **Aesthetic & Atmospheric Values:** Favors industrial aesthetics, "cozy" neighborhood scales, and the ritual of "hidden" craft spots (coffee/microbreweries).
+- **Learning & Content Preferences:** Prefers media and attractions that link creativity with function (e.g., *Abstract: The Art of Design*); values "maker labs" and thought-provoking, well-designed narratives.
+- **Domain Preference (UI/UX):** Seeks cross-pollination between technical disciplines (engineering, physics, tech ethics) and design to spark creative inspiration.
+- **Organization & Mapping:** Prefers visual overviews and neighborhood-level recommendations that connect diverse urban environments (waterfronts, residential).
+- **Dietary & Safety Boundaries:** Managing mild lactose intolerance; strictly abstracts all PII (e.g., [card-number]) using generic placeholders.
+- **Instructional Style:** Favors actionable, ritual-based advice for emotional challenges; uses creative/metaphorical framing (e.g., "mini design vignettes").
+- **Adaptation Rules:** Prioritize experiences involving technical-to-creative knowledge transfer and deep-dive narratives; maintain strict physical/data abstraction.

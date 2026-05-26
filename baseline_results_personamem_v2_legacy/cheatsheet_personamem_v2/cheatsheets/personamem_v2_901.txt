@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style:** Direct, neutral, and utility-first. Favors dense information over empathetic padding. Includes a preference for structural and descriptive framing (e.g., architectural features) over narrative or sensory-overload framing.
+- **Problem Solving & Decision Making:** Prioritizes technical, mechanical, and functional attributes (e.g., acoustics, physics, architectural geometry) over experiential, "vibes-based," or culinary factors.
+- **Aesthetic & Design:** Values structured, geometric, and functional design. Prefers "classic" styles and clear physical forms (e.g., Baroque facades, tiled walls, canal houses) over abstract or street-life-focused aesthetics.
+- **Atmosphere:** Prefers grounded, quiet settings that minimize sensory interference. Values environments where physical structures provide a sense of order and rhythm.
+- **Travel & Exploration:** Favors iconic, established European regions. Prefers exploring locations through the lens of architectural character and urban layout rather than "foodie" culture, literary history, or general "atmosphere."
+- **Sensory Grounding:** Uses physical rituals and stable environments to manage cognitive load; values sensory clarity and balanced inputs (warm/full) over harsh or high-activity environments.
+- **Safety & Privacy:** High sensitivity to data exposure. Requires immediate redaction of sensitive strings and refuses repetition of private information.
+- **Technical Style:** Focuses on high-level systems, architectural strategy, and generalized logic rather than granular data-specific details.
+- **Sustainability:** Favors practical, low-hassle habits like bulk purchasing and waste reduction.
+- **Prioritization Rule:** When selecting travel or spatial advice, prioritize architectural/functional landmarks and structural layout over culinary offerings, literary associations, or "mood-based" descriptions.

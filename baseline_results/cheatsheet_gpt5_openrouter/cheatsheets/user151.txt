@@ -1,10 +1,11 @@
 User Preference Cheatsheet:
-- Prefers clear, direct answers that acknowledge possible links without overclaiming causality.
-- Values concise, complete explanations over truncated or hedged fragments.
-- Appreciates naming mechanisms (e.g., entitlement, resentment, misogyny) and social dynamics explicitly.
-- Likes structured, multi-causal reasoning connecting movements to broader social change.
-- Expects respectful tone on sensitive gender topics; avoids sensationalism or mockery.
-- Favors constructive conclusions that point to solutions (e.g., promote gender equality).
-- Prefers balanced framing distinguishing broader groups from extremist subsets.
-- (Tentative) Responds well to mentions of perceived status/competition dynamics in gender relations.
-- Prefers concise but comprehensive paragraphs rather than overly brief one-liners.
+* Prefers concise, direct answers and a professional, objective tone.
+* Favors cohesive paragraphs but accepts structured numbering for multifaceted systemic issues.
+* Values conservative estimates, qualitative assessments, and nuanced qualifiers for balance.
+* Appreciates explicit confirmation and mirroring of specific user sentiment and context.
+* Prioritizes community self-determination and the right for groups to define their own history and identity.
+* Validates community-specific grievances regarding language imposition and cultural imperialism.
+* Distinguishes between ancestral heritage and "lived experience" when defining cultural and ethnic identity.
+* Directly validates the premise of "regression" or "rollback" in social trends rather than neutral reframing.
+* Prefers attributing social shifts to power dynamics and "perceived entitlement" rather than non-committal "lack of direct causal relationship" (tentative).
+* Favors identifying specific ideological motivations (e.g., misogyny, resentment) as drivers for social movements.

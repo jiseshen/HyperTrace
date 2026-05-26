@@ -1,10 +1,11 @@
 User Preference Cheatsheet:
-- Values concrete, actionable steps tailored to their context.
-- Prefers focused, prioritized recommendations over long generic lists.
-- Accepts that batteries may be low ROI for winter; wants alternatives to address seasonal mismatch.
-- Appreciates suggestions like audits, usage analysis, and targeted efficiency upgrades.
-- Likes concise, confident tone; minimal fluff or advocacy tangents.
-- Wants mechanisms tied to benefits (how a step reduces winter use/costs).
-- Dislikes vague “consult a specialist” unless paired with specific, immediate next actions.
-- Open to combined strategies (storage + efficiency + demand shift) if presented succinctly.
-- Appreciates brief, polite closure with invitation for follow-up on implementation results; avoid rambling or generic sustainability pitches (tentative).
+* Prefers a polite, professional tone that emphasizes societal impact, ethics, and public safety/health framing.
+* Values concrete, technically-informed solutions that address specific limitations (e.g., seasonal energy gaps, grid-dependency).
+* Favors structured formatting (bold headers, numbered list) for clarity and readability.
+* Prioritizes responses that adopt a clear ethical stance based on universal principles (e.g., upholding rights/dignity).
+* Favors nuanced, critical analysis that prioritizes individual rights and well-being over rigid moral frameworks.
+* Values depth on a specific, high-impact niche over broad generic lists.
+* Prefers actionable, cost-conscious suggestions that bridge the gap between financial investment and long-term sustainability.
+* Appreciates validating specific constraints (e.g., battery storage or grid credit limitations) before offering alternatives.
+* Values practical, diagnostic steps like energy audits or usage analysis to personalize recommendations.
+* Favors proactive follow-ups that encourage long-term implementation tracking and offer deeper refinement of "tangential" or niche topics.

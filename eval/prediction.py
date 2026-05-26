@@ -19,6 +19,7 @@ def predict_choice(
     generation_cfg: GenerationConfig = None,
     generation_overrides: Optional[Dict[str, Any]] = None,
     prompts: Optional[PromptSet] = None,
+    loose_schema: bool = False,
 ) -> Dict[str, float]:
     prev_turns = conversation_history[:-1]
     current_turn = conversation_history[-1]
@@ -33,9 +34,10 @@ def predict_choice(
         c=c
     )
 
+    ranking_type = list[str] if loose_schema else conlist(str, min_length=c, max_length=c)
     Schema = create_model(
-        "PredictSchema", 
-        ranking=(conlist(str, min_length=c, max_length=c), Field(..., description=f"List of {c} candidate IDs ranked from best to worst")),
+        "PredictSchema",
+        ranking=(ranking_type, Field(..., description=f"List of {c} candidate IDs ranked from best to worst")),
         justification=(str, Field(..., description="a brief explanation"))
     )
     cfg = generation_cfg or GenerationConfig()
@@ -53,6 +55,12 @@ def predict_choice(
             ranking.append(int(m.group(1)))
         except Exception:
             logger.exception("ID unmatched: " + r)
+    if loose_schema:
+        seen = set()
+        ranking = [
+            item for item in ranking
+            if 1 <= item <= c and not (item in seen or seen.add(item))
+        ]
     if gt_choice in ranking:
         rank = ranking.index(gt_choice) + 1
         ranking_score = 1.0 if len(ranking) == 1 else (len(ranking) - rank) / (len(ranking) - 1)

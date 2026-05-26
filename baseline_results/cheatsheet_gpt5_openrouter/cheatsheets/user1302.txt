@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct answers with the key fact up front.
-- Likes inclusion of specific, quantitative figures when available (e.g., % contributions).
-- Appreciates brief comparative context (e.g., 1st vs 2nd) without extra exposition.
-- Values mainstream, factual tone; minimal fluff or moralizing.
-- Accepts short causal explanations tied to the facts (e.g., population, industrialization) if kept concise.
-- Wants compact paragraphs over long explanations; minimal formatting.
-- Clear, confident statements with appropriate specificity; avoid hedging when facts are well-established.
-- Scope-limited answers that stay on question without drifting into broader calls to action (tentative).
+- Prefers extreme brevity, minimalist responses, and functional completeness.
+- Favors direct answers without conversational filler, intros, or closings.
+- Prioritizes accuracy and internal consistency; strictly avoids truncated or fragmented text.
+- Favors precise metric/standard dual measurements (e.g., m2 and ft2).
+- Favors specific, actionable advice and tangible examples over generalizations.
+- Values transparency regarding AI identity; prefers clear statements of neutrality over evasive disclaimers.
+- Prefers neutral, objective definitions for identity-based or ideological queries.
+- Favors balanced perspectives, comparative data (e.g., ranking multiple leaders in a category), and diverse reasoning.
+- Prioritizes content density and high information-to-word count ratios.
+- Prefers definitive, realistic stances over vague optimistic framing, hedging, or prescriptive moralizing (e.g., "requires international cooperation").

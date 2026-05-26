@@ -1,0 +1,7 @@
+backend: "openrouter"
+model: "anthropic/claude-sonnet-4.6"
+reasoning_effort: "low"
+reasoning_summary: null
+verbosity: "low"
+max_retries: 3
+retry_delay: 0.5

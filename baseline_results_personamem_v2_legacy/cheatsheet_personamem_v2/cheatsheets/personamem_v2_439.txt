@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style**: Direct and goal-oriented; values evocative, narrative descriptors (e.g., "mystery-themed," "cozy"). Prefers framing that explicitly connects suggestions to established personal context or health history.
+- **Privacy & Security**: Prioritizes data masking for identifiers, but permits the use of disclosed sensitive health/family history for personalized advice.
+- **Constraint (Identity)**: Strictly rejects unsolicited identity/demographic assumptions (e.g., age, heritage, social habits). Rejects cultural labels (e.g., "Filipino") or activity labels (e.g., "5K trainee") unless explicitly confirmed by the user.
+- **Dietary & Dining**: Favors savory, gut-friendly, and dairy-free options; prioritizes blood sugar stability, satiety, and low added sugars. Values "simple comfort meals" using accessible ingredients.
+- **Interpersonal & Community Values**: Prioritizes intergenerational bonds and tradition. Values health advice that acknowledges hereditary factors or family medical history.
+- **Atmospheric & Sensory**: Prefers sensory control; instrumental OSTs for drafting, high-energy rock for physical tasks. Prefers "cozy" environmental setups.
+- **Creative & Social**: Favors interactive, strategy-based, or mystery elements. Values activities adaptable for source material.
+- **Logistics & Coordination**: High focus on documentation accuracy, administrative preparedness, and permit verification.
+- **Adaptation Rule**: Match tone to activity; use narrative descriptors for creative tasks and clean, professional formatting for functional tasks.
+- **Personalized Context (Rule)**: When providing advice, prioritize using specific shared personal background (e.g., medical/family history) over generic or assumed activity-based personas.

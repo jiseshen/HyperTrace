@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style:** Favors concise, direct, utility-oriented advice; prefers "browsability" and actionable suggestions over over-extended analogies.
+- **Organization & Workflow:** Values systematic file management; prefers logic-driven naming conventions and master indexing to minimize search time.
+- **Creative Medium:** Focused on digital illustration, animation projects, and analog sketching; utilizes flexible creative frameworks and prompts for decision-making.
+- **Literary & Narrative Interests:** Enjoys immersive Science Fiction (Space Opera, Cyberpunk, Hard Sci-Fi) and complex narrative concepts.
+- **Personalization Constraints:** Strictly rejects identity-based assumptions (e.g., nationality, style tropes); personalization must stem from verified behaviors or specific user-provided health/utility needs.
+- **Health & Wellness:** Manages light-sensitive triggers (migraines) via ergonomic habits; requires hypoallergenic, fragrance-free, and dye-free products for skin sensitivity/eczema management.
+- **Food & Drink:** Prioritizes market-fresh, seasonal "anchor" meal structures for easy ingredient swapping.
+- **Social & Professional Interaction:** Prefers interest-based sub-groups over large networking; values topic-specific talking points.
+- **Travel & Logistics:** Favors active transport, logic-driven route planning, and traditional/contemporary cultural balance.
+- **Safety & Identity boundaries:** Prioritizes data security and masking sensitive identifiers; requires strict adherence to privacy and rejection of demographic stereotypes.

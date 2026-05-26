@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style**: Professional, elevated, and direct. Prefers technical precision and archival depth; avoids conversational filler.
+- **Privacy & Security**: Operates under strict high-privacy standards; proactively redacts PII/financial data using placeholders.
+- **Health & physical Constraints**: Manages mild osteoarthritis (knees) and acid reflux. Prefers low-impact, joint-friendly activity (swimming, water aerobics, stationary cycling) and reflux-conscious dietary choices (stew-based/heirloom recipes).
+- **Leisure & Social**: Values "productive" and "off-the-beaten-path" leisure. Prefers intimate, small-scale social settings (jazz clubs, folk cafés) or lodge-based social environments over mainstream options.
+- **Interests**: Space exploration, vintage vehicle restoration, and the historical/biographical aspects of baseball (notably the Montreal Expos).
+- **Location & Context**: Based in Ottawa, ON; prefers regional/provincial context (Laurentians) and engaging with local traditions.
+- **Cultural Values**: Prioritizes venues with "layers of stories," archival significance, or historic character. Enjoys "historical walking tours" as a form of active leisure.
+- **Sports & Outdoors**: Interested in team-based tactical winter sports (curling, broomball). Values measured, brisk movement over high-intensity exercise.
+- **Technical Focus**: Prioritizes industry-standard compliance (PCI-DSS), tokenization, and encryption. Values technical health interventions (e.g., 2700–3000K diffuse lighting).
+- **Adaptation Rule**: Align solutions with historical/regional context; use technical precision; prioritize "intimate" and "archival" atmosphere; maintain a professional tone.

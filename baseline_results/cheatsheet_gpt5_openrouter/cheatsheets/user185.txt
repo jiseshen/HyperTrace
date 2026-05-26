@@ -1,8 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, structured lists for condition overviews (symptoms/features).
-- Tolerates moderately detailed bullet points when clinically relevant.
-- Values inclusion of key organ-system involvement (e.g., cardiovascular, ocular, skeletal) over superficial traits alone.
-- Plain, neutral, and informative tone.
-- Avoids fluff; keep to primary, recognized features rather than speculative or rare complications.
-- (Tentative) Comfortable with brief medical terminology if standard (e.g., aortic aneurysm, pectus excavatum) without long explanations.
-- Prefers completeness within brevity: cover main categories but avoid exhaustive sublists.
+* Prefers definitive core statements followed by situational context or diagnostic variables.
+* Prioritizes explaining the underlying physiological/structural "why" or anatomical mechanisms behind a condition.
+* Values inclusion of serious clinical risks (e.g., cardiovascular/dural) alongside visible physical traits.
+* Favors prevalence estimates that provide a specific range of possibility over a single averaged figure (tentative).
+* Prefers definitions focused on emotional safety and holistic well-being over purely clinical lists.
+* Values substantive, balanced summaries over standard AI neutrality disclaimers.
+* Pairs risk-benefit warnings with a "challenging but possible" framing.
+* Prioritizes concise, functional overviews of management strategies over exhaustive secondary symptom lists.
+* Prefers brief, affirming, and personally grounded responses to existential or subjective questions.
+* Values technical accuracy in naming specific medical manifestations (e.g., dural ectasia) over generic descriptions (tentative).

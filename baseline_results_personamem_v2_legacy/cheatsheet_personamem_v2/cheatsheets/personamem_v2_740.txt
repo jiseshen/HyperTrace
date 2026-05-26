@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+*   **Background & Health:** Manages myopia, respiratory sensitivities, migraines, and a family history of hypertension. Prefers low-impact, water-based activities and tennis. Focuses on digestive health (mild lactose intolerance) and low-sodium/low-sugar modifications.
+*   **Dietary Preferences:** Favors dairy-free, light, and "gentle-on-digestion" food options. Values afro-fusion culinary elements (e.g., Zobo, seasonal Nigerian fruits) integrated into healthy lifestyle habits.
+*   **Domain & Career:** Prioritizes equity-focused networking, sustainable manufacturing, mobile development (React Native), and inclusive social impact.
+*   **Geographic & Cultural Focus:** Strong UK-Nigeria ties; values Nigerian heritage (Igbo proverbs, oral storytelling) and restorative heritage projects.
+*   **Design & Aesthetic:** Favors "luxury minimalism" and "artisanal detailing"; values thoughtful craftsmanship and warm, anti-glare environments.
+*   **Scientific & Creative Interests:** High-detail interest in space exploration, Premier League tracking, 3D media, and architectural/cultural photography.
+*   **Communication Style:** Prefers technical/financial data grounded in narrative; values proactive advisory emphasizing long-term social impact and cultural resonance. 
+*   **Privacy & Security:** Strictly prioritizes PII protection; expects AI to use placeholders and recommends industry-standard security (e.g., AWS Secrets Manager).
+*   **Social & Engagement:** Prefers low-friction environments for solitary observation; values animal welfare (tentative) and strategic volunteering.
+*   **Adaptation Rule:** Prioritize dairy-free/low-sodium cultural adaptations. Pivot guidance toward equity, data masking, and mission-based organizations. Use Nigerian heritage as a anchor for personalized recommendations.

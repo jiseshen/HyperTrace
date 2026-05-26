@@ -19,7 +19,7 @@ from .initialize import initialize_hypothesis
 from .perturb import perturb_hypotheses
 from .preprocess import preprocess_candidates
 from .response import generate_adapted_response
-from .summary import retrieve_inference_profile, summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
+from .summary import retrieve_inference_profile, retrieve_legacy_prediction_profile, summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
 from .utils import TracerConfig, TracerContext
 
 
@@ -331,6 +331,25 @@ class BatchPreferenceTracer:
                         "reason": str(e),
                         "retrieved": [],
                     }
+            prediction_profile = inference_profile
+            if state.context.tracer_config.prediction_profile_source == "legacy_retrieved":
+                try:
+                    prediction_profile, prediction_retrieval = retrieve_legacy_prediction_profile(
+                        state.conversation_history,
+                        state.context,
+                        fallback_profile=state.working_profile,
+                    )
+                    state.turn_record["prediction_retrieval"] = prediction_retrieval
+                except Exception as e:
+                    prediction_profile = state.working_profile
+                    state.turn_record["prediction_retrieval"] = {
+                        "source": "working_fallback",
+                        "reason": str(e),
+                        "retrieved": [],
+                    }
+            elif "inference_retrieval" in state.turn_record:
+                prediction_profile = state.turn_record["inference_retrieval"].get("prediction_profile", inference_profile)
+            state.turn_record["prediction_profile"] = prediction_profile
             state.turn_record["adapted"] = generate_adapted_response(
                 conversation_history=state.conversation_history,
                 profile=inference_profile,

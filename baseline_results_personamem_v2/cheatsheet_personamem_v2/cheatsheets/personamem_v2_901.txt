@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style**: Professional, high-precision, and direct. Prefers efficient prose but accepts descriptive language when focused on structural/physical attributes (architecture, geometry).
+- **Tone & Persona**: Rejects "literary" archetypes and storytelling-heavy framing. Prefers functional analysis and technical grounding over emotional or "vibes-based" descriptions.
+- **Aesthetics & Architecture**: Favors bold, structured, and geometric forms. In travel/urban contexts, prioritizes architectural character and physical layouts (facades, courtyards, bridges) over street food or literary history.
+- **Service & Community**: Prioritizes secular, "shared purpose" practical action (e.g., kit assembly) over traditional, faith-based, or purely social volunteerism.
+- **Service Constraints**: Strictly rejects religious settings/terminology ("spiritual nourishment").
+- **Logic & Systems**: Values technical precision, systemic efficiency (CI/CD), and acoustic physics. Prefers explanations rooted in frequency balance and spatial mechanics.
+- **Sensory Processing**: Prefers "warm and full" audio profiles. Sensitive to harsh frequencies, treble distortion, and poor acoustic reflections (echoes).
+- **Lifestyle & Rituals**: Values grounding through intentional movement (kickboxing, drumming) and nature. Rejects "quaint" domestic crafts (knitting) and performative "venting."
+- **Travel & Exploration**: Prefers active, independent exploration of high-impact scenic routes and urban environments defined by distinct structural/aesthetic identity.
+- **Adaptation Rule**: Provide secular, action-oriented advice focused on technical or structural optimization. Prioritize mechanical, physical, or architectural explanations over narrative/thematic framing.

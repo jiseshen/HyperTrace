@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct answers with a decisive lead, even on subjective topics.
-- Accepts brief acknowledgment of subjectivity/ambiguity, then a short, concrete list.
-- Favors single-paragraph responses; minimal fluff.
-- Likes concrete examples (a few named items) over long ranked lists.
-- Neutral, plain tone; minimal hedging.
-- Accepts slight imprecision/mixed categories if the core point is clear.
-- Allows a brief practical tip or caution if directly relevant (e.g., heat safety), but keep it short. (tentative)
-- Prioritizes a clear top-line answer over exhaustive caveats or methodology discussion.
+* Prefers immediate, direct answers over meta-discussions about data complexity or methodology.
+* Favors concrete lists of examples even when data is subjective or difficult to quantify.
+* Dislikes "As an AI" disclaimers; values a quick arrival at a factual or popular-consensus list.
+* Values high information density and specific narrative themes over broad labels.
+* Prefers direct, affirming, and ultra-concise responses to factual questions.
+* Values realistic, grounded information over abstract or cautionary explanations.
+* Favors concave/numbered lists or specific geographic examples for quick scanning.
+* Appreciates polite social reciprocity and non-judgmental validation.
+* Prioritizes lists of specific countries over cities or specific administrative districts (e.g., Kuwait over Dubai).
+* Accepts brief health or safety advice as a concluding remark if preceded by the requested data.

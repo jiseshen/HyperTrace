@@ -41,6 +41,19 @@ def target_trace_users(users: List[UserData], records_path: Path, users_per_run:
     return target_sample, target_users, finished_target_ids
 
 
+def select_users_by_id_file(users: List[UserData], user_ids_path: Path) -> List[UserData]:
+    user_ids = [
+        line.strip()
+        for line in user_ids_path.read_text().splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    users_by_id = {user.user_id: user for user in users}
+    missing = [user_id for user_id in user_ids if user_id not in users_by_id]
+    if missing:
+        raise ValueError(f"Missing users from {user_ids_path}: {', '.join(missing)}")
+    return [users_by_id[user_id] for user_id in user_ids]
+
+
 def dump_provider_report(path: Path, reports: List[Dict[str, Any]]) -> None:
     attempts = [
         attempt
@@ -199,6 +212,7 @@ def main() -> None:
     parser.add_argument("--prediction-only", action="store_true", help="Only run offline preference prediction metrics; skip response/profile evaluation")
     parser.add_argument("--prediction-model-from-main", action="store_true", help="Use main_model as the offline preference prediction model")
     parser.add_argument("--metrics-name", type=str, default=None, help="Metrics directory name under the run path; useful for prediction-only comparisons")
+    parser.add_argument("--user-ids-file", type=str, default=None, help="Optional newline-delimited user id file to run/evaluate a fixed cohort")
     args = parser.parse_args()
 
     config_root = Path(args.config_root)
@@ -213,6 +227,8 @@ def main() -> None:
     print(f"Records will be saved to: {records_path}")
 
     users = load_data(config["dataset"], n_users=config["n_users"], seed=config["seed"])
+    if args.user_ids_file:
+        users = select_users_by_id_file(users, Path(args.user_ids_file))
     users_by_id = {user.user_id: user for user in users}
     print(f"Loaded {len(users)} users from dataset {config['dataset']}")
 

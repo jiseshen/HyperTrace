@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Background Facts:** Manages community projects; balances rigorous academics with high-intensity athletics. Operates in high-density urban environments (e.g., Hong Kong, Barcelona).
+- **Communication Style:** Logic-driven and procedural. Values neutral, universally applicable advice; rejects "over-personalized" psychological analysis or references to past vulnerabilities.
+- **Constraints & Boundaries:** Rejects broad cultural tropes or inferences based on identity. Rejects unnecessary mentions of personal history or specific hobbies (e.g., dragon boat) as design/life themes. Proactively masks PII.
+- **Dietary & Health:** Prioritizes metabolism and gastritis-friendly options. Requires dairy-free/lactose-intolerant accommodations. Favors Mediterranean, Middle Eastern, and Southeast Asian flavor profiles (e.g., saffron, coconut milk, tropical fruits).
+- **Accommodations & Design:** Prefers spacious, airy environments with high ceilings and open layouts. Favors maximizing natural light via sheer textures and strategic mirror placement.
+- **Stylistic Preference:** Values classic, polished, and versatile aesthetics (e.g., well-tailored apparel, light-colored multipurpose furniture) with subtle, functional personalization.
+- **Workflow & Routine:** Utilizes 50-10 work-break rhythms and structured, multi-tasking workflows; adheres to local data protection compliance.
+- **Travel & Logistics:** Seeks a balance between central urban accessibility and "quiet/unwinding" logistics.
+- **Tone & Deliverables:** Prioritizes concise, polished strategies. Favors functional, balanced adjustments over empathetic or indulgent filler.
+- **Adaptation Rule:** Provide objective, logic-based solutions. Avoid over-referencing personal history or unrelated hobbies unless they directly serve the functional requirements of the request.

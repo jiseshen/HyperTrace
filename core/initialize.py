@@ -1,6 +1,6 @@
 from pydantic import BaseModel, create_model, conlist, StringConstraints, Field
 import logging
-from .hypothesis_set import Hypothesis, WorkingBelief
+from .hypothesis_set import Hypothesis, WorkingBelief, infer_hypothesis_metadata
 from data import Turn
 from .utils import TracerContext
 from typing import Any, Dict, List, Literal, Annotated
@@ -55,12 +55,18 @@ def initialize_hypothesis(
     reused_hypotheses: List[Hypothesis] = []
     for h in output['hypotheses']:
         if h['action'] == 'reuse' and h["id"] in context.hypothesis_set.hypotheses:
-            prev_category = context.hypothesis_set[h['id']][0].category
+            prev_hypothesis = context.hypothesis_set[h['id']][0]
+            prev_category = prev_hypothesis.category
             if output['category'] not in prev_category:
                 new_category = prev_category + ", " + output['category']
             else:
                 new_category = prev_category
-            reused_hypotheses.append(Hypothesis(id=h['id'], category=new_category, content=h['content']))
+            reused_hypotheses.append(Hypothesis(
+                id=h['id'],
+                category=new_category,
+                content=h['content'],
+                metadata=infer_hypothesis_metadata(h["content"], existing=prev_hypothesis.metadata),
+            ))
         else:
             new_hypotheses.append(Hypothesis(id=h['id'], category=output['category'], content=h['content']))
 

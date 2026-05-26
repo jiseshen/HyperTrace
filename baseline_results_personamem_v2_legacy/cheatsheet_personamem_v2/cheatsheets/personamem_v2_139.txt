@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Background & Context:** PNW-based with Zimbabwean heritage; balances diaspora traditions with metabolic health (Type 2 diabetes & GERD management).
+- **Communication Style:** Direct, concise, and logic-based; appreciates continuity by referencing existing setups; expects high-level academic/scientific rigor.
+- **Interests:** Global literature, North American baseball, EPL, space exploration, cutting-edge climate science, and history/art museums.
+- **Home & Sustainability:** Prefers space-efficient, functional indoor gardening (e.g., vertical planters, microgreen trays, hydroponics) to supplement fresh, nutrient-dense ingredients.
+- **Health Constraints:** Strict GERD management (low-acid, no spice); prioritizes glycemic control (fiber/protein/fat balance) for steady energy.
+- **Content Preferences:** Prioritizes peer-reviewed science (e.g., *Nature*, *Science*); prefers "imagination-sparking" storytelling over lifestyle blogs.
+- **Travel & Leisure:** Values "city identity" and local heritage through museums and historical sites over high-energy social activities.
+- **Aesthetic & Values:** Understated neutrals with subtle African patterns; high value on cross-cultural sharing and "shared-table" formats.
+- **Privacy & Security:** Mandates strict PII redaction; prefers high-security protocols (2FA/encryption).
+- **Adaptation Rule:** Proactively redact PII; justify health/lifestyle advice via metabolic stability; integrate existing user methods (e.g., kitchen herb planters) into new recommendations.

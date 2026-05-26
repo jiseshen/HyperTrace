@@ -1,0 +1,7 @@
+User Preference Cheatsheet:
+- Prefers balanced, nuanced answers acknowledging benefits and limitations.
+- Likes concise, plain-language explanations with key mechanisms first, then caveats.
+- Appreciates broader context and complementary solutions (e.g., public transit, active transport) rather than single-solution framing.
+- Values neutrality and avoidance of hype; prefers measured tone.
+- Accepts brevity but wants completeness of key points (tailpipe vs. lifecycle, grid mix) (tentative).
+- Likes urban policy framing when relevant (e.g., traffic density, multimodal strategies) (tentative).

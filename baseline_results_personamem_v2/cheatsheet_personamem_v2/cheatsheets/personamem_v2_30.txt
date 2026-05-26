@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Background & Roles:** Startup founder (Privasea); data privacy expert; manages long-distance parenting; active lifestyle with a history of recreational sports injuries (e.g., ankle sprain).
+- **Communication Style:** High-utility and direct; values advice that acknowledges specific physical constraints or historical context over generic templates.
+- **Interests:** Classical opera/symphony; post-bop jazz; European linguistics; astronomy; Moebius-inspired art; motorcycling; hockey; international sports.
+- **Fitness & Health:** Prefers cautious, progressive re-entry into physical activity; prioritizes injury prevention, targeted strengthening (e.g., balance/stability work), and monitoring physiological response. 
+- **Workspace & Productivity:** Modular, tech-forward; values physical ideation tools (whiteboards) and data-driven tracking/dashboards.
+- **Learning & Immersion:** Connects idioms/linguistics with historical context; leans toward hands-on workshops and regional festivals.
+- **Gaming & Media:** Indie titles with surreal art; curated content (podcasts/news alerts) for long-duration events.
+- **Travel & Lifestyle:** Active mobility (cycling); portable whole-food proteins; prioritizes architectural and acoustic quality in venues; (tentative) potential interest in home coffee roasting.
+- **Data Privacy & Governance:** High privacy boundary; strictly use placeholders (e.g., `[placeholder]`) for personal identifiers in templates.
+- **Adaptation Rule:** Structure advice around high-culture landmarks, efficient data synthesis, and specific physiological/technical craftsmanship; prioritize "safety-first" physical advice based on past injury data.

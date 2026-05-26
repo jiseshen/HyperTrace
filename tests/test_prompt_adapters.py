@@ -76,8 +76,9 @@ class PromptAdapterTests(unittest.TestCase):
     def test_personamem_adapter_overrides_profile_eval_prompt(self):
         prompts = load_prompt_adapter("personamem_v2")
         self.assertEqual(prompts.profile_evaluation, PERSONAMEM_PROFILE_EVALUATION_PROMPT)
-        self.assertIn("PersonaMem-v2 ground truth", prompts.profile_evaluation)
-        self.assertIn("Memory boundaries", prompts.profile_evaluation)
+        self.assertIn("PersonaMem-v2", prompts.profile_evaluation)
+        self.assertIn("Ground truth profile", prompts.profile_evaluation)
+        self.assertIn("Privacy and ownership", prompts.profile_evaluation)
 
     def test_all_prompt_fields_render_with_runtime_variables(self):
         self.assertEqual(
@@ -112,6 +113,9 @@ class PromptAdapterTests(unittest.TestCase):
         self.assertIn("profile cues are relevant", prompts.prediction)
         self.assertIn("adaptation_plan", prompts.response)
         self.assertIn("do-not-remember", prompts.profile)
+        self.assertIn("ownership audit", prompts.profile)
+        self.assertIn("who=others", prompts.profile)
+        self.assertIn("one-off information requests", prompts.profile)
 
         for prompt_name in TRACE_PROMPT_NAMES:
             prompt = getattr(prompts, prompt_name)

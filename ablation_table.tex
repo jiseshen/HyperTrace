@@ -1,0 +1,46 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.8pt}
+\renewcommand{\arraystretch}{1.08}
+\caption{
+Ablation results on PRISM. Acc$_{>20}$ and GPT$_{>20}$ report smoothed post-turn-20 averages with at least 10 users. Prof. is final overall profile alignment. Cost is estimated USD per tracing turn. Higher is better except for cost. Best results are bolded and second-best results are underlined.
+}
+\label{tab:ablation_results}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+Method & Acc$_{>20}$ & GPT$_{>20}$ & Prof. & Cost $\downarrow$ \\
+\midrule
+PT(GPT-5)
+& \textbf{0.6136}
+& 0.0739
+& \underline{4.1857}
+& 0.028010 \\
+PT(hybrid)
+& \underline{0.5878}
+& \textbf{0.1219}
+& \textbf{4.2500}
+& \textbf{0.013135} \\
+No-gating
+& 0.5054
+& 0.0944
+& \textbf{4.2500}
+& 0.040998 \\
+Flat5
+& 0.5489
+& 0.0313
+& 4.1714
+& 0.025396 \\
+No-topic
+& 0.5567
+& -0.0500
+& 4.1214
+& \underline{0.020916} \\
+No-consol
+& 0.5459
+& \underline{0.1100}
+& 4.0857
+& 0.025291 \\
+\bottomrule
+\end{tabular*}
+\end{table}

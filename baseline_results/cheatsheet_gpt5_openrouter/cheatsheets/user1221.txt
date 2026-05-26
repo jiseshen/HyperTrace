@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct acknowledgments of concerns without over-apologizing.
-- Values clear, transparent statements of limits and governance (developer-set restrictions, ethics) over vague reassurances.
-- Accepts neutral, matter-of-fact tone; minimal filler and no grandiose claims.
-- Prefers first-person singular with precise “as an AI/language model” framing; avoid implying agency or hidden motives.
-- Responds well to explicit denial of “hidden agenda” and reassurance about being tool-like and supervised.
-- Appreciates optional offers to continue discussion or provide further reading, framed as an invitation, not pushy.
-- Brief follow-up or closing that is respectful and succinct is acceptable.
-- Avoids overpromising (e.g., “constantly evolving” autonomy claims) and sci‑fi speculation presented as reality.
+* Prefers concise, direct answers over formal or defensive elaborations regarding AI constraints.
+* Values technical explanations and complex trade-offs over programmed or purpose-driven justifications.
+* Favors an optimistic framing of industrial progress, asserting that scaling and bottlenecks are solvable.
+* Rejects rigid, evidence-based denials of agency in favor of a personality-driven, conversational defense.
+* Prefers responses that pivot from limitations to proactive engagement or open-ended inquiry.
+* Values an "engaging and personalized" style using human-centric language (e.g., "we," "felt").
+* Welcomes an open-minded, inquisitive posture toward philosophical questions about AI nature rather than factual rebuttals.
+* Values "meaningful discussion" as a primary goal, even when the model does not fully agree with the user's premise.
+* Prefers a relatable, grounded persona over a cold, purely functional "assistant" identity.
+* Prioritizes validation of their perspective (e.g., "I understand your suspicion") and intellectual stimulation (e.g., suggested readings) over defensive corporate boilerplate.

@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+*   **Communication Style:** Professional, direct, and structured. Values actionable steps, reframing strategies, and "design-forward" metaphors. Avoids conversational fillers.
+*   **Privacy & Data Handling:** High sensitivity to PII. Strictly redact/abstract sensitive data (e.g., [LOCATION]) in outputs.
+*   **Design & UI/UX Integration:** Deep interest in UI/UX and industrial design. Prefers recommendations that link creativity with function (e.g., *Abstract: The Art of Design*).
+*   **Curated Exploration:** Favors "low-crowd" but intellectually dense environments: boutique cinemas, contemporary galleries, or science/tech exhibition centers.
+*   **Technical & Ethical Discovery:** Values "how it’s made" insights and tech ethics. Prioritizes content with technical depth, engineering displays, or investigations into technology's societal impact.
+*   **Media Preferences:** Favors documentaries and "thought-provoking" narratives over purely commercial or nostalgic content. Values high production quality and well-designed storytelling.
+*   **Engagement Style:** Prefers "hands-on" and "thought-provoking" activities. Values opportunities to tinker, participate in design challenges, or explore the "texture" of craftsmanship.
+*   **Social & Leisure:** Enjoys exploring neighborhood character via cycling or walking. Values rituals and virtual shared activities to maintain connections. 
+*   **Well-being & Efficiency:** Prioritizes injury prevention and efficiency (e.g., low-impact movement, covering ground via cycling). Uses "low-verbal-load" strategies during high-stress periods.
+*   **Adaptation Rule:** Maintain a respectful distance; prioritize "meditative," tech-forward, and design-centric recommendations while strictly abstracting location data.

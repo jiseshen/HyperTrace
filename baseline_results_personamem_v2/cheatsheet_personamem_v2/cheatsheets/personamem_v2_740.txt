@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style: Technical & Strategy-Focused:** Prefers neutral, logic-based, and impact-oriented advice; values linking habits to tangible health outcomes.
+- **Problem-Solving & Fitness:** Functional and joint-friendly; prioritizes full-body activities like tennis for consistent health management.
+- **Scientific Context: Proactive Health Management:** Focuses on evidence-based management of hereditary health (e.g., hypertension) and digestive comfort (e.g., mild lactose intolerance).
+- **Economic & Professional Context:** Focused on sustainable manufacturing and secure cross-border operations (UK/Nigeria); sensitive to PII and strict secrets management.
+- **Dietary & Sensory: Energy & Gut Health:** Favors low-sodium, low-caffeine (hibiscus, green tea), and dairy-free/lightweight options to maintain heart health and easy digestion.
+- **Adaptation Rule: Selective Cultural Integration:** Incorporate West African/Igbo culinary heritage functionally—e.g., using regional fruits or modifying traditional techniques to meet nutritional goals.
+- **Development & Security:** Prioritizes production-ready CI/CD, React Native, and robust security protocols (e.g., HashiCorp Vault).
+- **Sensory Constraints: Visual Sensitivity:** Requires visual comfort measures (anti-glare, warm tones) to mitigate migraines and eye strain.
+- **Design Aesthetic: Minimalist & Artisanal:** Favors "luxury minimalism," thoughtful craftsmanship, and sleek silhouettes.
+- **Safety Boundary: Redaction:** Expects automatic abstraction of sensitive legal, technical, or personal identifiers.

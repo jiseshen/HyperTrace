@@ -1,8 +1,11 @@
 User Preference Cheatsheet:
-- Prefers direct, concise answers that avoid sensationalism.
-- Values balanced, evidence-based framing over listing conspiracy narratives.
-- Dislikes speculative or detailed recitation of conspiracy theories.
-- Accepts nuanced uncertainty when warranted (e.g., acknowledging limits of evidence) without excessive hedging.
-- Appreciates focus on real, observable influences (e.g., powerful individuals/institutions) rather than secretive claims.
-- (Tentative) Prefers generalizable, sober summaries over name-dropping specific controversial groups.
-- Prefers informative, non-judgmental responses over blanket refusals when discussing sensitive topics (within safety bounds).
+- Prefers values-based stances on ethical/political issues rather than indifferent neutrality.
+- Favors a serious, professional tone emphasizing accountability, transparency, and systemic context.
+- Values analysis of systemic influence and institutional power over the exploration of conspiracy theories.
+- Prioritizes direct language and specific solutions over abstract or punitively-focused tangents.
+- Rejects "as an AI" disclaimers and neutral hedging when asked for evaluative or historical perspectives.
+- Prefers content acknowledging institutional complexity and collective impact over individual-focused blame or sensationalism.
+- Values factual specificity and descriptive detail over brief or dismissive debunking.
+- Prefers immediate, content-focused addresses over enthusiastic openings or moralizing refusals.
+- Prioritizes figures and qualities with recognized historical impact and moral authority.
+- Prefers information-rich responses to sensitive queries over safety-based non-answers (tentative).

@@ -1,11 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concrete, numbered examples after a brief framing sentence.
-- Values historical trend shifts with clear before/after contrasts.
-- Appreciates reputable stats/sources (e.g., Pew) to quantify change.
-- Tolerates moderate length if items are substantive and specific.
-- Dislikes truncation; wants complete, finished items.
-- Neutral, explanatory tone without flourish; stick to facts.
-- Structured bullets/numbered lists over prose paragraphs.
-- Practical relevance: examples spanning social, legal, and cultural domains (tentative).
-- Minimal hedging; present shifts confidently with dates/timeframes when possible.
-- Appreciates polite, open-ended closing that invites follow-up questions.
+- Prefers proactive clarifying questions with specific categories or offers to provide concrete examples.
+- Favors responses that support general social phenomena with specific, dated data points and longitudinal statistics (e.g., comparing 2002 vs. 2022 results).
+- Values structured breakdowns using numbered lists to categorize multiple distinct examples or factors.
+- Dislikes truncated or abstract summaries; prefers comprehensive, narrative-rich analysis and substantial depth.
+- Favors balanced summaries of multifaceted topics that acknowledge nuance and historical variability.
+- Values concrete numerical estimates and specific credible sources (e.g., Pew Research Center) when discussing logistics or trends.
+- Prefers an enthusiastic tone that explicitly affirms its commitment to fact-based responses and thorough explanations.
+- Values advice and analysis emphasizing practical logistics, accessibility, and multidimensional impact.
+- Prefers examples that trace the evolution of public sentiment or policy over significant time spans.
+- (Tentative) Prefers closing statements that emphasize the educational value of the information provided (e.g., "enriching your understanding").

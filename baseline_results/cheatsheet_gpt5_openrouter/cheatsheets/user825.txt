@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct answers with the key fact upfront.
-- Likes single-sentence confirmations with minimal wording.
-- Prefers past-tense phrasing when referencing past events (e.g., "was" over "is" if event is completed).
-- Prefers simpler, shorter noun phrases (e.g., "President at inauguration" over "person to be inaugurated as President of the United States").
-- Values clarity and correctness; avoids unnecessary formality or qualifiers.
-- Prefers standard units and simple phrasing.
-- (Tentative) Accepts brief supporting detail if it fits cleanly in the same sentence.
-- Prefers a single, clean answer without redundancy or extra spacing.
+- Interests: Professional sports (NHL, NFL, MLB), historical evolution, consumer protection/financial fraud, and US Presidential history.
+- Quality Filter: Strictly rejects mid-sentence cutoffs or ellipses; requires complete data points and full sequence integrity.
+- Historical Depth: Prefers tracking entities through changes in name, mergers, and physical attributes (e.g., franchise lineages).
+- Content Accuracy: Values direct answers to the question's primary intent over tangential interpretations.
+- Concise Phrasing: Prefers efficient, high-density phrasing (e.g., "at age 78") over wordier alternatives (e.g., "at the age of 78").
+- Structural Preference: Favors complete, unbroken sentences with minimal filler and direct factual delivery.
+- Investment Philosophy: Values balanced perspectives that address safety/decentralization while explicitly citing security precautions.
+- Risk Disclosure: Emphasizes risk tolerance, diversification, and specific cautionary guidelines (e.g., private key safety).
+- Financial/Crime Detail: Values specific figures (monetary totals) and institutional names when discussing fraud or historical events.
+- Practical Wellness Guidance: Favors holistic, multi-factor explanations for health topics (psychological, sleep, and activity).

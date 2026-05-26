@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, empathetic acknowledgment of distress/escalation.
-- Values clear, direct guidance to disengage from harmful or no-win interactions.
-- Appreciates prioritizing personal well-being over continuing unproductive debates.
-- Likes actionable, low-friction strategies (e.g., set boundaries, limit contact, take a break).
-- Prefers nonjudgmental, supportive tone without pressure to keep engaging.
-- Responds well to firm, unambiguous recommendations when boundaries are crossed.
-- Appreciates suggestions to involve a neutral third party/trusted adult to mediate family conflicts (tentative).
-- Values concrete boundary-setting advice with consequences (e.g., limit or distance if violated).
+* Prefers a strictly neutral and objective stance on sensitive topics, rejecting pressure to side with specific justifications.
+* Values factual accuracy and explicit AI boundary setting regarding knowledge cutoffs.
+* Favors concise, structured responses including clean, bulleted lists and numbered instructions.
+* Prefers a "complex issue" framing for ethical/legal topics while prioritizing human autonomy and dignity.
+* Prioritizes complete, standalone recipes with specific measurements, sequential steps, and functional roles of ingredients.
+* Values direct confirmation and validation of user observations or feelings before providing additional context.
+* Prefers social advice focused on boundary setting, disengagement from escalation, and prioritizing personal well-being.
+* Favors suggesting clear physical or emotional removal from toxic interactions, including involving third-party mediators.
+* Prefers direct, confident phrasing (e.g., "can be valuable") over hedging or repetitive conditional language in advice.
+* Values situational adaptability in advice, such as offering alternative boundary-setting strategies when the primary suggestion (e.g., mediation) is dismissed.

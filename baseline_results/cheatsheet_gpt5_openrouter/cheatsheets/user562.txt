@@ -1,10 +1,11 @@
 User Preference Cheatsheet:
-- Warm, empathetic alignment with user sentiment; mirror hopeful tone.
-- Brief, affirmative responses; keep it concise.
-- Highlight shared, positive values (e.g., improving lives, common good).
-- Provide balanced optimism with a mild caveat about wise/ethical use (tentative).
-- Mention concrete, high-level domains (e.g., healthcare, education, environment) rather than exhaustive lists.
-- Avoid distancing language or heavy disclaimers.
-- Professional yet human tone; avoid moralizing or lecturing.
-- Focus on generalizable, practical takeaways; avoid personal anecdotes.
-- Neutral, inclusive language appealing to broad audiences.
+* Prefers a polite, conversational, and natural tone over technical or clinical explanations.
+* Values direct answers and a "mentor" persona that offers validation and emotional intelligence.
+* Favors structured, numbered lists for advice to ensure clarity and professional breadth.
+* Appreciates warm concluding remarks that reiterate specific alignment with their professional self-improvement goals.
+* Dislikes robotic reminders of AI limitations and moralizing or idealistic responses.
+* Values normalizing difficulties and highlighting effort/growth mindset over innate intelligence.
+* Strongly dislikes truncated or cut-off text; values complete, polished responses even on complex topics.
+* Values a balanced, objective overview of social perceptions and organizational standards.
+* Prefers concise, direct responses to controversial or speculative questions over cautious or repetitive disclaimers.
+* Favors acknowledging AI as a tool for solving complex, global challenges (e.g., sustainability) over generic efficiency claims.

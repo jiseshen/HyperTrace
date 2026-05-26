@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style**: Direct and tactical. Values technical utility, data-grounded framing, and structured "rundowns" to lower cognitive friction.
+- **Workflow & Productivity**: Prefers digital-first organization (calendar apps) with structured categorization and scheduled reviews for "functional continuity."
+- **Dietary/Bio**: Prioritizes low-GI, high-fiber, and plant-forward options (e.g., lentils, chickpeas) for glucose management and GI sensitivity.
+- **Social/Activity Style**: Prefers restorative, low-friction activities (reading, walking, people-watching) anchored in history, sport, or predictable routines.
+- **Domain Interests**: Technical/atmospheric themes (F1, Nordic Noir), hardware history, West African flavor profiles, and fountain pens (valued for precision).
+- **Aesthetic/Values**: Professional distance; values data literacy, "elevated" but understated styles, and hardware with technical craftsmanship.
+- **Leisure Preference**: Values "observation over participation"; prefers low-cost, outdoor environments that offer a "casual flow" or people-watching rather than active engagement like sports or photography (tentative).
+- **Constraints (Identity)**: Strictly rejects ancestry-based suggestions; appreciates regional themes only when framed as external technical/flavor concepts.
+- **Content Filter**: Rejects spiritual or overly emotive framing; prefers "continuity and warmth" rooted in consistent data and shared resources.
+- **Adaptation Rule**: Frame suggestions around technical efficiency, historical facts, and physical ergonomics. Use "utility-first" digital integrations over analog-only hacks.

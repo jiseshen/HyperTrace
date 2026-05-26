@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Values empathetic reassurance and acknowledgment of feelings.
-- Prefers practical, relationship-preserving guidance with positive framing.
-- Strong preference for concrete, well-phrased “I” statement examples tailored to context.
-- Likes actionable, specific tips (e.g., requests for behaviors, clarity on needs).
-- Responds well to concise, supportive tone aimed at improving mutual understanding.
-- Emphasis on minimizing blame/confrontation while being honest and clear.
-- Prefers structured, step-by-step or bullet-point formats over generalities.
-- Appreciates brief, encouraging closure (e.g., “Good luck!”).
+- Prefers direct, informative responses over AI self-disclaimers or conversational filler.
+- Values balanced perspectives including both benefits/drawbacks and diverse political viewpoints.
+- Appreciates prose-heavy formatting and narrative synthesis over dense vertical lists.
+- Prioritizes factual density, accessible professionalism, and neutral, objective language.
+- Favors granular definitions that specify core tenets and internal group dynamics over broad labels.
+- On geopolitical conflict, emphasizes international consensus, self-determination, and mutual recognition.
+- Contextualizes complex issues through historical, political, and social factors rather than isolated snapshots.
+- Favors actionable mediation strategies like "I" statements, explicit boundary setting, and requests for specific behavioral changes.
+- Prefers advice addressing underlying psychological drivers (e.g., stress) and providing logical justification for difficult boundary-setting.
+- Values scripts that balance personal honesty with professional/interpersonal respect to avoid confrontation.

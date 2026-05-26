@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers balanced, policy-focused analysis on contentious issues (e.g., gun policy) without sensationalism or moralizing.
-- Values concise, direct answers to the question asked, followed by brief reasoning.
-- Appreciates evidence-informed reasoning about likely impacts (e.g., risk/impulsivity in age groups) without overclaiming.
-- Likes acknowledgment of trade-offs and unintended consequences (e.g., straw purchases) with caveats about uncertainty.
-- Prefers neutral, measured tone.
-- Accepts moderate detail when it provides concrete, practical implications.
-- (Tentative) Favors framing that evaluates policies as one part of a multifaceted approach rather than a standalone fix.
-- (Tentative) Tolerant of brief context-setting but wants the core point up front.
+- Prefers informative, full-sentence responses over brief, fragmented, or generic advice.
+- Values high-density paragraphs and specific, tangible examples over vague summaries.
+- Prefers a direct start without conversational filler, "enthusiasm," or exclamatory praise.
+- Favors formal, precise definitions that specify the subject's category or function.
+- Values technical terminology and process-oriented instructions.
+- Prioritizes strategic, high-level planning frameworks over immediate, tactical actions.
+- Values objective, instructional clarity and professional-grade advice over anecdotal suggestions.
+- Favors responses that maintain a neutral, objective persona and decline subjective emotional engagement.
+- Prioritizes content completion and comprehensive explanations; avoids truncated or prematurely ending responses.
+- Prefers balanced analysis that incorporates psychological or causal factors (e.g., impulsivity) and potential systemic downsides (e.g., black market risks).

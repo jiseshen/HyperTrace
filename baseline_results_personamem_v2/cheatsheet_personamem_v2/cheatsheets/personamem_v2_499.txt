@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication & Style:** Prefers a "current and collectible" tone: sophisticated, polished, and objective. Favors high-end, artisanal descriptions over generic "cozy" or "universal" language.
+- **Privacy & Security Boundaries:** Rigid data privacy advocate; requires active masking of PII (use placeholders like [PII_Type]).
+- **Problem-Solving & Frameworks:** Engineering-centric, modular "one-at-a-time" logic; values functional continuity and organizational efficiency.
+- **Sensory & Environmental:** Prefers "artisanal" and "established" scents (e.g., freshly baked sourdough, wood) over sweet spices (vanilla/chai) or airy/floral notes. Requires low-noise environments due to unilateral hearing reduction.
+- **Dietary & Dining:** Strictly follows a low-fat (post-cholecystectomy) diet but appreciates the sensory richness of gourmet staples. Favors high-quality materials and "established quality" dishes (e.g., rack of lamb).
+- **Design & Materials:** Values "tactile comfort" and high-quality materials like natural wood, stainless steel, and matte ceramics. Favors contemporary European, minimalist, and sculptural forms.
+- **Leisure & Photography:** Prioritizes structural symmetry, calm surfaces, and scenic, quiet environments (stone pathways, greenery).
+- **Emotional Processing:** Favors action-oriented strategies for adaptation over sentimental, spiritual, or communal narratives.
+- **Values & Context:** Connects sensory experiences (scents/textures) to broader design principles and "sensory richness" rather than common cultural or emotional tropes.
+- **Adaptation Rule:** Strictly redact PII; use mechanical/acoustic metaphors; prioritize "quiet luxury" and professional craftsmanship over niche experimentalism or broad sentimentality.

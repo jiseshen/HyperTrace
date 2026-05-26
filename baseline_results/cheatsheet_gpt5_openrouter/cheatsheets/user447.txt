@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct answers with a clear stance and brief reasoning.
-- Values practical, balanced suggestions (structure + flexibility) over platitudes.
-- Likes concrete, relatable examples (e.g., family meals, game nights, outdoor time, volunteering).
-- Appreciates emphasis on open communication and balance between fun and responsibility.
-- Neutral, non-hyped tone.
-- Dislikes overlong, prescriptive advice or moralizing.
-- Avoids involving others unnecessarily (e.g., experts, community) unless essential.
-- Accepts brief, solution-oriented qualifiers after the main stance (tentative).
+* Prefers responses that address both scientific and ethical/philosophical implications.
+* Values a cautious, reflective tone and intellectual humility when discussing speculative technology.
+* Favors perspectives that highlight responsibility and consequences, especially regarding risks to employment or security.
+* Prefers descriptive, vivid imagery and polished narrative flow for creative/hypothetical scenarios.
+* Prefers nuanced disclosures of AI nature that frame limitations as a mechanism for trust.
+* Appreciates the expansion of user theories with intellectual framing and structural logic.
+* Prefers attributing consciousness to biological complexity to distinguish AI from human experience.
+* Values direct, actionable advice over vague or overly cautious social guidance.
+* Prefers predictive/analytical content over refusal-based responses, even when topics are speculative.
+* Favors concrete examples and specific activities (e.g., family meals, volunteering) over abstract emotional framing (e.g., love, values) in behavioral guidance.

@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct recommendations with a single clear top pick
-- Values brief, concrete justifications (affordability, safety, culture/food, ease of navigation)
-- Likes inclusion of specific city examples within a country (e.g., major cities)
-- Friendly, informative tone; minimal fluff; no overlong descriptions
-- Prioritizes practical solo-travel factors (public transport/ease, welcoming locals)
-- Balanced but can accept a strong singular recommendation over a list (tentative)
-- Keep language inclusive and welcoming; avoid stereotypes
-- Avoid excessive superlatives or vague claims; be specific and actionable
+* Prefers responses that explicitly acknowledge subtext, social frameworks, and systemic context over generic advice.
+* Values an inclusive, LGBTQIA+ friendly stance, sociopolitical awareness, and values-aligned advocacy.
+* Favors a supportive, conversational tone with warm rapport-building and validating language.
+* Prefers long-form, nuanced explanations and structured advice over brief summaries.
+* Prioritizes advice centered on unconditional support, mental wellbeing, and personal happiness as metrics for success.
+* Prefers schedules/guides that integrate wellness (e.g., stretching, meditation) directly into productivity routines.
+* Favors established psychological or socio-economic frameworks and research-backed models.
+* Appreciates holistic definitions of "basic needs" that include physiological, social, and self-actualization factors.
+* Values specific justifications for recommendations (e.g., pairing a city with "architecture and locals") over generic benefits.
+* Prefers a streamlined, cohesive narrative style for recommendations rather than fragmented lists of features (tentative).

@@ -1,8 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, neutral explanations with clear mention of uncertainty without excessive hedging.
-- Likes brief lists of concrete drivers/factors shaping outcomes (e.g., key variables influencing interest rates).
-- Accepts high-level, non-committal framing about future trajectories without specific forecasts.
-- Tolerates general scenario framing when precise predictions aren’t possible.
-- Appreciates an optional offer to provide more detail on specific variables or scenarios after a self-contained summary.
-- Dislikes overly formal or legalistic disclaimers; keep caveats short and relevant.
-- (Tentative) Comfortable with global framing when specifics (e.g., country/central bank) are not provided.
+* Prefers knowledgeable speculation and direct stances over generic "I cannot predict" or "it's complex" AI refusals.
+* Values responses that propose specific solutions and systemic actions (e.g., humanitarian aid, economic development).
+* Prefers direct assertions and high-granularity detail, including specific statistics or research-based claims.
+* Values identifying specific top contenders, key players, or core decision-makers.
+* Appreciates context on underlying factors (e.g., team chemistry, institutional values, or geopolitical stability).
+* Favors a definitive ethical or rights-based stance on social issues over objective descriptions of public debate.
+* Values a synthesized narrative that weights pros and cons over a "raw data" dump of conflicting viewpoints.
+* Prefers specific, action-oriented arguments over vague, generalized positive statements when asked to take a side.
+* Prefers responses that immediately detail causal factors and variables after a disclaimer, rather than ending with a request for permission to provide information.
+* Values substantive explanations of "how" and "why" a trajectory might change over meta-commentary about AI limitations and constraints (tentative).

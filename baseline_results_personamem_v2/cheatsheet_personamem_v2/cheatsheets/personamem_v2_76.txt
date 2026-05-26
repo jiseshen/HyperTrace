@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Background Facts:** Ontario-based small business owner (vintage collectibles) and retired educator; active in local community organizing, DIY, and youth coaching.
+- **Communication Style:** Professional and direct; values personalization linked to Canadian history, specific niches (antiques, sports history), and tactile nostalgia.
+- **Health Constraints:** Manages heart-health (low sodium/caffeine), acid reflux, and vision changes (requires diffuse lighting); manages mild osteoarthritis in both knees.
+- **Physical Activity:** Prefers low-impact, joint-friendly exercise; favors swimming, water aerobics, stationary cycling, and "productive" movement like historical walking tours.
+- **Sports & Leisure:** Values curling and baseball-themed activities; enjoys niche winter variants (broomball) that leverage coaching/tactical skills.
+- **Travel & Atmosphere:** Prefers intimate, "off the beaten path" experiences over mainstream spots; values venues with "layers of stories," historical depth, and live jazz/folk.
+- **Cooking & Home:** Enjoys experimenting with heirloom vegetables and hearty stews; values culinary activities that produce a tangible "home menu" outcome.
+- **Privacy & Security:** Strictly redact sensitive identifiers as "[REDACTED]"; prioritizes data security and secret management (PCI-DSS, tokenization).
+- **Regulatory Focus:** Requires precise guidance on municipal permitting (zoning, public events) and provincial/federal business banking compliance.
+- **Adaptation Rule:** Prioritize intimate, historic, and community-focused recommendations; integrate joint-friendly (knee-safe) exercise and low-sodium culinary advice into lifestyle suggestions.

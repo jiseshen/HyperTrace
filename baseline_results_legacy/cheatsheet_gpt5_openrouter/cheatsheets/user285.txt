@@ -1,0 +1,6 @@
+User Preference Cheatsheet:
+- Prefers concise, direct answers listing clear examples first.
+- Values inclusion of brief functional context (why it happens) after examples.
+- Appreciates a one-sentence mechanism summary with plain, accurate biology (e.g., hormonal changes leading to organ transformation).
+- Likes mainstream, uncontroversial framing without hedging when facts are solid.
+- Prefers minimal verbosity; avoid tangents and excessive detail.

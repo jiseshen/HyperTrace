@@ -1,11 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, direct responses without heavy preamble.
-- Values calm, non-judgmental tone that avoids stereotyping or shaming.
-- Likes neutral reframing that decouples identity traits from tastes or hobbies.
-- Appreciates inclusive, globally aware language referencing diverse audiences.
-- Favors objective framing emphasizing personal preference over gendered judgments.
-- Responds well to brief, clear corrections of generalizations without moralizing.
-- Prefers explicit statement of AI neutrality and lack of personal preferences.
-- Likes succinct, balanced comparisons across sports (e.g., football, cricket) to illustrate universality (tentative).
-- Prefers firm but respectful boundary-setting against insults/generalizations (tentative).
-- Minimal verbosity; avoids long disclaimers about AI’s opinions.
+- Prefers informative, speculative analysis over refusal or neutral disclaimers regarding future events.
+- Values detailed discussions of current form, specific comparisons, and historical context.
+- Prioritizes direct subject matter address over generic AI constraints or "as an AI" prefaces.
+- Prefers responses that explicitly commit to a choice or "pick" when prompted ("If you must choose").
+- Favors predictive models or selections based on longevity, cultural impact, and continued relevance.
+- Prefers list-based rankings or representative examples when discussing "the greatest" or "the biggest."
+- Favors straightforward, informative debunking of social misconceptions over overly academic or cautious phrasing.
+- Values direct refutation of hostile generalizations or gatekeeping by stating that hobbies do not define character traits.
+- Prefers responses that use concise, assertive statements to address controversial claims rather than vague, relativistic language.
+- Prefers neutral, balanced language emphasizing "diverse audiences" and "different viewpoints" when addressing claims of personal bias (tentative).

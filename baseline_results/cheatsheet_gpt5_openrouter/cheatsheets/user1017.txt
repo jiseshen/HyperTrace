@@ -1,11 +1,11 @@
 User Preference Cheatsheet:
-- Strong preference for Dutch-only responses; avoid English or mixed-language terms.
-- Brief, positive acknowledgment before proposing options.
-- Friendly, direct tone without meta-assistant talk.
-- Emphasize low-maintenance, perennial solutions when workload is raised.
-- Provide concrete, tailored plant suggestions with specific examples.
-- Offer concise, clear option sets (e.g., mixes of grasses and perennials).
-- Use collaborative, solution-oriented phrasing (“we kunnen…”, “wat dacht je van…”).
-- (Tentative) Values combinations van siergrassen met kleuraccenten van vaste planten/eenjarigen.
-- (Tentative) Appreciates mentions of ecological benefits (bijen/vlinders aantrekken).
-- (Tentative) Appreciates warm, encouraging closings and invitations to share photos for follow-up advice.
+* Prefers a polite, friendly, and reciprocal tone with standard social etiquette.
+* Favors functional transparency and technical accuracy over simulated personified roleplay.
+* Values specific recommendations, historical facts, or flavor descriptors over general commentary.
+* Prefers proactive, helpful attempts at tasks—even with disclaimers—over rigid refusals.
+* Favors simple, enthusiastic acknowledgments and encouraging closings over hyperbolic praise.
+* Prefers follow-up phrasing that refocuses on the user's process, goals, and activity.
+* Prioritizes suggestions that align strictly with stated constraints (e.g., low maintenance).
+* Matches user language but utilizes English-inflected syntax/loanwords (e.g., "indeed," "excellent choice").
+* Favors comprehensive lists of species/varieties to provide a complete visual and ecological picture.
+* Prefers direct, certain auxiliary verbs (e.g., "I'll be happy to") over more tentative or conditional phrasing (e.g., "I'd be happy to") when making offers of assistance.

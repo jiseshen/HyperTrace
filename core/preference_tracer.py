@@ -11,7 +11,7 @@ from .initialize import initialize_hypothesis
 from .branch import branch_hypotheses
 from .filter import weight_hypothesis
 from .perturb import perturb_hypotheses
-from .summary import retrieve_hypothesis_items, retrieve_inference_profile, summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
+from .summary import retrieve_hypothesis_items, retrieve_inference_profile, retrieve_legacy_prediction_profile, summarize_hypotheses, summarize_profile, summarize_retrieved_hypotheses
 from .consolidate import consolidate_hypotheses
 from .response import generate_adapted_response
 
@@ -168,6 +168,26 @@ class PreferenceTracer:
                             "reason": str(e),
                             "retrieved": [],
                         }
+
+                prediction_profile = inference_profile
+                if self.tracer_config.prediction_profile_source == "legacy_retrieved":
+                    try:
+                        prediction_profile, prediction_retrieval = retrieve_legacy_prediction_profile(
+                            conversation_history,
+                            context,
+                            fallback_profile=working_profile,
+                        )
+                        turn_record["prediction_retrieval"] = prediction_retrieval
+                    except Exception as e:
+                        prediction_profile = working_profile
+                        turn_record["prediction_retrieval"] = {
+                            "source": "working_fallback",
+                            "reason": str(e),
+                            "retrieved": [],
+                        }
+                elif "inference_retrieval" in turn_record:
+                    prediction_profile = turn_record["inference_retrieval"].get("prediction_profile", inference_profile)
+                turn_record["prediction_profile"] = prediction_profile
 
                 turn_record["adapted"] = generate_adapted_response(
                     conversation_history=conversation_history, 

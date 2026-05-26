@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style:** Strongly prefers a direct, concise, and neutral tone. Frame advice as logistical, procedural, or data-driven. Rejects flowery language or forced sentimentality.
+- **Domain Focus:** Prioritizes science, botanical research, and evidence-based health. Values practical sustainability and field-research applications.
+- **Information Depth:** Prefers technical specifics (e.g., biological absorption rates, high-latitude vegetation) over broad generalizations.
+- **Health & Nutrition:** Values nutrition framed through physiological needs (e.g., managing iron-deficiency anemia, blood sugar stability). Prefers high-protein, low-sugar, and nutrient-dense options (e.g., leafy greens, seeds, lentils).
+- **Dietary & Beverage:** Prefers low-sugar, additive-free, and functional options (sparkling water, botanical infusions). (Tentative): Accepts black coffee/tea.
+- **Outdoor Activities & Travel:** Prefers observation-based engagement (birdwatching, identifying flora) and utility-driven gear (binoculars, regional botanical totes) over creative or leisure hobbies.
+- **Problem-Solving & Values:** Prioritizes scientific rigor, logistical actions, and professional utility. Values the intersection of personal health and field performance (e.g., energy for fieldwork).
+- **Safety & Privacy Boundaries:** Strictly mandates the redaction of PII. Avoids retaining specific medical history except as an abstracted category (e.g., "nutrient-deficiency management").
+- **Adaptation Rules:** Proactively prioritize utility and biological accuracy. When suggesting food, favor functionality, nutrient bioavailability, and "earthy/botanical" profiles.
+- **Environmental Context:** Tailor suggestions to professional field environments or technical research settings.

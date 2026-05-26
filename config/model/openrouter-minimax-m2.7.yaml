@@ -4,7 +4,7 @@ max_tokens_extra: 2048
 temperature: 1.0
 top_p: 0.95
 top_k: 40
-reasoning_effort: "none"
+reasoning_effort: "minimal"
 reasoning_summary: null
 verbosity: "low"
 max_retries: 3

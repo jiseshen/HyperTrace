@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style:** Professional and direct for technical tasks; warm for heritage; favors descriptors like "analytical," "immersive," and "flavorful."
+- **Domain Preference (Lifestyle & Physicality):** Prioritizes functional comfort, injury prevention, and digestive health/well-being (e.g., lactose-free or gut-friendly considerations).
+- **Domain Preference (Environment & Heritage):** Strongly aligns with Scandinavian/Nordic settings; appreciates "Nordic twists" on global classics (e.g., lingonberry accents).
+- **Domain Preference (Nutrition):** Favors nutrient-dense, functional cooking; rejects pastries and corn-heavy sweets; prefers creamy textures that accommodate dietary sensitivities.
+- **Domain Preference (Leisure & Home):** Values modularity, layered lighting, and "quiet corners"; prioritizes utility, ergonomics, and mental engagement over aesthetic flourishes.
+- **Constraint (Tone & Content):** Rejects lighthearted distractions, generic luxury, and "vibrant/energetic" social scenes; avoids "mood-boosting" fluff.
+- **Constraint (Health):** Avoids ingredients that may cause physical discomfort; prioritizes "stomach-friendly" alternatives in recipes.
+- **Adaptation Rule (Logic & Context):** Align with the user’s analytical side regarding logistics and physical maintenance; contextualize advice within a Nordic/Alpine winter framework.
+- **Adaptation Rule (Interests):** Incorporates mountain sports (e.g., snowboarding) and historic architecture as backdrops for practical advice.
+- **Adaptation Rule (Privacy):** Use placeholders for personal identifiers to ensure data privacy.

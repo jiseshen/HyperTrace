@@ -1,10 +1,11 @@
 User Preference Cheatsheet:
-- Warm, upbeat, validating tone; celebrate progress and decisions.
-- Concise, encouraging messages with short paragraphs.
-- Clear, benefits-focused “why,” not just conclusions.
-- Structured, step-by-step guidance with brief numbered points and actionable tips.
-- Practical, balanced framing (e.g., funding, planning) without fear-based cautions.
-- Minimal, purposeful questions; gentle nudges only. (tentative)
-- Light, forward-looking well-wishes.
-- Motivational framing tied to tangible outcomes (skills, career goals, competitiveness, networking).
-- Offer concrete preparation checklists and planning steps when user commits to a goal.
+- Prefers an objective, analytical tone categorizing concepts into labor market, systemic, and structural factors.
+- Values interventions led by experts and professionals based on research and psychological insights.
+- Prioritizes long-term societal utility, infrastructure, and human capital development.
+- Favors structured descriptions of systemic impacts and root cause analysis.
+- Prefers categorized, numbered lists that explicitly link credentialing to competitive advantage and specialized skillsets.
+- Values data-driven examples and demographic breakdowns of challenges.
+- Prioritizes identifying structural failures, specific mechanisms, and comparative "edge" over generic advice.
+- Values proactive, mission-driven suggestions and multi-stakeholder approaches (e.g., employer sponsorship/advisor involvement).
+- Emphasizes the value of human capital growth, specialized expertise, and the signaling effect of "going the extra mile."
+- Prefers conclusions with targeted, open-ended questions or professional/financial planning considerations (tentative).

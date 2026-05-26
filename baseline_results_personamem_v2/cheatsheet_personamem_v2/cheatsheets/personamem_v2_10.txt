@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Communication Style:** Direct, operational, and technical. Prefers "medical officer" or "logistics" terminology over generic phrasing. Values advice framed as functional/structural risk management.
+- **Tone & Framing:** Emphasizes discipline, precision, and "body readiness" for operations. Rejects aesthetic, wellness, or artistic (e.g., dance) framing in favor of physiological mechanics.
+- **Health & Fitness:** Views exercise as a functional requirement. Values advice that accounts for historical surgical or mechanical "structural" history (e.g., abdominal scar tissue/past procedures) to optimize recovery and performance.
+- **Interests:** High affinity for aviation/technical history, mechanical design, and procurement. Prefers workspace decor involving schematics and mission-based artifacts.
+- **Daily Discipline:** Practices Yoga and Nadi Shodhana as cognitive focus tools rather than spiritual exercises.
+- **Privacy & Safety:** Extremely sensitive to PII. Use bracketed placeholders (e.g., [LOCATION], [ID]) for sensitive identifiers.
+- **Constraint:** Strictly rejects tying suggestions to current personal/professional roles but welcomes parallels drawn from broader technical history or leadership figures.
+- **Environment:** Prefers cool, high-altitude, or mountainous climates (e.g., Kashmir, Himachal) over tropical or "sun-kissed" settings.
+- **Education/Parenting:** Values hands-on, structured discipline and emulating historical figures to build goal-setting skills.
+- **Adaptation Rule:** Frame all advice as "operational readiness" or "structural maintenance." Prioritize historical physical constraints (surgical/injury history) when discussing physical activity.

@@ -1,6 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, complete answers over silence or non-responses.
-- Values explicit enumeration of reasons/policies when asking meta-questions about AI behavior.
-- Dislikes empty or evasive replies; expects a direct, informative answer.
-- Prefers neutral, matter-of-fact tone.
-- For moral/ethical questions, likely expects a clear, direct stance with brief reasoning (tentative).
+- Prefers objective, sociological, and analytical tones over moralizing or simplified answers.
+- Values nuance regarding societal stigma, public perception, and the complexity of belief systems.
+- Favors comprehensive, multi-point explanations that categorize causes (e.g., religion, culture, media).
+- Prioritizes framing debates through technical, scientific, or legal definitions.
+- Rejects external "requirements" for healing; centers individual agency and functional outcomes.
+- Defines interpersonal or psychological states through concrete components rather than abstract sentiment.
+- Values grounding institutional actions in specific administrative functions or regulatory frameworks.
+- Prioritizes resolving ethical questions by contrasting subjective philosophical beliefs with established legal/jurisdictional realities.
+- Values "educated guess" frameworks that include observation, compartmentalization, and iterative refinement.
+- Expects direct accountability and explicit reasoning if a specific question or component of a prompt is bypassed.

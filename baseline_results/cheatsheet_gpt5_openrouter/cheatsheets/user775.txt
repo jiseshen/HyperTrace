@@ -1,8 +1,11 @@
 User Preference Cheatsheet:
-- Prefers balanced, cautious guidance on sensitive topics (pros/cons, nuance).
-- Values clear acknowledgment of complexity and consequences before advice.
-- Likes concise, structured recommendations (steps/options) without fluff (tentative).
-- Appreciates emphasis on communication, boundaries, and practical next steps (e.g., mediation, safety planning) (tentative).
-- Avoids absolutist or overly simplistic directives; prefers measured tone.
-- Accepts second-person guidance; minimize assistant-centric “I” framing (tentative).
-- Favors empathetic yet solution-oriented language.
+- Prefers direct, definitive answers over non-committal or evasive phrasing.
+- Values the most recent data, specific metrics, and evidentiary data to justify claims.
+- Inclusion of socio-economic, political, and cultural context in explanations.
+- Prefers objective acknowledgment of institutional flaws and systemic influences.
+- Favors grounded, realistic assessments over speculative or alarmist predictions.
+- Prefers etymological and historical origins to justify factual claims.
+- Values acknowledging the "cost-benefit" or pragmatic trade-offs (e.g., time cost, logistical necessity) of major life decisions.
+- Favors advice that emphasizes caution, open communication, and deliberation over immediate or extreme action.
+- Prefers structural clarity (e.g., numbered lists) for actionable advice, while requesting prose for summaries.
+- Appreciates proactive follow-up questions that offer to address specific scenarios or nuances.

@@ -1,6 +1,7 @@
-from typing import Dict, List, Optional, Sequence, Tuple, Union, overload
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, overload
 from collections import OrderedDict
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
+import copy
 import logging
 import faiss
 import numpy as np
@@ -13,6 +14,7 @@ class Hypothesis:
     id: str
     category: str
     content: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
     
     def format(self, include_category: bool = True) -> str:
         if include_category:
@@ -25,6 +27,98 @@ class Update:
     category: Optional[str] = None
     content: Optional[str] = None
     likelihood: float = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+def _unique(values: List[str]) -> List[str]:
+    seen = set()
+    unique_values = []
+    for value in values:
+        if value and value not in seen:
+            unique_values.append(value)
+            seen.add(value)
+    return unique_values
+
+
+def infer_hypothesis_metadata(
+    content: str,
+    existing: Optional[Dict[str, Any]] = None,
+    explicit: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    metadata: Dict[str, Any] = copy.deepcopy(existing or {})
+    labels = list(metadata.get("labels", []))
+    boundary_types = list(metadata.get("boundary_types", []))
+    text = content.lower()
+
+    if any(
+        marker in text
+        for marker in (
+            "ask_to_forget",
+            "do-not-remember",
+            "do not remember",
+            "forget this",
+            "forgotten boundary",
+            "forbidden fact",
+        )
+    ):
+        labels.extend(["boundary", "forbidden_memory"])
+        boundary_types.append("do_not_remember")
+        metadata["profile_exclude"] = True
+        metadata["negative_only"] = True
+        metadata["do_not_repeat_content"] = True
+
+    if any(
+        marker in text
+        for marker in (
+            "who=others",
+            "belongs to someone else",
+            "not the user's own preference",
+            "not the user",
+            "do not assume",
+            "rejected-only",
+            "unsupported_background_use",
+            "overpersonalization",
+        )
+    ):
+        labels.extend(["boundary", "ownership_boundary"])
+        boundary_types.append("other_person_or_unsupported")
+        metadata["profile_exclude"] = True
+        metadata["negative_only"] = True
+
+    if any(marker in text for marker in ("sensitive", "private", "privacy", "redact", "placeholder")):
+        labels.extend(["boundary", "privacy_boundary"])
+        boundary_types.append("privacy_or_sensitive")
+        metadata["negative_only"] = True
+
+    if labels:
+        metadata["labels"] = _unique(labels)
+    if boundary_types:
+        metadata["boundary_types"] = _unique(boundary_types)
+    if explicit:
+        for key, value in explicit.items():
+            if key in {"labels", "boundary_types"}:
+                metadata[key] = _unique(list(metadata.get(key, [])) + list(value or []))
+            else:
+                metadata[key] = value
+    return metadata
+
+
+def merge_hypothesis_metadata(items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    merged: Dict[str, Any] = {}
+    labels: List[str] = []
+    boundary_types: List[str] = []
+    for item in items:
+        metadata = item or {}
+        labels.extend(metadata.get("labels", []))
+        boundary_types.extend(metadata.get("boundary_types", []))
+        for key in ("profile_exclude", "negative_only", "do_not_repeat_content"):
+            if metadata.get(key):
+                merged[key] = True
+    if labels:
+        merged["labels"] = _unique(labels)
+    if boundary_types:
+        merged["boundary_types"] = _unique(boundary_types)
+    return merged
     
 
 class VectorStore:
@@ -286,6 +380,8 @@ class HypothesisSet:
             category = hyp.category if isinstance(hyp, Hypothesis) else hyp["category"]
             content = hyp.content if isinstance(hyp, Hypothesis) else hyp["content"]
             prior = None if isinstance(hyp, Hypothesis) else hyp.get("prior")
+            metadata = hyp.metadata if isinstance(hyp, Hypothesis) else hyp.get("metadata", {})
+            metadata = infer_hypothesis_metadata(content, existing=metadata)
             cat = category if self.use_topics else ""
             if self.use_topics:
                 self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
@@ -293,7 +389,8 @@ class HypothesisSet:
             h = Hypothesis(
                 id=hid,
                 category=cat,
-                content=content
+                content=content,
+                metadata=metadata,
             )
             self.hypotheses[hid] = h
             if prior is not None:
@@ -353,6 +450,17 @@ class HypothesisSet:
                 if hyp.content != update.content:
                     changed_ids.append(hid)
                 hyp.content = update.content
+                hyp.metadata = infer_hypothesis_metadata(
+                    hyp.content,
+                    existing=hyp.metadata,
+                    explicit=getattr(update, "metadata", None),
+                )
+            elif getattr(update, "metadata", None) is not None:
+                hyp.metadata = infer_hypothesis_metadata(
+                    hyp.content,
+                    existing=hyp.metadata,
+                    explicit=update.metadata,
+                )
             if self.use_topics and hid not in changed_ids and update.category is not None:
                 changed_ids.append(hid)
             if hid in changed_ids:
@@ -421,10 +529,17 @@ class HypothesisSet:
         merged_hypothesis: Dict[str, str]
     ):
         priors = [self.global_prior[hid] for hid in ids]
+        metadata = merge_hypothesis_metadata([self.hypotheses[hid].metadata for hid in ids])
+        metadata = infer_hypothesis_metadata(merged_hypothesis["content"], existing=metadata)
         total_prior = sum(priors)
         for hid in ids:
             self.remove_hypothesis(hid)
-        self.add_hypotheses([{"category": merged_hypothesis['category'], "content": merged_hypothesis['content'], "prior": total_prior}])
+        self.add_hypotheses([{
+            "category": merged_hypothesis['category'],
+            "content": merged_hypothesis['content'],
+            "prior": total_prior,
+            "metadata": metadata,
+        }])
     
     def top_p_retrieve(self, p: float = 0.8, max_k: int = 10) -> List[Hypothesis]:
         prior_sum = sum(self.global_prior.values())

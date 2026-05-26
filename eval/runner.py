@@ -42,6 +42,14 @@ def _write_json(path: Path, data: Dict[str, Any]) -> None:
         json.dump(data, f, indent=4)
 
 
+def _prediction_profile_for_turn(turn_record: Dict[str, Any], profile_before_turn: str) -> str:
+    if "prediction_profile" in turn_record:
+        return turn_record.get("prediction_profile") or ""
+    if "inference_profile" in turn_record:
+        return turn_record.get("inference_profile") or ""
+    return profile_before_turn
+
+
 def _metrics_cache_matches(
     metrics: Dict[str, Any],
     eval_model_name: str = None,
@@ -109,7 +117,7 @@ def evaluate_user_record(
         turn_metrics["prediction"] = predict_choice(
             model=prediction_model,
             conversation_history=conversation_history,
-            profile=turn_record.get("inference_profile") or profile_before_turn,
+            profile=_prediction_profile_for_turn(turn_record, profile_before_turn),
             generation_cfg=prediction_cfg,
             prompts=prompt_set,
         )
@@ -189,6 +197,10 @@ def summarize_user_metrics(metrics: Dict[str, Any]) -> Dict[str, Any]:
         "profile_survey_consistency": profile_alignment.get("survey_consistency"),
         "profile_key_aspect_match": profile_alignment.get("key_aspect_match"),
         "profile_internal_plausibility": profile_alignment.get("internal_plausibility"),
+        "profile_preference_coverage": profile_alignment.get("preference_coverage"),
+        "profile_personalization_utility": profile_alignment.get("personalization_utility"),
+        "profile_update_and_boundary_handling": profile_alignment.get("update_and_boundary_handling"),
+        "profile_memory_quality": profile_alignment.get("memory_quality"),
     }
 
 
@@ -261,6 +273,10 @@ def summarize_metrics(user_metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
         "profile_survey_consistency": _mean(profile.get("survey_consistency") for profile in profile_metrics),
         "profile_key_aspect_match": _mean(profile.get("key_aspect_match") for profile in profile_metrics),
         "profile_internal_plausibility": _mean(profile.get("internal_plausibility") for profile in profile_metrics),
+        "profile_preference_coverage": _mean(profile.get("preference_coverage") for profile in profile_metrics),
+        "profile_personalization_utility": _mean(profile.get("personalization_utility") for profile in profile_metrics),
+        "profile_update_and_boundary_handling": _mean(profile.get("update_and_boundary_handling") for profile in profile_metrics),
+        "profile_memory_quality": _mean(profile.get("memory_quality") for profile in profile_metrics),
     }
 
     return {

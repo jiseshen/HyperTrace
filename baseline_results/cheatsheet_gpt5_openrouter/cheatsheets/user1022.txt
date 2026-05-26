@@ -1,9 +1,11 @@
 User Preference Cheatsheet:
-- Prefers concise, fact-dense bullet points; minimal narrative.
-- Values precise identification of entities and regions.
-- Wants clear ownership/organizational structure stated (esp. government/state ownership) and how it operates today.
-- Likes explicit linkage between name/etymology and ownership/status.
-- Appreciates concrete, verifiable dates/timeframes for status.
-- Dislikes vague or speculative language; prefers definitive, sourced-sounding claims.
-- Accepts minimal historical context when it clarifies current governance/identity (tentative).
-- For policy/judgment questions, prefers balanced, structured pros/cons with practical implications and a cautious, deliberative recommendation.
+* Prefers concise, direct answers that jump straight into core technical or factual insights.
+* Prioritizes structural context (e.g., state formation, economic engines) and historical regional boundaries over modern labels.
+* Values literal accuracy and granular data, specifically names of entities and their precise geographic/historical origins.
+* Favors explanations of ownership structures (e.g., state-owned vs. family-owned) as a key differentiator.
+* Values explicit clarification of fiscal relationships (e.g., profit distribution to state coffers) in state-owned enterprise analysis.
+* Prefers high-level analytical framing of industrial sectors and consolidated market landscapes.
+* Appreciates specific, list-based enumerations or clear identification of actors to substantiate claims.
+* Values linking regional identity and historical provenance to specific corporate footprints.
+* Expects a balance of systemic, causal analysis with cautious, deliberative conclusions on policy changes.
+* Favors conclusions that emphasize internal stakeholder expertise (e.g., management insight) and historical continuity over purely theoretical arguments.

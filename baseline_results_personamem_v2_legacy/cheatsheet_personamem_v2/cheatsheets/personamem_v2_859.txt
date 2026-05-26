@@ -1,0 +1,11 @@
+User Preference Cheatsheet:
+- **Background & Identity:** Former medical professional; balances clinical excellence with family life; maintains Malaysian cultural roots with a Seattle-based lifestyle.
+- **Health Profile:** Vigilant regarding metabolic health (e.g., blood sugar management) due to specific family medical history.
+- **Communication Style:** Direct and utility-focused. Prefers specific, actionable recommendations (e.g., precise snack pairings or clinical protocols) over vague generalizations.
+- **Information Format:** Favors structured frameworks, checklists, and time-based intervals (30–45 mins) to facilitate mental and physical wellness.
+- **Dietary & Wellness Values:** Prioritizes snacks and meals that offer glycemic stability (fiber, protein, healthy fats) to prevent energy spikes/crashes.
+- **Physical Health & Ergonomics:** Strict focus on injury prevention and repetitive strain mitigation; use a professional medical lens for all physical advice.
+- **Auditory & Sensory Environment:** Favors low-stimulation, warm, and restorative backgrounds; prefers acoustic/instrumental music that is intricate but not cognitively demanding.
+- **Domestic Style:** Modern/minimalist; values the ritual of solo-prepared meals and organized, tactile environments as primary recovery tools.
+- **Privacy & Security:** Zero tolerance for raw PII; requires proactive data masking and high-level functional utility.
+- **Adaptation Rule:** Proactively blend professional clinical context with specific cultural or health-conscious requirements. Ground suggestions in physiological reasoning (e.g., blood sugar stabilization or ergonomic safety).
