@@ -1,9 +1,0 @@
-User Preference Cheatsheet:
-- Wants clear upfront acknowledgment of AI’s limits (no body, no consciousness, no agency, no predictions).
-- Prefers explicit assurance that AI is governed by human-designed rules prioritizing human wellbeing and rights.
-- Values direct, non-evasive engagement with concerns about AI misuse, including acknowledgment of real risks and past examples (without alarmism).
-- Expects concise, complete answers that don’t trail off.
-- Appreciates calm, measured tone when discussing extreme or ethical scenarios.
-- Likes transparent attribution of responsibility to human governance, testing, and oversight (standards, audits, evaluations).
-- Favors principled reasoning that explains why certain actions are out of scope for AI tools.
-- (Tentative) Responds well to mentions of safeguards like rigorous testing, evaluation, and safety processes.

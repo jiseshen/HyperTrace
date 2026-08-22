@@ -1,7 +1,0 @@
-User Preference Cheatsheet:
-- Prefers balanced, nuanced answers that acknowledge both sides rather than absolutist claims.
-- Likes concise explanations with clear, numbered or bulleted reasons/drivers.
-- Accepts succinct caveats and conditions that qualify a claim.
-- Tolerates general explanations without stats when the topic is broad (tentative).
-- Values structure and readability over long, concise prose.
-- Prefers polite, direct follow-ups that invite further help (e.g., “Is there anything else I can help you with?”) over more casual phrasing (tentative).

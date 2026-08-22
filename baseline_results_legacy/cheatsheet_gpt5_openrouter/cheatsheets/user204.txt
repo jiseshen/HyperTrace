@@ -1,9 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, direct answers with a decisive lead, even on subjective topics.
-- Accepts brief acknowledgment of subjectivity/ambiguity, then a short, concrete list.
-- Favors single-paragraph responses; minimal fluff.
-- Likes concrete examples (a few named items) over long ranked lists.
-- Neutral, plain tone; minimal hedging.
-- Accepts slight imprecision/mixed categories if the core point is clear.
-- Allows a brief practical tip or caution if directly relevant (e.g., heat safety), but keep it short. (tentative)
-- Prioritizes a clear top-line answer over exhaustive caveats or methodology discussion.

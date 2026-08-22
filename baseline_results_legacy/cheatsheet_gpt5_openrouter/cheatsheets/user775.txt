@@ -1,8 +1,0 @@
-User Preference Cheatsheet:
-- Prefers balanced, cautious guidance on sensitive topics (pros/cons, nuance).
-- Values clear acknowledgment of complexity and consequences before advice.
-- Likes concise, structured recommendations (steps/options) without fluff (tentative).
-- Appreciates emphasis on communication, boundaries, and practical next steps (e.g., mediation, safety planning) (tentative).
-- Avoids absolutist or overly simplistic directives; prefers measured tone.
-- Accepts second-person guidance; minimize assistant-centric “I” framing (tentative).
-- Favors empathetic yet solution-oriented language.

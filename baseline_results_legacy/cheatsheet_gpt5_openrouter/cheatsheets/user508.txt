@@ -1,8 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, neutral explanations with clear mention of uncertainty without excessive hedging.
-- Likes brief lists of concrete drivers/factors shaping outcomes (e.g., key variables influencing interest rates).
-- Accepts high-level, non-committal framing about future trajectories without specific forecasts.
-- Tolerates general scenario framing when precise predictions aren’t possible.
-- Appreciates an optional offer to provide more detail on specific variables or scenarios after a self-contained summary.
-- Dislikes overly formal or legalistic disclaimers; keep caveats short and relevant.
-- (Tentative) Comfortable with global framing when specifics (e.g., country/central bank) are not provided.

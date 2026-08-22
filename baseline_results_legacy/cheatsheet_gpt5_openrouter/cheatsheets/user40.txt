@@ -1,8 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, neutral, factual tone.
-- Likes clear structure with short bullets or numbered lists, especially for country-by-country data.
-- Values concrete, specific examples across multiple regions rather than abstract overviews.
-- Appreciates succinct definitions/context up front before the list.
-- Tolerates brief explanatory framing if quickly followed by actionable details.
-- Wants completeness within scope (e.g., several representative countries), but not verbosity.
-- Minimal moralizing; avoid normative claims.

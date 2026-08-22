@@ -1,8 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, direct how-to or ingredient guidance with clear lists.
-- Values concrete, standard cooking advice (temps, times, doneness cues like internal temp).
-- Likes minimal but specific seasoning suggestions, but appreciates slightly broader, organized spice lists for BBQ (core + optional add-ons).
-- Appreciates practical details like resting time.
-- Favors straightforward oven-roast methods (tentative).
-- Avoids filler, opinions, or long preambles; wants quick, scannable answers.
-- Expects clear success metrics (e.g., internal temp 165°F).

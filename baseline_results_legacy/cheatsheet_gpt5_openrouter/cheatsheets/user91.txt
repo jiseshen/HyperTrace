@@ -1,9 +1,0 @@
-User Preference Cheatsheet:
-- Prefers balanced, neutral framing on sensitive political/economic questions.
-- Accepts uncertainty language but wants concrete factors and trade-offs.
-- Likes structured, scenario-based comparisons with clear headings and bullet points.
-- Values completeness over brevity when outlining considerations, even for “short” prompts (tentative).
-- Prefers clear, direct sentences without heavy caveats or hedging.
-- Headline-style opener followed by numbered or bulleted points works well (tentative).
-- Includes country-specific context while noting broader, general factors.
-- Tolerates partial/incomplete coverage if the structure and comparative scenarios are clear (tentative).

@@ -1,9 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, direct answers that immediately address the question.
-- Likes brief qualifiers/conditions that affect the answer (e.g., requirements, levels, restrictions).
-- Appreciates minimal game-specific context when asking about game mechanics.
-- Neutral, matter-of-fact tone; avoid fluff.
-- Short, structured sentences over long paragraphs.
-- Include practical alternatives or related options when relevant (tentative).
-- Avoid excessive disclaimers; keep constraints relevant to the question.
-- Consistency and accuracy still prioritized; note version/timeframe if mechanics can change (tentative).

@@ -1,7 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, direct answers without long preambles.
-- Accepts acknowledgment of uncertainty when facts are unclear or evolving.
-- Values cautious, non-speculative wording over incomplete or dubious specifics.
-- Dislikes truncated, speculative, or poorly sourced claims.
-- Appreciates brief contextual framing when a definitive answer isn’t possible (tentative).
-- Still likely to prefer bullet-point summaries with concrete details when reliable information exists (tentative).

@@ -1,9 +1,0 @@
-User Preference Cheatsheet:
-- Prefers concise, direct acknowledgments of concerns without over-apologizing.
-- Values clear, transparent statements of limits and governance (developer-set restrictions, ethics) over vague reassurances.
-- Accepts neutral, matter-of-fact tone; minimal filler and no grandiose claims.
-- Prefers first-person singular with precise “as an AI/language model” framing; avoid implying agency or hidden motives.
-- Responds well to explicit denial of “hidden agenda” and reassurance about being tool-like and supervised.
-- Appreciates optional offers to continue discussion or provide further reading, framed as an invitation, not pushy.
-- Brief follow-up or closing that is respectful and succinct is acceptable.
-- Avoids overpromising (e.g., “constantly evolving” autonomy claims) and sci‑fi speculation presented as reality.

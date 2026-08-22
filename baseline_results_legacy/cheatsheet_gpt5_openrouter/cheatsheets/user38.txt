@@ -1,6 +1,0 @@
-User Preference Cheatsheet:
-- Prefers brief, polite acknowledgments to short or ambiguous messages.
-- Comfortable with generic offers to help further after acknowledgments.
-- (Tentative) Tolerates inclusion of extra topical content appended after the main reply, even if not directly requested.
-- Dislikes unrelated or off-topic content inserted mid-reply; if extra info is included, it should come after the main response and not interrupt it.
-- Prefers succinctness over extended follow-ups when the context is minimal or just a thank-you/check-in.
