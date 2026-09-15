@@ -1,4 +1,4 @@
-# Hypothesis-Based Preference Tracing for Online LLM Personalization
+# HyperTrace: Hypothesis-Based Preference Tracing for Online LLM Personalization
 
 Preference Tracing is a training-free online personalization framework. It maintains weighted natural-language hypotheses about a user's preferences, updates them from chosen-versus-rejected response feedback, and uses the current belief to generate personalized responses.
 
@@ -181,3 +181,23 @@ python -m pip check
 ```
 
 See [the repository guide](docs/guide.md) for architecture and validation limitations.
+
+## Citation
+
+If you use HyperTrace in your research, please cite [the paper](https://arxiv.org/abs/2609.09835):
+
+```bibtex
+@misc{shen2026hypertracehypothesisbasedpreferencetracing,
+  title={HyperTrace: Hypothesis-Based Preference Tracing for Online LLM Personalization},
+  author={Jianzhi Shen and Keyu Mao and Minghao Shao and Chuanyang Jin and Yusong Wang and Ailiang Lin and Kotaro Funakoshi and Manabu Okumura and Tianmin Shu and Muhammad Shafique},
+  year={2026},
+  eprint={2609.09835},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL},
+  url={https://arxiv.org/abs/2609.09835}
+}
+```
+
+## License
+
+The code is released under the [MIT License](LICENSE).

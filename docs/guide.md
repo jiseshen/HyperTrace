@@ -30,7 +30,7 @@ Temporary offline smoke checks cover sampling overrides, trace-only, evaluation-
 - Optional Gemini and local transformer backends require their additional dependencies and are not validated against live services/models.
 - Record resume is based on file existence. Metric caching matches model names and scope, not complete inputs. Use new output names for changed experiments.
 - Provider reports cover calls made in the current invocation and are not a cumulative run ledger.
-- License, author metadata, and citation information have not been supplied. Add the owner's chosen terms and verified publication metadata before public release.
+- The code uses the MIT License in `LICENSE`; the README contains the author-supplied paper citation.
 - Git ignore rules do not scrub existing Git history. This cleanup is a current-tree review, not a historical secrets audit.
 
 See [cleanup history](history.md) for the verified publication-cleanup milestone.
