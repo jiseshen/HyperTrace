@@ -1,0 +1,23 @@
+[project]
+name = "hypertrace"
+version = "0.1.0"
+description = "Hypothesis-based preference tracing for online LLM personalization"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+dependencies = [
+    "datasets>=2.14",
+    "faiss-cpu>=1.7.4",
+    "numpy>=1.24",
+    "omegaconf>=2.3",
+    "openai>=1.66",
+    "pydantic>=2.0",
+    "tqdm>=4.65",
+]
+
+[project.optional-dependencies]
+gemini = ["google-genai>=1.66"]
+transformer = ["sentence-transformers>=3.0"]
+
+[tool.uv]
+package = false
