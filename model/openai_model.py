@@ -1,3 +1,4 @@
+from .credentials import require_api_key
 from openai import OpenAI, AsyncOpenAI, APIError, RateLimitError
 from .base import BaseLM, GenerationConfig, GenerationOverrides
 from pydantic import BaseModel
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class OpenAIModel(BaseLM):
     def __init__(self, api_key: Optional[str] = None, default_cfg: Optional[GenerationConfig] = None):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY", "empty")
+        self.api_key = require_api_key("OPENAI_API_KEY", api_key)
         self.default_cfg = default_cfg or GenerationConfig()
         self.base_url = self.default_cfg.base_url or os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)

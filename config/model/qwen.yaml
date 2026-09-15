@@ -1,8 +1,0 @@
-backend: "vllm"
-model: "Qwen/Qwen3.5-4B"
-temperature: 0.0
-top_p: 0.95
-top_k: 20
-presence_penalty: 1.5
-max_retries: 3
-retry_delay: 0.1

@@ -46,7 +46,7 @@ def branch_hypotheses(conversation_history: List[Turn], candidates: str, context
     except Exception:
         logger.exception("Branching generation failed")
         async_outputs = [None for _ in prompts]
-    outputs = [o["output"] if not isinstance(o, Exception) else None for o in async_outputs]
+    outputs = [o["output"] if isinstance(o, dict) else None for o in async_outputs]
     replace, invalid = 0, 0
     for output in outputs:
         if output and output['action'] == 'replace':

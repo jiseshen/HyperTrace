@@ -3,8 +3,6 @@ import math
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
-from tqdm import tqdm
-
 from data import Turn, UserData
 from model import BaseLM, EmbedConfig, GenerationConfig
 from prompt import PromptSet, prism_prompts
@@ -32,14 +30,16 @@ def _mean(values: Iterable[Optional[float]]) -> Optional[float]:
 
 
 def _load_record(path: Path) -> Dict[str, Any]:
-    with path.open() as f:
+    with path.open(encoding="utf-8") as f:
         return json.load(f)
 
 
 def _write_json(path: Path, data: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as f:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
+    temporary.replace(path)
 
 
 def _prediction_profile_for_turn(turn_record: Dict[str, Any], profile_before_turn: str) -> str:
@@ -295,65 +295,3 @@ def summarize_metrics(user_metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
             for metrics in user_metrics
         },
     }
-
-
-def evaluate_records(
-    users: List[UserData],
-    records_path: Path,
-    metrics_path: Path,
-    eval_model: BaseLM,
-    eval_cfg: GenerationConfig,
-    embed_cfg: EmbedConfig,
-    prompts: PromptSet = None,
-    prediction_model: BaseLM = None,
-    prediction_cfg: GenerationConfig = None,
-    eval_model_name: str = None,
-    prediction_model_name: str = None,
-    prediction_only: bool = False,
-) -> Dict[str, Any]:
-    prompt_set = prompts or prism_prompts()
-    users_by_id = {user.user_id: user for user in users}
-    record_files = sorted(records_path.glob("*.json"))
-    user_metrics: List[Dict[str, Any]] = []
-
-    pbar = tqdm(record_files, desc="Evaluating records", unit="user")
-    for record_file in pbar:
-        record = _load_record(record_file)
-        user_id = record.get("user", record_file.stem)
-        pbar.set_postfix(user=user_id)
-
-        user_data = users_by_id.get(user_id)
-        if user_data is None:
-            continue
-
-        user_metrics_path = metrics_path / "users" / f"{user_id}.json"
-        if user_metrics_path.exists():
-            cached_metrics = _load_record(user_metrics_path)
-            if _metrics_cache_matches(
-                cached_metrics,
-                eval_model_name=eval_model_name,
-                prediction_model_name=prediction_model_name,
-                eval_scope="prediction_only" if prediction_only else "full",
-            ):
-                user_metrics.append(cached_metrics)
-                continue
-
-        metrics = evaluate_user_record(
-            user_data=user_data,
-            record=record,
-            eval_model=eval_model,
-            eval_cfg=eval_cfg,
-            embed_cfg=embed_cfg,
-            prompts=prompt_set,
-            prediction_model=prediction_model,
-            prediction_cfg=prediction_cfg,
-            eval_model_name=eval_model_name,
-            prediction_model_name=prediction_model_name,
-            prediction_only=prediction_only,
-        )
-        _write_json(user_metrics_path, metrics)
-        user_metrics.append(metrics)
-
-    summary = summarize_metrics(user_metrics)
-    _write_json(metrics_path / "summary.json", summary)
-    return summary

@@ -1,3 +1,4 @@
+from .credentials import require_api_key
 import asyncio
 import copy
 import json
@@ -37,7 +38,7 @@ class EmptyContentError(ValueError):
 
 class OpenRouterModel(BaseLM):
     def __init__(self, api_key: Optional[str] = None, default_cfg: Optional[GenerationConfig] = None):
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY", "empty")
+        self.api_key = require_api_key("OPENROUTER_API_KEY", api_key)
         self.default_cfg = default_cfg or GenerationConfig(backend="openrouter")
         self.base_url = self.default_cfg.base_url or os.getenv("OPENROUTER_API_BASE", OPENROUTER_BASE_URL)
         default_headers = self._default_headers()
@@ -164,54 +165,6 @@ class OpenRouterModel(BaseLM):
         if not isinstance(parsed, (dict, list)):
             raise ValueError("Failed to parse OpenRouter structured output as JSON.")
         return schema.model_validate(parsed).model_dump()
-
-    @classmethod
-    def _empty_schema_output(cls, schema: type[BaseModel]) -> Dict[str, Any]:
-        root_schema = schema.model_json_schema()
-        fallback = cls._empty_value_from_schema(root_schema, root_schema)
-        return schema.model_validate(fallback).model_dump()
-
-    @classmethod
-    def _empty_value_from_schema(
-        cls,
-        node: Dict[str, Any],
-        root_schema: Dict[str, Any],
-        index: int = 0,
-        field_name: str = "",
-    ) -> Any:
-        if "$ref" in node:
-            ref_name = node["$ref"].rsplit("/", 1)[-1]
-            node = root_schema.get("$defs", {}).get(ref_name, node)
-        if "enum" in node and node["enum"]:
-            return node["enum"][0]
-        if "const" in node:
-            return node["const"]
-        if "anyOf" in node:
-            non_null = [item for item in node["anyOf"] if item.get("type") != "null"]
-            return cls._empty_value_from_schema(non_null[0] if non_null else node["anyOf"][0], root_schema, index, field_name)
-
-        node_type = node.get("type")
-        if node_type == "object" or "properties" in node:
-            return {
-                name: cls._empty_value_from_schema(prop, root_schema, index=index, field_name=name)
-                for name, prop in node.get("properties", {}).items()
-            }
-        if node_type == "array":
-            min_items = node.get("minItems", 0)
-            item_schema = node.get("items", {})
-            return [
-                cls._empty_value_from_schema(item_schema, root_schema, index=i, field_name=field_name)
-                for i in range(min_items)
-            ]
-        if node_type == "integer":
-            return index if field_name == "i" else 0
-        if node_type == "number":
-            return node.get("minimum", 0)
-        if node_type == "boolean":
-            return False
-        if node_type == "string":
-            return f"empty-{index}" if field_name == "id" else "empty"
-        return "empty"
 
     @staticmethod
     def _parse_json_text(text: str) -> Optional[Any]:
@@ -448,13 +401,6 @@ class OpenRouterModel(BaseLM):
                     error=e,
                 )
                 if attempt == retries - 1:
-                    if isinstance(e, EmptyContentError):
-                        logger.warning("OpenRouter returned empty content after %s attempts; using fallback 'empty'.", retries)
-                        output = self._empty_schema_output(schema) if schema else "empty"
-                        result = {"output": output}
-                        if cfg.reasoning_summary:
-                            result["reasoning"] = None
-                        return result
                     raise
                 time.sleep(cfg.retry_delay)
                 continue
@@ -511,13 +457,6 @@ class OpenRouterModel(BaseLM):
                                 error=e,
                             )
                             if attempt == retries - 1:
-                                if isinstance(e, EmptyContentError):
-                                    logger.warning("OpenRouter returned empty content after %s attempts; using fallback 'empty'.", retries)
-                                    output = self._empty_schema_output(schema) if schema else "empty"
-                                    result = {"output": output}
-                                    if cfg.reasoning_summary:
-                                        result["reasoning"] = None
-                                    return result
                                 raise
                             await asyncio.sleep(cfg.retry_delay)
                             continue

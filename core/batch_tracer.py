@@ -28,8 +28,6 @@ class Records(TypedDict, total=False):
     turns: list[dict]
     general_profile: Optional[str]
     final_profile: str
-    stopped_early: bool
-    stop_reason: str
 
 
 Phase = Literal[
@@ -95,15 +93,11 @@ class BatchPreferenceTracer:
         self.stage_workers = max(1, stage_workers)
         self.prompts = prompts or prism_prompts()
         self._scheduler_tick_seconds = 0.1
-        self._active_pool_stop_ratio = 0.1
-        self._stop_requested = False
 
     def trace_users(self, users: List[UserData]) -> Dict[str, Records]:
         states = [self._new_state(user) for user in users]
         ready = deque([state for state in states if state.phase != "done"])
-        self._stop_requested = False
-        stop_threshold = self._active_stop_threshold(len(states))
-        estimate = self._estimate_work(users=users, stop_threshold=stop_threshold)
+        estimate = self._estimate_work(users=users)
         pbar = tqdm(
             total=max(estimate.estimated_flushes, 1),
             desc="Tracing preferences (batch)",
@@ -122,13 +116,6 @@ class BatchPreferenceTracer:
                 running: Dict[Future[None], _TraceState] = {}
 
                 while ready or running:
-                    active_count = self._count_active(states)
-                    if not self._stop_requested and active_count < stop_threshold:
-                        self._stop_requested = True
-                        for state in ready:
-                            self._mark_stopped_early(state)
-                        ready.clear()
-
                     while ready and len(running) < self.stage_workers:
                         state = ready.popleft()
                         if state.phase == "done":
@@ -156,9 +143,7 @@ class BatchPreferenceTracer:
                         for future in done:
                             state = running.pop(future)
                             future.result()
-                            if self._stop_requested:
-                                self._mark_stopped_early(state)
-                            elif state.phase != "done":
+                            if state.phase != "done":
                                 ready.append(state)
                         self._refresh_progress(pbar, active=self._count_active(states))
                         continue
@@ -208,16 +193,10 @@ class BatchPreferenceTracer:
         }
         return _TraceState(user_data=user, context=context, records=records)
 
-    def _active_stop_threshold(self, total_users: int) -> int:
-        if total_users <= 0:
-            return 0
-        return max(1, int(total_users * self._active_pool_stop_ratio))
-
-    def _estimate_work(self, users: List[UserData], stop_threshold: int) -> _WorkEstimate:
+    def _estimate_work(self, users: List[UserData]) -> _WorkEstimate:
         if not users:
             return _WorkEstimate(estimated_flushes=0, estimated_rounds=0, estimated_users=0, max_flushes_per_turn=0)
-        # Once active users drop below stop_threshold, tracing stops.
-        estimated_users = max(1, len(users) - stop_threshold + 1)
+        estimated_users = len(users)
         # Empirical average used for ETA only.
         max_flushes_per_turn = 9
         max_flushes_per_conversation_end = 1
@@ -243,14 +222,6 @@ class BatchPreferenceTracer:
     def _count_active(states: List[_TraceState]) -> int:
         return sum(1 for state in states if state.phase != "done")
 
-    @staticmethod
-    def _mark_stopped_early(state: _TraceState) -> None:
-        if state.phase == "done":
-            return
-        state.phase = "done"
-        state.records["stopped_early"] = True
-        state.records["stop_reason"] = "active_user_pool_below_threshold"
-
     def _advance_progress(self, pbar: tqdm, flushed: int, active: int) -> None:
         if flushed > 0:
             if pbar.n + flushed > pbar.total:
@@ -268,9 +239,6 @@ class BatchPreferenceTracer:
     def _advance_one_step(self, state: _TraceState) -> None:
         self.model.set_request_context(user_id=state.user_data.user_id, phase=state.phase)
         if state.phase == "done":
-            return
-        if self._stop_requested:
-            self._mark_stopped_early(state)
             return
 
         if state.phase == "start_turn":

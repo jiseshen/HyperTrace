@@ -1,6 +1,9 @@
 import numpy as np
 from dataclasses import dataclass
 import time
+import os
+import threading
+from .credentials import require_api_key
 from typing import List
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
@@ -15,38 +18,54 @@ class EmbedConfig:
     retry_delay: float = 0.5
 
 
-_client, _backend = None, None
+_local = threading.local()
+
 
 def get_client(backend: str = "openai", base_url: str | None = None):
-    global _client, _backend
-    cache_key = f"{backend}:{base_url or ''}"
-    if _client is None or _backend != cache_key:
-        if backend == "openai":
+    """Keep each worker's clients separate when different backends run concurrently."""
+    if backend not in ("openai", "openrouter", "gemini"):
+        raise ValueError(f"Unsupported embedding client backend: {backend}")
+    if not hasattr(_local, "clients"):
+        _local.clients = {}
+    cache_key = (backend, base_url)
+    if cache_key not in _local.clients:
+        if backend in ("openai", "openrouter"):
             from openai import OpenAI
-            _client = OpenAI()
-            _backend = cache_key
-        elif backend == "openrouter":
-            import os
-            from openai import OpenAI
-            _client = OpenAI(
-                api_key=os.getenv("OPENROUTER_API_KEY", "empty"),
-                base_url=base_url or os.getenv("OPENROUTER_API_BASE", OPENROUTER_BASE_URL),
+            variable = "OPENAI_API_KEY" if backend == "openai" else "OPENROUTER_API_KEY"
+            default_url = "https://api.openai.com/v1" if backend == "openai" else OPENROUTER_BASE_URL
+            url_variable = "OPENAI_API_BASE" if backend == "openai" else "OPENROUTER_API_BASE"
+            client = OpenAI(
+                api_key=require_api_key(variable),
+                base_url=base_url or os.getenv(url_variable, default_url),
             )
-            _backend = cache_key
-        elif backend == "gemini":
+        else:
             from google import genai
-            _client = genai.Client()
-            _backend = cache_key
-    return _client
+            key = os.getenv("GOOGLE_API_KEY") or require_api_key("GEMINI_API_KEY")
+            client = genai.Client(api_key=key)
+        _local.clients[cache_key] = client
+    return _local.clients[cache_key]
 
-_model = None
+
+def close_embedding_clients():
+    for client in getattr(_local, "clients", {}).values():
+        client.close()
+    _local.clients = {}
+
+
+_encoder = None
+_encoder_name = None
+_encoder_lock = threading.Lock()
+
 
 def get_encoder(model_name: str):
-    global _model
-    if _model is None or _model.model_card_data.model_id != model_name:
-        from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer(model_name)
-    return _model
+    global _encoder, _encoder_name
+    with _encoder_lock:
+        if _encoder is None or _encoder_name != model_name:
+            from sentence_transformers import SentenceTransformer
+            _encoder = SentenceTransformer(model_name)
+            _encoder_name = model_name
+        return _encoder
+
 
 def embed(
     text: str | List[str],
@@ -63,6 +82,10 @@ def embed(
     Returns:
         2D numpy array of shape (N, D), normalized.
     """
+    if embed_cfg.backend not in ("openai", "openrouter", "gemini", "transformer"):
+        raise ValueError(f"Unknown embedding backend: {embed_cfg.backend}")
+    if embed_cfg.max_retries < 1:
+        raise ValueError("Embedding max_retries must be positive")
     if isinstance(text, str):
         text = [text]
     if len(text) == 0:
@@ -92,18 +115,15 @@ def embed(
                     raise RuntimeError(
                         "Embedding request failed after retries "
                         f"(backend={embed_cfg.backend}, model={embed_cfg.model}, "
-                        f"inputs={len(text)}, max_retries={embed_cfg.max_retries}, "
-                        f"texts={text!r})"
+                        f"inputs={len(text)}, max_retries={embed_cfg.max_retries})"
                     ) from last_error
                 time.sleep(embed_cfg.retry_delay)
         vec = np.array([d.embedding for d in sorted(response.data, key=lambda x: x.index)], dtype=np.float32)
         vec = vec / (np.linalg.norm(vec, axis=1, keepdims=True) + 1e-14)
         return vec
 
-    elif "transformer" in embed_cfg.backend:
-        from sentence_transformers import SentenceTransformer
-
-        model = SentenceTransformer(embed_cfg.model)
+    elif embed_cfg.backend == "transformer":
+        model = get_encoder(embed_cfg.model)
         vec = model.encode(text, convert_to_numpy=True, normalize_embeddings=True)
         return vec
 

@@ -22,7 +22,8 @@ class Turn:
                 raise ValueError(f"chosen candidate '{self.chosen}' not found in candidates list: {self.candidates}")
     
     def __repr__(self):
-        return f"Turn {self.turn_id}\n\nUser Message:\n {self.user_message[:100] + ('...' if len(self.user_message) > 100 else '')}\n\nCandidates:\n{'\n'.join([c[:100] + ('...' if len(c) > 100 else '') for c in self.candidates])}\n\nChosen:\n{self.chosen[:100] + ('...' if len(self.chosen) > 100 else '')}\n"
+        candidates = "\n".join(c[:100] + ("..." if len(c) > 100 else "") for c in self.candidates)
+        return f"Turn {self.turn_id}\n\nUser Message:\n {self.user_message[:100] + ('...' if len(self.user_message) > 100 else '')}\n\nCandidates:\n{candidates}\n\nChosen:\n{self.chosen[:100] + ('...' if len(self.chosen) > 100 else '')}\n"
     
     def format(self, include_candidates: bool = True, include_choice: bool = True) -> str:
         formatted = f"User: {self.user_message}\n"
@@ -41,7 +42,8 @@ class Conversation:
     turns: List[Turn] = field(default_factory=list)
     
     def __repr__(self):
-        return f"Conversation {self.conversation_id}:\n{('\n\n'.join([repr(turn) for turn in self.turns]))}\n"
+        turns = "\n\n".join(repr(turn) for turn in self.turns)
+        return f"Conversation {self.conversation_id}:\n{turns}\n"
     
 @dataclass
 class UserData:
@@ -50,4 +52,5 @@ class UserData:
     gt_profile: str = ""
     
     def __repr__(self):
-        return f"User {self.user_id} ({self.gt_profile}):\n\n{('\n\n'.join([repr(conv) for conv in self.conversations]))}\n"
+        conversations = "\n\n".join(repr(conv) for conv in self.conversations)
+        return f"User {self.user_id} ({self.gt_profile}):\n\n{conversations}\n"

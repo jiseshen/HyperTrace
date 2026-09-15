@@ -9,8 +9,6 @@ from data.base import Turn
 from prompt.base import LIKELIHOOD_PROMPT
 
 
-# TODO: Binary (True or false) scoring + 2 Examples steering
-
 FILTER_BUDGET = 64
 logger = logging.getLogger(__name__)
 
@@ -50,7 +48,7 @@ def weight_hypothesis(conversation_history: List[Turn], candidates: str, context
     except Exception:
         logger.exception("Likelihood weighting generation failed")
         async_outputs = [None for _ in likelihood_prompts]
-    outputs = [o["output"] if not isinstance(o, Exception) else None for o in async_outputs]
+    outputs = [o["output"] if isinstance(o, dict) else None for o in async_outputs]
     updates = []
     invalid = 0
     for h, o in zip(hypotheses, outputs):
