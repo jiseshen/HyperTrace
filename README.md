@@ -1,5 +1,7 @@
 # HyperTrace: Hypothesis-Based Preference Tracing for Online LLM Personalization
 
+📄 **Paper:** [arXiv:2609.09835](https://arxiv.org/abs/2609.09835)
+
 HyperTrace is a training-free online personalization framework. It maintains weighted natural-language hypotheses about a user's preferences, updates them from chosen-versus-rejected response feedback, and uses the current belief to generate personalized responses.
 
 <p align="center">
