@@ -12,7 +12,7 @@ We tested this on PRISM. HyperTrace stays steadier through session changes and b
 
 **Post 2**
 
-A choice may reflect today's task or a lasting preference. HyperTrace keeps several explanations in play, updating them with new choices instead of locking you into one profile. No retraining.
+One choice may signal a temporary task or a lasting preference. HyperTrace keeps several possibilities in play and updates them with each new choice—without retraining.
 
 Paper: https://arxiv.org/abs/2609.09835
 Code: https://github.com/jiseshen/HyperTrace
