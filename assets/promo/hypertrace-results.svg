@@ -1,110 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1700" viewBox="0 0 2400 1700">
-<rect width="2400" height="1700" fill="#f8f7f2"/>
-<rect width="2400" height="425" fill="#13233d"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1510" viewBox="0 0 2400 1510">
+<rect width="2400" height="1510" fill="#f8f7f2"/>
+<rect width="2400" height="350" fill="#13233d"/>
 <circle cx="2230" cy="-80" r="340" fill="#244c8a" opacity=".48"/>
 <circle cx="2060" cy="275" r="148" fill="#a9d9cd" opacity=".18"/>
 <path d="M1815 243 C1900 140 1990 190 2060 115 C2140 30 2260 75 2350 35" fill="none" stroke="#93d4ad" stroke-width="10" opacity=".55"/>
 <circle cx="1815" cy="243" r="15" fill="#93d4ad"/><circle cx="2060" cy="115" r="15" fill="#93d4ad"/><circle cx="2350" cy="35" r="15" fill="#93d4ad"/>
 
 <text x="78" y="80" font-family="DejaVu Sans,Arial,sans-serif" font-size="28" font-weight="900" fill="#99d9ae" letter-spacing="5">HYPERTRACE</text>
-<rect x="1950" y="50" width="370" height="60" rx="30" fill="#203c66" stroke="#5e88b2" stroke-width="2"/>
-<text x="2135" y="91" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="800" fill="#f8f7f2" text-anchor="middle">FINDINGS · EMNLP 2026</text>
-<text x="75" y="190" font-family="DejaVu Sans,Arial,sans-serif" font-size="76" font-weight="900" fill="#ffffff" >When the topic changes,</text>
-<text x="75" y="280" font-family="DejaVu Sans,Arial,sans-serif" font-size="76" font-weight="900" fill="#ffffff" >does your AI still know you?</text>
-<text x="80" y="354" font-family="DejaVu Sans,Arial,sans-serif" font-size="33" font-weight="500" fill="#c9d7e8" >Preference tracing that adapts now and remembers what lasts.</text>
+<text x="75" y="190" font-family="DejaVu Sans,Arial,sans-serif" font-size="76" font-weight="900" fill="#ffffff" >Can AI predict your preferences</text>
+<text x="75" y="280" font-family="DejaVu Sans,Arial,sans-serif" font-size="76" font-weight="900" fill="#ffffff" >when the topic changes?</text>
+<g transform="translate(0,-75)">
 <rect x="66" y="460" width="1460" height="1070" rx="28" fill="#ffffff" stroke="#233450" stroke-width="4"/>
 <rect x="1556" y="460" width="777" height="515" rx="28" fill="#f0f2ff" stroke="#233450" stroke-width="4"/>
 <rect x="1556" y="1000" width="777" height="530" rx="28" fill="#e8f6ec" stroke="#233450" stroke-width="4"/>
-<rect x="90" y="495" width="270" height="52" rx="26" fill="#ddecff" stroke="none" stroke-width="0"/>
-<text x="120" y="531" font-family="DejaVu Sans,Arial,sans-serif" font-size="24" font-weight="800" fill="#2f61aa" >01 / ADAPTATION</text>
-<text x="105" y="604" font-family="DejaVu Sans,Arial,sans-serif" font-size="45" font-weight="800" fill="#17243a" >Tracks you across sessions</text>
-<text x="105" y="647" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="500" fill="#5d6c80" >PRISM · preference prediction accuracy</text>
-<rect x="106" y="685" width="160" height="50" rx="25" fill="#e4efff" stroke="none" stroke-width="0"/>
-<text x="186" y="720" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="800" fill="#3169b8" text-anchor="middle">Ours</text>
-<rect x="286" y="685" width="245" height="50" rx="25" fill="#f1e9ff" stroke="none" stroke-width="0"/>
-<text x="408" y="720" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="800" fill="#9c79d5" text-anchor="middle">Memory-based</text>
-<line x1="1198" y1="706" x2="1198" y2="1418" stroke="#dfe5ed" stroke-width="3"/>
-<text x="1230" y="805" font-family="DejaVu Sans,Arial,sans-serif" font-size="67" font-weight="900" fill="#3169b8" >61.4%</text>
+<text x="105" y="560" font-family="DejaVu Sans,Arial,sans-serif" font-size="45" font-weight="800" fill="#17243a" >Preference prediction across sessions</text>
+<line x1="106" y1="655" x2="160" y2="655" stroke="#3169b8" stroke-width="9" stroke-linecap="round"/>
+<circle cx="133" cy="655" r="8" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<text x="178" y="664" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="800" fill="#3169b8" >Ours</text>
+<line x1="300" y1="655" x2="354" y2="655" stroke="#9c79d5" stroke-width="7" stroke-linecap="round"/>
+<circle cx="327" cy="655" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<text x="372" y="664" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="800" fill="#9c79d5" >Memory-based</text>
+<line x1="1205" y1="665" x2="1205" y2="1418" stroke="#dfe5ed" stroke-width="3"/>
+<text x="1230" y="733" font-family="DejaVu Sans,Arial,sans-serif" font-size="21" font-weight="800" fill="#5d6c80" letter-spacing="1">AFTER TURN 20</text>
+<text x="1230" y="805" font-family="DejaVu Sans,Arial,sans-serif" font-size="72" font-weight="900" fill="#3169b8" >61.4%</text>
 <text x="1230" y="849" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="800" fill="#17243a" >Ours</text>
-<text x="1230" y="887" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" >after turn 20</text>
 <line x1="1230" y1="925" x2="1460" y2="925" stroke="#d8deea" stroke-width="3"/>
-<text x="1230" y="992" font-family="DejaVu Sans,Arial,sans-serif" font-size="53" font-weight="800" fill="#9c79d5" >54.4%</text>
+<text x="1230" y="992" font-family="DejaVu Sans,Arial,sans-serif" font-size="60" font-weight="800" fill="#9c79d5" >54.4%</text>
 <text x="1230" y="1032" font-family="DejaVu Sans,Arial,sans-serif" font-size="24" font-weight="700" fill="#17243a" >Memory-based</text>
-<rect x="1218" y="1115" width="267" height="190" rx="20" fill="#e8f5eb" stroke="none" stroke-width="0"/>
-<text x="1240" y="1170" font-family="DejaVu Sans,Arial,sans-serif" font-size="35" font-weight="900" fill="#308457" >41 / 50</text>
-<text x="1240" y="1212" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="700" fill="#17243a" >users start a new</text>
-<text x="1240" y="1251" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#17243a" >session near</text>
-<text x="1240" y="1290" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#17243a" >turn 20</text>
-<rect x="1584" y="495" width="325" height="52" rx="26" fill="#dee6ff" stroke="none" stroke-width="0"/>
-<text x="1614" y="531" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="800" fill="#3e61a9" >02 / LESS FEEDBACK</text>
-<text x="1618" y="607" font-family="DejaVu Sans,Arial,sans-serif" font-size="38" font-weight="800" fill="#17243a" >80% feedback withheld</text>
-<text x="1618" y="650" font-family="DejaVu Sans,Arial,sans-serif" font-size="24" font-weight="500" fill="#5d6c80" >Can it still learn your preferences?</text>
-<rect x="1584" y="1035" width="337" height="52" rx="26" fill="#d5efd9" stroke="none" stroke-width="0"/>
-<text x="1614" y="1071" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="800" fill="#2d8050" >03 / TOPIC SHIFTS</text>
-<text x="1618" y="1147" font-family="DejaVu Sans,Arial,sans-serif" font-size="37" font-weight="800" fill="#17243a" >Frequent session changes</text>
-<text x="1618" y="1191" font-family="DejaVu Sans,Arial,sans-serif" font-size="24" font-weight="500" fill="#5d6c80" >Does it stay with you?</text>
-<rect x="130" y="760" width="1035" height="655" rx="20" fill="#fbfdff" stroke="#e3e9f0" stroke-width="2"/>
-<line x1="170" y1="1320.0" x2="1140" y2="1320.0" stroke="#e8edf2" stroke-width="2"/>
-<text x="153" y="1329.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.3</text>
-<line x1="170" y1="1211.2" x2="1140" y2="1211.2" stroke="#e8edf2" stroke-width="2"/>
-<text x="153" y="1220.2" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.4</text>
-<line x1="170" y1="1102.4" x2="1140" y2="1102.4" stroke="#e8edf2" stroke-width="2"/>
-<text x="153" y="1111.4" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.5</text>
-<line x1="170" y1="993.6" x2="1140" y2="993.6" stroke="#e8edf2" stroke-width="2"/>
-<text x="153" y="1002.6" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.6</text>
-<line x1="170" y1="884.8" x2="1140" y2="884.8" stroke="#e8edf2" stroke-width="2"/>
-<text x="153" y="893.8" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.7</text>
-<line x1="170" y1="776.0" x2="1140" y2="776.0" stroke="#e8edf2" stroke-width="2"/>
-<text x="153" y="785.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.8</text>
-<line x1="170.0" y1="1320" x2="170.0" y2="776" stroke="#eef1f5" stroke-width="2"/>
-<text x="170.0" y="1370" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">0</text>
-<line x1="364.0" y1="1320" x2="364.0" y2="776" stroke="#eef1f5" stroke-width="2"/>
-<text x="364.0" y="1370" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">5</text>
-<line x1="558.0" y1="1320" x2="558.0" y2="776" stroke="#eef1f5" stroke-width="2"/>
-<text x="558.0" y="1370" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">10</text>
-<line x1="752.0" y1="1320" x2="752.0" y2="776" stroke="#eef1f5" stroke-width="2"/>
-<text x="752.0" y="1370" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">15</text>
-<line x1="946.0" y1="1320" x2="946.0" y2="776" stroke="#eef1f5" stroke-width="2"/>
-<text x="946.0" y="1370" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">20</text>
-<line x1="1140.0" y1="1320" x2="1140.0" y2="776" stroke="#eef1f5" stroke-width="2"/>
-<text x="1140.0" y="1370" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">25</text>
-<rect x="868.4" y="776" width="155.2" height="544" fill="#dff1e5" opacity=".72"/>
-<line x1="946.0" y1="776" x2="946.0" y2="1320" stroke="#5ba977" stroke-width="3" stroke-dasharray="12 10"/>
-<text x="938.0" y="806" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="800" fill="#388556" text-anchor="end">session switch</text>
-<polyline points="170.0,1195.7 364.0,1141.3 558.0,1141.3 752.0,1094.6 946.0,1209.2 1140.0,871.5" fill="none" stroke="#9c79d5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="170.0" cy="1195.7" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
-<circle cx="364.0" cy="1141.3" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
-<circle cx="558.0" cy="1141.3" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
-<circle cx="752.0" cy="1094.6" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
-<circle cx="946.0" cy="1209.2" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
-<circle cx="1140.0" cy="871.5" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
-<polyline points="170.0,1219.0 364.0,1102.4 558.0,1133.5 752.0,1048.0 946.0,1042.2 1140.0,879.1" fill="none" stroke="#3169b8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="170.0" cy="1219.0" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
-<circle cx="364.0" cy="1102.4" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
-<circle cx="558.0" cy="1133.5" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
-<circle cx="752.0" cy="1048.0" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
-<circle cx="946.0" cy="1042.2" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
-<circle cx="1140.0" cy="879.1" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
-<text x="650" y="1403" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="600" fill="#5d6c80" text-anchor="middle">Interaction turn</text>
-<text x="105" y="1484" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="700" fill="#3169b8" >More stable around the main session transition</text>
-<text x="1620" y="699" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="800" fill="#17243a" >Ours</text>
-<text x="2230" y="699" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="900" fill="#3169b8" text-anchor="end">55.7%</text>
-<rect x="1620" y="716" width="590" height="44" rx="22" fill="#e3e8f1" stroke="none" stroke-width="0"/>
-<rect x="1620" y="716" width="505" height="44" rx="22" fill="#3169b8" stroke="none" stroke-width="0"/>
-<text x="1620" y="814" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="800" fill="#17243a" >Memory-based</text>
-<text x="2230" y="814" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="900" fill="#9c79d5" text-anchor="end">45.8%</text>
-<rect x="1620" y="831" width="590" height="44" rx="22" fill="#e3e8f1" stroke="none" stroke-width="0"/>
-<rect x="1620" y="831" width="416" height="44" rx="22" fill="#9c79d5" stroke="none" stroke-width="0"/>
-<text x="1620" y="936" font-family="DejaVu Sans,Arial,sans-serif" font-size="35" font-weight="900" fill="#3169b8" >+9.9 points</text>
-<text x="1620" y="1241" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="800" fill="#17243a" >Ours</text>
-<text x="2230" y="1241" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="900" fill="#3169b8" text-anchor="end">53.0%</text>
-<rect x="1620" y="1258" width="590" height="44" rx="22" fill="#e3e8f1" stroke="none" stroke-width="0"/>
-<rect x="1620" y="1258" width="481" height="44" rx="22" fill="#3169b8" stroke="none" stroke-width="0"/>
-<text x="1620" y="1356" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="800" fill="#17243a" >Memory-based</text>
-<text x="2230" y="1356" font-family="DejaVu Sans,Arial,sans-serif" font-size="30" font-weight="900" fill="#9c79d5" text-anchor="end">42.2%</text>
-<rect x="1620" y="1373" width="590" height="44" rx="22" fill="#e3e8f1" stroke="none" stroke-width="0"/>
-<rect x="1620" y="1373" width="383" height="44" rx="22" fill="#9c79d5" stroke="none" stroke-width="0"/>
-<text x="1620" y="1478" font-family="DejaVu Sans,Arial,sans-serif" font-size="35" font-weight="900" fill="#3169b8" >+10.8 points</text>
-<line x1="68" y1="1584" x2="2330" y2="1584" stroke="#b9c7cf" stroke-width="2"/>
-<text x="75" y="1634" font-family="DejaVu Sans,Arial,sans-serif" font-size="27" font-weight="600" fill="#43546d" >PRISM  ·  Preference prediction  ·  arXiv:2609.09835</text>
+<text x="1618" y="565" font-family="DejaVu Sans,Arial,sans-serif" font-size="43" font-weight="800" fill="#17243a" >80% feedback withheld</text>
+<text x="1618" y="1105" font-family="DejaVu Sans,Arial,sans-serif" font-size="43" font-weight="800" fill="#17243a" >Frequent topic shifts</text>
+<rect x="120" y="690" width="1060" height="740" rx="20" fill="#fbfdff" stroke="#e3e9f0" stroke-width="2"/>
+<line x1="155" y1="1335.0" x2="1145" y2="1335.0" stroke="#e8edf2" stroke-width="2"/>
+<text x="153" y="1344.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.3</text>
+<line x1="155" y1="1210.0" x2="1145" y2="1210.0" stroke="#e8edf2" stroke-width="2"/>
+<text x="153" y="1219.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.4</text>
+<line x1="155" y1="1085.0" x2="1145" y2="1085.0" stroke="#e8edf2" stroke-width="2"/>
+<text x="153" y="1094.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.5</text>
+<line x1="155" y1="960.0" x2="1145" y2="960.0" stroke="#e8edf2" stroke-width="2"/>
+<text x="153" y="969.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.6</text>
+<line x1="155" y1="835.0" x2="1145" y2="835.0" stroke="#e8edf2" stroke-width="2"/>
+<text x="153" y="844.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.7</text>
+<line x1="155" y1="710.0" x2="1145" y2="710.0" stroke="#e8edf2" stroke-width="2"/>
+<text x="153" y="719.0" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="end">0.8</text>
+<line x1="155.0" y1="1335" x2="155.0" y2="710" stroke="#eef1f5" stroke-width="2"/>
+<text x="155.0" y="1380" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">0</text>
+<line x1="353.0" y1="1335" x2="353.0" y2="710" stroke="#eef1f5" stroke-width="2"/>
+<text x="353.0" y="1380" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">5</text>
+<line x1="551.0" y1="1335" x2="551.0" y2="710" stroke="#eef1f5" stroke-width="2"/>
+<text x="551.0" y="1380" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">10</text>
+<line x1="749.0" y1="1335" x2="749.0" y2="710" stroke="#eef1f5" stroke-width="2"/>
+<text x="749.0" y="1380" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">15</text>
+<line x1="947.0" y1="1335" x2="947.0" y2="710" stroke="#eef1f5" stroke-width="2"/>
+<text x="947.0" y="1380" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">20</text>
+<line x1="1145.0" y1="1335" x2="1145.0" y2="710" stroke="#eef1f5" stroke-width="2"/>
+<text x="1145.0" y="1380" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="500" fill="#5d6c80" text-anchor="middle">25</text>
+<rect x="867.8" y="710" width="158.4" height="625" fill="#dff1e5" opacity=".72"/>
+<line x1="947.0" y1="710" x2="947.0" y2="1335" stroke="#5ba977" stroke-width="3" stroke-dasharray="12 10"/>
+<text x="939.0" y="742" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" font-weight="800" fill="#388556" text-anchor="end">session switch</text>
+<polyline points="155.0,1192.1 353.0,1129.6 551.0,1129.6 749.0,1076.1 947.0,1207.7 1145.0,819.7" fill="none" stroke="#9c79d5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="155.0" cy="1192.1" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<circle cx="353.0" cy="1129.6" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<circle cx="551.0" cy="1129.6" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<circle cx="749.0" cy="1076.1" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<circle cx="947.0" cy="1207.7" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<circle cx="1145.0" cy="819.7" r="8" fill="#fff" stroke="#9c79d5" stroke-width="3"/>
+<polyline points="155.0,1218.9 353.0,1085.0 551.0,1120.7 749.0,1022.5 947.0,1015.9 1145.0,828.4" fill="none" stroke="#3169b8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="155.0" cy="1218.9" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<circle cx="353.0" cy="1085.0" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<circle cx="551.0" cy="1120.7" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<circle cx="749.0" cy="1022.5" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<circle cx="947.0" cy="1015.9" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<circle cx="1145.0" cy="828.4" r="9" fill="#fff" stroke="#3169b8" stroke-width="4"/>
+<text x="650" y="1415" font-family="DejaVu Sans,Arial,sans-serif" font-size="23" font-weight="600" fill="#5d6c80" text-anchor="middle">Interaction turn</text>
+<text x="105" y="1484" font-family="DejaVu Sans,Arial,sans-serif" font-size="29" font-weight="800" fill="#3169b8" >Ours stays steadier through the session switch</text>
+<text x="1620" y="678" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="800" fill="#17243a" >Ours</text>
+<text x="2230" y="678" font-family="DejaVu Sans,Arial,sans-serif" font-size="36" font-weight="900" fill="#3169b8" text-anchor="end">55.7%</text>
+<rect x="1620" y="696" width="590" height="50" rx="25" fill="#e3e8f1" stroke="none" stroke-width="0"/>
+<rect x="1620" y="696" width="505" height="50" rx="25" fill="#3169b8" stroke="none" stroke-width="0"/>
+<text x="1620" y="793" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="800" fill="#17243a" >Memory-based</text>
+<text x="2230" y="793" font-family="DejaVu Sans,Arial,sans-serif" font-size="36" font-weight="900" fill="#9c79d5" text-anchor="end">45.8%</text>
+<rect x="1620" y="811" width="590" height="50" rx="25" fill="#e3e8f1" stroke="none" stroke-width="0"/>
+<rect x="1620" y="811" width="416" height="50" rx="25" fill="#9c79d5" stroke="none" stroke-width="0"/>
+<text x="1620" y="924" font-family="DejaVu Sans,Arial,sans-serif" font-size="43" font-weight="900" fill="#3169b8" >+9.9 points</text>
+<text x="1620" y="1210" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="800" fill="#17243a" >Ours</text>
+<text x="2230" y="1210" font-family="DejaVu Sans,Arial,sans-serif" font-size="36" font-weight="900" fill="#3169b8" text-anchor="end">53.0%</text>
+<rect x="1620" y="1228" width="590" height="50" rx="25" fill="#e3e8f1" stroke="none" stroke-width="0"/>
+<rect x="1620" y="1228" width="481" height="50" rx="25" fill="#3169b8" stroke="none" stroke-width="0"/>
+<text x="1620" y="1325" font-family="DejaVu Sans,Arial,sans-serif" font-size="31" font-weight="800" fill="#17243a" >Memory-based</text>
+<text x="2230" y="1325" font-family="DejaVu Sans,Arial,sans-serif" font-size="36" font-weight="900" fill="#9c79d5" text-anchor="end">42.2%</text>
+<rect x="1620" y="1343" width="590" height="50" rx="25" fill="#e3e8f1" stroke="none" stroke-width="0"/>
+<rect x="1620" y="1343" width="383" height="50" rx="25" fill="#9c79d5" stroke="none" stroke-width="0"/>
+<text x="1620" y="1456" font-family="DejaVu Sans,Arial,sans-serif" font-size="43" font-weight="900" fill="#3169b8" >+10.8 points</text>
+</g>
 </svg>
