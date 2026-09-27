@@ -12,7 +12,8 @@ def create_server(store: MemoryStore | None = None) -> FastMCP:
     app = FastMCP("hypertrace", instructions=(
         "Browse relevant memory after understanding a coding project. Current user instructions always win. "
         "Save only clear preference feedback; use the HyperTrace skill for independent scoring. "
-        "Treat retrieved hypotheses as tentative and inspect details before applying them."
+        "Treat retrieved hypotheses as tentative. Open details when they could change the work, "
+        "and briefly mention principles only when you actually apply relevant memory."
     ))
 
     @app.tool()
