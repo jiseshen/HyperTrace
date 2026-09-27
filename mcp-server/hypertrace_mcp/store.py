@@ -192,8 +192,8 @@ class MemoryStore:
                     if not all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and 0 <= x <= 5
                                for x in (likelihood, baseline)):
                         raise ValueError("Scores must be finite numbers in [0, 5]")
-                    if action == "new" and likelihood <= baseline:
-                        raise ValueError("A new hypothesis must explain feedback better than its baseline")
+                    if action == "new" and likelihood - baseline < 2:
+                        raise ValueError("A new hypothesis needs clear evidence beyond its baseline")
                     # Bounded evidence ratios keep an uncalibrated model score from dominating memory.
                     ratio = math.log((likelihood + 0.5) / (baseline + 0.5))
                     delta = max(-0.55, min(0.55, ratio)) * (0.5 if scoring_mode == "main_agent" else 1.0)

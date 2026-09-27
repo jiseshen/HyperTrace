@@ -4,7 +4,7 @@
 
 The prototype makes HyperTrace useful during ordinary coding work. It stores tentative hypotheses about user habits across projects, using short verbal feedback rather than requiring chosen and rejected candidate responses. The research pipeline remains the source of the hypothesis-based design; the MCP has a separate live interaction path because a follow-up has no candidate-response comparison.
 
-Feedback scoring uses the current host's small subagents, one per hypothesis. Each returns an expectedness score for the observed follow-up with and without that hypothesis. The server applies a bounded evidence update and keeps new hypotheses provisional. Scores are ranking signals, not calibrated probabilities. If subagents are unavailable, the main agent can score serially with reduced weight.
+Feedback scoring uses the current host's small subagents, one per hypothesis. Each returns an expectedness score for the observed follow-up with and without that hypothesis. A new hypothesis needs a clear two-point advantage over its baseline; the server then applies a bounded evidence update and keeps it provisional. Scores are ranking signals, not calibrated probabilities. If subagents are unavailable, the main agent can score serially with reduced weight.
 
 Each hypothesis has a short description, actionable detail, weight, project-kind category, and preference-axis category. Both category sets can grow. The server reuses normalized labels and accepts reviewed aliases. Retrieval first shows categories, then returns short entries ranked by weight within selected categories; it uses no embeddings. Current user instructions always override stored beliefs.
 
@@ -16,7 +16,9 @@ Requires Python 3.11 or later, [uv](https://docs.astral.sh/uv/), and the Claude 
 uv run --project mcp-server hypertrace-mcp install
 ```
 
-The installer copies the same `hypertrace` skill to each detected client's user skill directory and registers a stdio server pointing at this checkout. It does not overwrite the user's agent instruction files. Restart the clients after installation. The checkout must remain at the same path; rerun installation if it moves. To check registration, use `codex mcp list` or `claude mcp list`. The server command can also run directly with `uv run --project mcp-server hypertrace-mcp serve`.
+The installer copies the same `hypertrace` skill to each detected client's user skill directory, registers a stdio server pointing at this checkout, and appends one short routing note to Codex `AGENTS.md` or Claude `CLAUDE.md` if absent. It preserves existing instructions. Restart the clients after installation. The checkout must remain at the same path; rerun installation if it moves. To check registration, use `codex mcp list` or `claude mcp list`. The server command can also run directly with `uv run --project mcp-server hypertrace-mcp serve`.
+
+For a Windows Codex installation whose `CODEX_HOME` is on `/mnt/c/...` but whose server runs in WSL, set `CODEX_HOME` to that path when running the installer. It will put the skill there and register the Linux `uv` path in that home's `config.toml`, with a writable temporary `UV_CACHE_DIR`. The desktop app needs a restart to discover a newly added MCP server or skill; an already-running task may retain its old tool list.
 
 Codex and Claude share one database on the **same operating system**. Linux uses `${XDG_DATA_HOME:-~/.local/share}/hypertrace/memory.sqlite3`; Windows uses `%LOCALAPPDATA%\hypertrace\memory.sqlite3`. `HYPERTRACE_DB` can override the path for testing or an intentionally shared location. Windows and WSL are separate environments unless pointed to the same accessible file; SQLite on a network share is not supported by this prototype.
 
@@ -39,4 +41,4 @@ The skill is the workflow layer; the server validates inputs and owns persistenc
 
 ## Verification and next iteration
 
-Run the focused checks with `uv run --project mcp-server python -m unittest discover -s mcp-server/tests -v`. They cover weight changes, duplicate events, category aliases, forgetting, merge recovery, and a real stdio MCP handshake. Windows and Claude/Codex interaction still need hands-on checks on those hosts. The next iteration should use real follow-ups to inspect category drift, ranking usefulness, acknowledgment quality, and scoring cost before adding custom processing models.
+Run the focused checks with `uv run --project mcp-server python -m unittest discover -s mcp-server/tests -v`. They cover weight changes, duplicate events, category aliases, forgetting, merge recovery, and a real stdio MCP handshake. A WSL-backed Windows Codex CLI session has also discovered the installed skill and MCP and completed an isolated follow-up with subagent scoring and memory retrieval. Native Windows execution, Claude integration, and discovery in a restarted Codex desktop task still need hands-on checks. The next iteration should use real follow-ups to inspect category drift, ranking usefulness, acknowledgment quality, and scoring cost before adding custom processing models.

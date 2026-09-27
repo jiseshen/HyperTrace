@@ -3,10 +3,29 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
+
+
+ROUTING_NOTE = """## HyperTrace tool routing
+
+For coding work, use the `hypertrace` skill after learning a new project's context and when a follow-up explicitly signals a reusable preference, correction, or coding habit. Let its evidence gate decide whether to save anything. Current user instructions take precedence over memory; do not copy existing agent instructions into memory.
+"""
+
+
+def ensure_routing_note(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing = path.read_text() if path.exists() else ""
+    if "## HyperTrace tool routing" in existing:
+        return
+    with path.open("a", encoding="utf-8") as output:
+        if existing:
+            output.write("\n" if existing.endswith("\n") else "\n\n")
+        output.write(ROUTING_NOTE)
 
 
 def install() -> int:
@@ -20,12 +39,14 @@ def install() -> int:
         print("Run install from the HyperTrace repository root or its mcp-server directory.", file=sys.stderr)
         return 1
     launch = [uv, "run", "--project", str(project), "hypertrace-mcp", "serve"]
+    cache = str(Path(tempfile.gettempdir()) / "hypertrace-uv-cache")
     bundled = Path(__file__).resolve().parent / "skill" / "SKILL.md"
+    codex_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
     found = 0
     registered = 0
-    for host, root, command in (
-        ("Codex", Path.home() / ".codex" / "skills", ["codex", "mcp", "add", "hypertrace", "--", *launch]),
-        ("Claude", Path.home() / ".claude" / "skills", ["claude", "mcp", "add", "--scope", "user", "--transport", "stdio", "hypertrace", "--", *launch]),
+    for host, root, entry, command in (
+        ("Codex", codex_home / "skills", codex_home / "AGENTS.md", ["codex", "mcp", "add", "hypertrace", "--env", f"UV_CACHE_DIR={cache}", "--", *launch]),
+        ("Claude", Path.home() / ".claude" / "skills", Path.home() / ".claude" / "CLAUDE.md", ["claude", "mcp", "add", "--scope", "user", "--env", f"UV_CACHE_DIR={cache}", "--transport", "stdio", "hypertrace", "--", *launch]),
     ):
         executable = shutil.which(command[0])
         if not executable:
@@ -41,7 +62,8 @@ def install() -> int:
             print(f"{host}: MCP registration failed ({exc}); skill installed at {target}", file=sys.stderr)
             continue
         registered += 1
-        print(f"{host}: registered MCP and installed skill at {target}")
+        ensure_routing_note(entry)
+        print(f"{host}: registered MCP and installed skill at {target}; enabled routing in {entry}")
     if not found:
         print("Neither Codex nor Claude CLI was found. Install one, then rerun this command.", file=sys.stderr)
         return 1

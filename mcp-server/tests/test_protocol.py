@@ -23,6 +23,23 @@ class ProtocolTest(unittest.IsolatedAsyncioTestCase):
                     self.assertFalse(result.isError)
                     payload = result.structuredContent or json.loads(result.content[0].text)
                     self.assertEqual(payload["hypotheses"], [])
+                    proposal = {"action": "new", "description": "Run focused tests before completion",
+                                "detail": "Run focused tests for changed behavior before reporting completion.",
+                                "project_kind": "general coding", "preference_axis": "verification",
+                                "likelihood": 3, "baseline": 2}
+                    event = {"event_id": "test-follow-up", "excerpt": "Run focused tests for behavior changes",
+                             "project": "API coding", "proposals": [proposal]}
+                    self.assertTrue((await session.call_tool("save_feedback", event)).isError)
+                    proposal["likelihood"] = 5
+                    saved = await session.call_tool("save_feedback", event)
+                    self.assertFalse(saved.isError)
+                    page = await session.call_tool("browse_memory", {"project_kinds": ["general coding"]})
+                    cards = page.structuredContent or json.loads(page.content[0].text)
+                    self.assertEqual(len(cards["hypotheses"]), 1)
+                    repeated = await session.call_tool("save_feedback", event)
+                    self.assertFalse(repeated.isError)
+                    duplicate = repeated.structuredContent or json.loads(repeated.content[0].text)
+                    self.assertTrue(duplicate["duplicate"])
 
 
 if __name__ == "__main__":

@@ -64,6 +64,9 @@ class MemoryStoreTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.store.save_feedback("secret", "api_key=abc123456", "demo", [proposal("Prefer tests")])
         self.assertEqual(self.store.browse()["hypotheses"], [])
+        with self.assertRaises(ValueError):
+            self.save("weak", proposal("Mention testing in every final answer", likelihood=3, baseline=2))
+        self.assertEqual(self.store.browse()["hypotheses"], [])
 
     def test_concurrent_clients_share_memory(self):
         def write(index):
