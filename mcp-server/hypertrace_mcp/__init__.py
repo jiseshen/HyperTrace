@@ -1,0 +1,1 @@
+"""Local HyperTrace MCP service."""

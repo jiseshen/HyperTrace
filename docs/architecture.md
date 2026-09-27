@@ -2,6 +2,8 @@
 
 HyperTrace separates online preference inference, provider access, dataset adaptation, prompts, and evaluation. The root `main.py` is the only tracing and evaluation entrypoint.
 
+The separate [local MCP prototype](local-mcp.md) uses a standalone package under `mcp-server/`. Its SQLite store and host-agent skill do not invoke this research runner or its embedding backends.
+
 ## Execution flow
 
 1. `main.py` resolves the selected YAML configuration, applies command-line overrides, loads the dataset, and selects the run cohort.
