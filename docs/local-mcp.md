@@ -6,7 +6,7 @@ The prototype makes HyperTrace useful during ordinary coding work. It stores ten
 
 Feedback scoring uses the current host's small subagents, one per hypothesis. Each returns an expectedness score for the observed follow-up with and without that hypothesis. A new hypothesis needs a clear two-point advantage over its baseline; the server then applies a bounded evidence update and keeps it provisional. Scores are ranking signals, not calibrated probabilities. If subagents are unavailable, the main agent can score serially with reduced weight.
 
-Each hypothesis has a short description, actionable detail, weight, project-kind category, and preference-axis category. Both category sets can grow. The server reuses normalized labels and accepts reviewed aliases. Retrieval first shows categories, then returns short entries ranked by weight within selected categories; it uses no embeddings. Current user instructions always override stored beliefs.
+Each hypothesis has a short description, actionable detail, weight, project-kind category, and preference-axis category. Both category sets can grow. The server reuses normalized labels and accepts reviewed aliases. One unfiltered browse returns both categories and top ranked short entries. The agent filters categories only when that first page misses relevant entries, and opens details only when they could change the work. This keeps the common retrieval path to one MCP call; it uses no embeddings. Current user instructions always override stored beliefs.
 
 ## Install and use
 

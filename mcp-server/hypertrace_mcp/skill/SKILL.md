@@ -9,7 +9,7 @@ The MCP stores tentative, weighted hypotheses. The current user's instructions t
 
 ## Retrieve
 
-After learning enough about a new project or a changed task, call `browse_memory` without filters to see project-kind and preference-axis categories. Choose broad relevant labels, including a general project kind when present, then browse again with those labels. Read details with `open_memory` for the few entries that might change your work. Use only applicable beliefs. Briefly tell the user the main principles you are applying, in ordinary language; do not claim certainty or recite scores. Do not mention irrelevant memories.
+After learning enough about a new project or a changed task, call `browse_memory` once without filters. Its response contains both category labels and top ranked cards; use relevant cards directly. Browse again with broad project-kind or preference-axis labels only when the first page misses a relevant category or omits likely useful cards. Call `open_memory` only for cards whose detail or evidence could change your next action, and group selected IDs in one call. Use only applicable beliefs. Briefly tell the user the main principles you are applying, in ordinary language; do not claim certainty or recite scores. Do not mention irrelevant memories.
 
 ## Learn from verbal feedback
 
