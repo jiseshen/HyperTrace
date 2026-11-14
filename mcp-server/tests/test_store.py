@@ -90,6 +90,65 @@ class MemoryStoreTest(unittest.TestCase):
         self.store.manage(merge["id"], "undo_merge")
         self.assertEqual({x["id"] for x in self.store.browse()["hypotheses"]}, {a["id"], b["id"]})
 
+    def merge_next(self):
+        queue = self.store.next_consolidation()["candidates"]
+        self.assertTrue(queue)
+        return self.store.finish_consolidation(queue[0]["queue_id"], "merge",
+                                               "Run focused tests before finishing",
+                                               "Run focused tests for changed behavior.")["id"]
+
+    def test_nested_merge_preserves_and_forgets_all_evidence(self):
+        self.save("a", proposal("Run focused tests before finishing"))
+        self.save("b", proposal("Run focused tests before finalizing"))
+        first = self.merge_next()
+        self.save("c", proposal("Run focused tests before finishing"))
+        final = self.merge_next()
+        self.assertEqual(len(self.store.details([final])[0]["evidence"]), 3)
+        self.store.manage(final, "undo_merge")
+        self.assertEqual(len(self.store.details([first])[0]["evidence"]), 2)
+        self.store.manage(first, "forget")
+        with self.store._connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0], 1)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 1)
+
+    def test_forget_nested_merge_erases_entire_source_tree(self):
+        a = self.save("a", proposal("Run focused tests before finishing"))["hypotheses"][0]
+        self.save("b", proposal("Run focused tests before finalizing"))
+        self.merge_next()
+        self.save("c", proposal("Run focused tests before finishing"))
+        final = self.merge_next()
+        with self.assertRaisesRegex(ValueError, "active merged hypothesis"):
+            self.store.manage(a["id"], "forget")
+        self.store.manage(final, "forget")
+        with self.store._connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0], 0)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM hypotheses WHERE status!='forgotten'").fetchone()[0], 0)
+
+    def test_merged_shared_event_is_only_shown_once(self):
+        self.save("shared", proposal("Run focused tests before finishing"),
+                  proposal("Run focused tests before finalizing"))
+        hid = self.merge_next()
+        self.assertEqual(len(self.store.details([hid])[0]["evidence"]), 1)
+
+    def test_aliases_follow_renamed_canonical_category(self):
+        self.save("a", proposal("Prefer focused checks", kind="web"))
+        self.save("b", proposal("Prefer short reports", kind="frontend"))
+        self.store.alias_category("project_kind", "web app", "web")
+        self.store.alias_category("project_kind", "web", "frontend")
+        self.assertEqual(len(self.store.browse(project_kinds=["web app"])["hypotheses"]), 2)
+        self.save("c", proposal("Prefer minimal diffs", kind="web app"))
+        self.assertTrue(all(h["project_kind"] == "frontend" for h in self.store.browse()["hypotheses"]))
+
+    def test_feedback_invalidates_in_flight_review(self):
+        a = self.save("a", proposal("Run focused tests before finishing"))["hypotheses"][0]
+        self.save("b", proposal("Run focused tests before finalizing"))
+        queue = self.store.next_consolidation()["candidates"][0]
+        self.save("c", proposal(a["description"], action="reuse", hid=a["id"]))
+        with self.assertRaisesRegex(ValueError, "No active consolidation lease"):
+            self.store.finish_consolidation(queue["queue_id"], "distinct")
+        self.assertTrue(self.store.next_consolidation()["candidates"])
+
     def test_forget_removes_evidence(self):
         item = self.save("a", proposal("Prefer concise reports"))["hypotheses"][0]
         self.store.manage(item["id"], "forget")

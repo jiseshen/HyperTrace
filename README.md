@@ -4,9 +4,16 @@
 
 HyperTrace is a training-free online personalization framework. It maintains weighted natural-language hypotheses about a user's preferences, updates them from chosen-versus-rejected response feedback, and uses the current belief to generate personalized responses.
 
-## Local coding-agent memory prototype
+## Coding-agent memory with MCP
 
-HyperTrace also has a local MCP prototype for Claude Code and Codex. It learns tentative coding preferences from explicit verbal follow-ups, saves short evidence in a shared SQLite database, and lets agents browse relevant beliefs across projects. This prototype runs separately from the research tracing and evaluation command below.
+**Use HyperTrace directly in Claude Code and Codex.** The local MCP learns tentative coding preferences from explicit follow-ups and carries them across projects. It runs separately from the research tracing and evaluation pipeline.
+
+- **Retrieve only what matters:** browse weight-ranked summaries and categories in one call, then open selected details and recent evidence.
+- **Learn from corrections:** save scored feedback atomically, with bounded weight updates and duplicate-event protection.
+- **Share local memory:** both clients use the same SQLite database on the same operating system, without a separate model API key.
+- **Keep memory reviewable:** correct or forget hypotheses, reconcile category aliases, and review duplicate suggestions with reversible merges. Repeated merges retain their original evidence; forgetting a merged memory removes its inherited evidence.
+
+Current user instructions always take precedence over remembered preferences.
 
 With [uv](https://docs.astral.sh/uv/) and either coding-agent CLI installed, run from this repository:
 

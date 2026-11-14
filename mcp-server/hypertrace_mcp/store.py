@@ -83,6 +83,11 @@ class MemoryStore:
                 id TEXT PRIMARY KEY, target_id TEXT NOT NULL, source_ids TEXT NOT NULL,
                 created_at REAL NOT NULL);
             CREATE INDEX IF NOT EXISTS idx_hypotheses_active ON hypotheses(status, weight DESC);
+            CREATE INDEX IF NOT EXISTS idx_hypotheses_categories
+                ON hypotheses(project_kind, preference_axis, status, weight DESC);
+            CREATE INDEX IF NOT EXISTS idx_hypotheses_merged_to ON hypotheses(merged_to);
+            CREATE INDEX IF NOT EXISTS idx_evidence_hypothesis ON evidence(hypothesis_id, event_id);
+            CREATE INDEX IF NOT EXISTS idx_queue_status ON consolidation_queue(status, lease_until, created_at);
             """)
 
     @contextmanager
@@ -110,11 +115,12 @@ class MemoryStore:
         if not 1 <= limit <= 20:
             raise ValueError("limit must be 1 to 20")
         with self._connect() as db:
-            cats = db.execute("""SELECT kind, name, COUNT(*) AS count FROM categories c
-                JOIN hypotheses h ON (c.kind='project_kind' AND h.project_kind=c.name)
-                    OR (c.kind='preference_axis' AND h.preference_axis=c.name)
-                WHERE c.key=c.canonical_key AND h.status='active'
-                GROUP BY kind,name ORDER BY count DESC,name""").fetchall()
+            cats = db.execute("""SELECT 'project_kind' AS kind, project_kind AS name, COUNT(*) AS count
+                FROM hypotheses WHERE status='active' GROUP BY project_kind
+                UNION ALL
+                SELECT 'preference_axis' AS kind, preference_axis AS name, COUNT(*) AS count
+                FROM hypotheses WHERE status='active' GROUP BY preference_axis
+                ORDER BY count DESC,name""").fetchall()
             conditions = ["status='active'"]
             params: list[str | int] = []
             for column, values in (("project_kind", project_kinds), ("preference_axis", preference_axes)):
@@ -136,25 +142,36 @@ class MemoryStore:
                               " ORDER BY weight DESC, updated_at DESC LIMIT ?", (*params, limit)).fetchall()
             return {"categories": [dict(x) for x in cats], "hypotheses": [_score(x) for x in rows]}
 
+    @staticmethod
+    def _lineage(db: sqlite3.Connection, hid: str) -> list[str]:
+        # UNION also terminates safely if a damaged database contains a cycle.
+        return [r[0] for r in db.execute("""WITH RECURSIVE sources(id) AS (
+            SELECT id FROM hypotheses WHERE id=?
+            UNION SELECT h.id FROM hypotheses h JOIN sources s ON h.merged_to=s.id
+        ) SELECT id FROM sources""", (hid,))]
+
     def details(self, ids: list[str]) -> list[dict]:
         if not ids or len(ids) > 10:
             raise ValueError("Provide 1 to 10 hypothesis IDs")
         with self._connect() as db:
-            result = []
-            for hid in ids:
-                row = db.execute("SELECT * FROM hypotheses WHERE id=?", (hid,)).fetchone()
-                if not row:
-                    continue
-                sources = [hid]
-                if row["status"] == "active":
-                    sources += [x[0] for x in db.execute("SELECT id FROM hypotheses WHERE merged_to=?", (hid,))]
-                marks = ",".join("?" for _ in sources)
-                ev = db.execute(f"""SELECT e.excerpt,e.project,e.created_at FROM evidence v
-                    JOIN events e ON e.id=v.event_id WHERE v.hypothesis_id IN ({marks})
-                    ORDER BY e.created_at DESC LIMIT 5""", sources).fetchall()
-                result.append({**_score(row), "detail": row["detail"], "evidence": [dict(x) for x in ev],
-                               "merged_to": row["merged_to"]})
-            return result
+            db.execute("BEGIN")
+            return self._details(db, ids)
+
+    def _details(self, db: sqlite3.Connection, ids: list[str]) -> list[dict]:
+        result = []
+        for hid in ids:
+            row = db.execute("SELECT * FROM hypotheses WHERE id=?", (hid,)).fetchone()
+            if not row:
+                continue
+            sources = self._lineage(db, hid) if row["status"] == "active" else [hid]
+            marks = ",".join("?" for _ in sources)
+            ev = db.execute(f"""SELECT DISTINCT e.id,e.excerpt,e.project,e.created_at FROM evidence v
+                JOIN events e ON e.id=v.event_id WHERE v.hypothesis_id IN ({marks})
+                ORDER BY e.created_at DESC,e.id LIMIT 5""", sources).fetchall()
+            result.append({**_score(row), "detail": row["detail"],
+                           "evidence": [{k: x[k] for k in ("excerpt", "project", "created_at")} for x in ev],
+                           "merged_to": row["merged_to"]})
+        return result
 
     def save_feedback(self, event_id: str, excerpt: str, project: str, proposals: list[dict],
                       scoring_mode: str = "subagents") -> dict:
@@ -214,6 +231,7 @@ class MemoryStore:
                             WHERE id=?""", (description, detail, category, axis, weight, now, hid))
                     db.execute("INSERT INTO evidence VALUES(?,?,?,?)", (event_id, hid, likelihood, baseline))
                     cards.append({"id": hid, "description": description, "weight": round(weight, 3)})
+                    self._invalidate_reviews(db, hid)
                     self._queue_overlap(db, hid, description, category, axis, now)
                 db.execute("COMMIT")
                 return {"event_id": event_id, "hypotheses": cards, "consolidation_pending":
@@ -221,6 +239,11 @@ class MemoryStore:
             except Exception:
                 db.execute("ROLLBACK")
                 raise
+
+    @staticmethod
+    def _invalidate_reviews(db: sqlite3.Connection, hid: str) -> None:
+        db.execute("""UPDATE consolidation_queue SET status='pending',lease_until=0
+            WHERE status='leased' AND (left_id=? OR right_id=?)""", (hid, hid))
 
     def _queue_overlap(self, db, hid, description, category, axis, now):
         words = _words(description)
@@ -247,8 +270,10 @@ class MemoryStore:
                 AND a.status='active' AND b.status='active' ORDER BY q.created_at LIMIT 3""", (now,)).fetchall()
             for row in rows:
                 db.execute("UPDATE consolidation_queue SET status='leased',lease_until=? WHERE id=?", (now + 600, row["id"]))
+            candidates = [{"queue_id": r["id"],
+                           "hypotheses": self._details(db, [r["left_id"], r["right_id"]])} for r in rows]
             db.execute("COMMIT")
-            return {"candidates": [{"queue_id": r["id"], "hypotheses": self.details([r["left_id"], r["right_id"]])} for r in rows]}
+            return {"candidates": candidates}
 
     def finish_consolidation(self, queue_id: str, decision: str, description: str = "", detail: str = "") -> dict:
         if decision not in {"merge", "distinct"}:
@@ -302,7 +327,9 @@ class MemoryStore:
                     db.execute("UPDATE hypotheses SET description=?,detail=?,updated_at=? WHERE id=?",
                                (_clean(description, 120), _clean(detail, 500), time.time(), hid))
                 elif action == "forget":
-                    ids = [hid] + [x[0] for x in db.execute("SELECT id FROM hypotheses WHERE merged_to=?", (hid,))]
+                    if row["status"] == "merged":
+                        raise ValueError("Forget the active merged hypothesis to remove its inherited evidence")
+                    ids = self._lineage(db, hid)
                     for source in ids:
                         db.execute("DELETE FROM evidence WHERE hypothesis_id=?", (source,))
                     db.execute("DELETE FROM events WHERE id NOT IN (SELECT event_id FROM evidence)")
@@ -318,6 +345,7 @@ class MemoryStore:
                     db.execute("UPDATE hypotheses SET status='active',merged_to=NULL WHERE id IN (?,?)", ids)
                     db.execute("UPDATE hypotheses SET status='forgotten',detail='',description='[undone]' WHERE id=?", (hid,))
                     db.execute("UPDATE consolidation_queue SET status='dismissed' WHERE id=?", (merge["id"],))
+                self._invalidate_reviews(db, hid)
                 db.execute("COMMIT")
                 return {"id": hid, "action": action, "success": True}
             except Exception:
@@ -342,7 +370,13 @@ class MemoryStore:
                 alias_name = db.execute("SELECT name FROM categories WHERE kind=? AND key=?", (kind, alias_key)).fetchone()
                 db.execute("INSERT OR REPLACE INTO categories VALUES(?,?,?,?)", (kind, alias_key, alias_name[0] if alias_name else alias,
                                                                             canonical_key))
+                # Redirect existing aliases as well, keeping every lookup one hop.
+                db.execute("UPDATE categories SET canonical_key=? WHERE kind=? AND canonical_key=?",
+                           (canonical_key, kind, alias_key))
                 if alias_name:
+                    affected = db.execute(f"SELECT id FROM hypotheses WHERE {kind}=?", (alias_name[0],)).fetchall()
+                    for item in affected:
+                        self._invalidate_reviews(db, item[0])
                     db.execute(f"UPDATE hypotheses SET {kind}=? WHERE {kind}=?", (target[0], alias_name[0]))
                 db.execute("COMMIT")
                 return {"alias": alias, "canonical": target[0]}
